@@ -8,7 +8,7 @@ import { createTeam, createMember, cloneTeam, calculateTeam, validateTeam, migra
 import { placeRosterCharacter } from '../src/team-interactions.mjs';
 import { getEquipmentPresetOptions, applyEquipmentPreset, changeMemberRarity } from '../src/equipment-presets.mjs';
 import { calculateCharacterStats } from '../src/character-stats.mjs';
-import { fillColumnEmptyRunes } from '../src/rune-interactions.mjs';
+import { fillColumnEmptyRunes, updateColumnRune } from '../src/rune-interactions.mjs';
 
 const [baseCatalog, policy, freeLibrary, nameAliases, arcana, equipmentBonuses, characterStats] = await Promise.all(['catalog', 'pricing-policy', 'free-library', 'name-aliases', 'arcana-catalog', 'equipment-bonuses', 'character-stats'].map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
 const catalog = { ...baseCatalog, arcana, equipmentBonuses, characterStats };
@@ -593,7 +593,7 @@ test('automatic same-column rune installation shows its exact shared stock and p
   const category = catalog.runeCategories.find(item => item.slots.includes(1) && !policy.runes.fixedStock.excludedCategoryIds.includes(item.id));
   const filled = fillColumnEmptyRunes(team, 0, 1, 0, { categoryId: category.id, level: 11 }, catalog, policy);
   const markup = await renderDraft(filled);
-  assert.match(markup, /首次新增会填入同列对应空孔，已有符石保留；库存允许时同步，后续独立调整/);
+  assert.match(markup, /首次新增填入同列空孔，首次设置等级一起同步；离开等级框后独立调整，已有符石保留/);
   for (const name of ['武器', '项链', '手套']) assert.match(markup, new RegExp(`aria-label="${name}第1孔固定符石等级"[^>]*>[\\s\\S]*?<option value="11" selected=""`));
   assert.ok(markup.includes(`${category.name} · Lv.11</span><span>已用 3 / 3</span><strong>余 0</strong>`));
   const tuned = fillColumnEmptyRunes(filled, 0, 2, 0, { level: 10 }, catalog, policy);
@@ -604,7 +604,64 @@ test('automatic same-column rune installation shows its exact shared stock and p
   assert.ok(independent.includes(`${category.name} · Lv.10</span><span>已用 1 / 3</span><strong>余 2</strong>`));
   assert.equal(validateTeam(tuned, catalog, policy, { freeLibrary }).valid, true);
   const source = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
-  assert.match(source, /onRuneChange=\{\(runeIndex, nextRune\) => updateRune\(slot, runeIndex, nextRune\)\}/);
+  assert.match(source, /onRuneChange=\{\(runeIndex, nextRune, kind\) => updateRune\(slot, runeIndex, nextRune, kind\)\}/);
+});
+
+test('the real category and level controls synchronize a new speed batch through typing and commit it on Enter', async () => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
+  try {
+    const { EquipmentEditor } = await server.ssrLoadModule('/src/App.jsx');
+    const team = createTeam();
+    team.members[0] = applyEquipmentPreset(createMember(54), 'ur2-ssr4', catalog, policy);
+    let state = { team, batch: null };
+    const speed = catalog.runeCategories.find(category => category.name === '速度');
+    assert.ok(speed);
+    function control(label) {
+      const member = state.team.members[0];
+      const tree = EquipmentEditor({
+        gear: member.equipment[0], index: 0, member, memberIndex: 0, catalog, policy, freeLibrary,
+        errors: [], inventory: [], borrowableWeapons: [], ownWeaponClaimed: false,
+        batchSourceRuneIndex: state.batch?.slot === 1 ? state.batch.runeIndex : null,
+        onRuneChange(index, rune, kind) { state = updateColumnRune(state.team, 0, 1, index, rune, catalog, policy, { batch: state.batch, kind }); },
+        onRuneCommit(index) { if (state.batch?.slot === 1 && state.batch.runeIndex === index) state.batch = null; },
+      });
+      function find(node) {
+        if (!React.isValidElement(node)) return null;
+        if (node.props['aria-label'] === label) return node;
+        for (const child of React.Children.toArray(node.props.children)) {
+          const found = find(child);
+          if (found) return found;
+        }
+        return null;
+      }
+      const result = find(tree);
+      assert.ok(result, `control exists: ${label}`);
+      return result;
+    }
+    const levels = () => state.team.members[0].equipment.slice(0, 3).map(gear => gear.runes[0].level);
+    control('武器第1孔符石类别').props.onChange({ target: { value: String(speed.id) } });
+    assert.deepEqual(levels(), [1, 1, 1]);
+    control('武器第1孔符石等级').props.onChange({ target: { value: '' } });
+    assert.equal(control('武器第1孔符石等级').props.disabled, false, 'clearing the initial numeric value must not disable the editor');
+    assert.equal(control('武器第1孔符石等级').props.value, '');
+    for (const value of ['1', '10']) control('武器第1孔符石等级').props.onChange({ target: { value } });
+    assert.deepEqual(levels(), [10, 10, 10]);
+    assert.equal(validateTeam(state.team, catalog, policy, { freeLibrary }).valid, true);
+    const markup = await renderDraft(state.team);
+    for (const name of ['武器', '项链', '手套']) assert.match(markup, new RegExp(`aria-label="${name}第1孔符石等级"[^>]*value="10"`));
+    const levelControl = control('武器第1孔符石等级');
+    levelControl.props.onKeyDown({ key: 'Enter', currentTarget: { blur() { levelControl.props.onBlur(); } } });
+    assert.equal(state.batch, null);
+    control('武器第1孔符石等级').props.onChange({ target: { value: '12' } });
+    assert.deepEqual(levels(), [12, 10, 10], 'after committing, later adjustments are per hole');
+    state = { team, batch: null };
+    control('武器第1孔符石类别').props.onChange({ target: { value: String(speed.id) } });
+    assert.ok(state.batch);
+    control('武器第1孔符石类别').props.onChange({ target: { value: '' } });
+    assert.equal(state.batch, null, 'selecting an empty hole cancels the batch rather than looking like unfinished number input');
+    assert.deepEqual(levels(), [0, 1, 1]);
+    assert.equal(control('武器第1孔符石等级').props.disabled, true);
+  } finally { await server.close(); }
 });
 
 test('team actual investments and off-team arcana characters remain separate and included once in the budget', async () => {

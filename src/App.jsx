@@ -8,7 +8,7 @@ import {
 import { placeRosterCharacter, swapTeamPositions } from './team-interactions.mjs';
 import { getEquipmentPresetOptions, applyEquipmentPreset, changeMemberRarity } from './equipment-presets.mjs';
 import { calculateCharacterStats } from './character-stats.mjs';
-import { fillColumnEmptyRunes } from './rune-interactions.mjs';
+import { updateColumnRune } from './rune-interactions.mjs';
 import teamSeat from './assets/team-seat.svg';
 
 const DRAFT_KEY = 'mementomori-team-builder:draft:v1';
@@ -283,7 +283,7 @@ function MemberEquipmentSummary({ member, position, catalog }) {
   </div>;
 }
 
-function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, onChange, onRuneChange, errors, memberIndex, inventory, borrowableWeapons, ownWeaponClaimed }) {
+export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, onChange, onRuneChange, onRuneCommit, batchSourceRuneIndex, errors, memberIndex, inventory, borrowableWeapons, ownWeaponClaimed }) {
   const prefix = `members[${memberIndex}].equipment[${index}]`;
   const availableRunes = catalog.runeCategories.filter(category => runeSlots(category).includes(gear.slot));
   const levels = equipmentLevels(catalog, gear.rarity, gear.weaponKind).filter(level => level <= policy.characterLevel);
@@ -328,9 +328,9 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
     const level = gift?.level ?? 180;
     onChange({ ...gear, weaponKind: 'exclusive', weaponOwnerCharacterId: nextOwnerId, rarity, seriesId: RARITY_SERIES[rarity], level, reinforcementLevel: Math.min(Number(gear.reinforcementLevel) || 0, level) });
   }
-  function setRune(runeIndex, updates) {
+  function setRune(runeIndex, updates, kind = Object.hasOwn(updates, 'categoryId') ? 'category' : 'level') {
     const nextRune = { ...gear.runes[runeIndex], ...updates };
-    if (onRuneChange) onRuneChange(runeIndex, nextRune);
+    if (onRuneChange) onRuneChange(runeIndex, nextRune, kind);
     else onChange({ ...gear, runes: gear.runes.map((rune, i) => i === runeIndex ? nextRune : rune) });
   }
   return <section className={`equipment-card${gear.rarity === 'NONE' ? ' empty-equipment' : ''}`} aria-label={SLOT_NAMES[gear.slot]}>
@@ -384,16 +384,16 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
       </div>
       <div className="rune-section">
         <div className="rune-heading"><span>符石孔</span><span>{gear.slot <= 3 ? '攻击类' : '防御类'} · 同类不可重复</span></div>
-        <p className="rune-auto-note">首次新增会填入同列对应空孔，已有符石保留；库存允许时同步，后续独立调整。</p>
+        <p className="rune-auto-note">首次新增填入同列空孔，首次设置等级一起同步；离开等级框后独立调整，已有符石保留。</p>
         <div className="rune-holes">{gear.runes.map((rune, runeIndex) => {
-          const active = rune.level !== 0;
+          const active = rune.level !== 0 || batchSourceRuneIndex === runeIndex;
           const fixedLevel = active && isFixedCategory(rune.categoryId);
           const issue = errors.find(item => item.path.startsWith(`${prefix}.runes[${runeIndex}]`));
           return <div className="rune-column" key={runeIndex}>
             <div className="rune-row">
               <span className="rune-number">第 {runeIndex + 1} 孔</span>
               <select aria-label={`${SLOT_NAMES[gear.slot]}第${runeIndex + 1}孔符石类别`} value={active ? rune.categoryId : ''} onChange={event => {
-                if (event.target.value === '') { setRune(runeIndex, { level: 0 }); return; }
+                if (event.target.value === '') { setRune(runeIndex, { level: 0 }, 'category'); return; }
                 const categoryId = Number(event.target.value);
                 const availableTier = stockTiers.find(tier => inventory.some(item => item.categoryId === categoryId && item.level === tier.level && item.remaining > 0));
                 setRune(runeIndex, { categoryId, level: isFixedCategory(categoryId) ? availableTier?.level ?? stockTiers[0]?.level : rune.level > 0 ? rune.level : 1 });
@@ -409,14 +409,14 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
               </select>
               <span className="rune-level-label">等级</span>
               {fixedLevel
-                ? <select aria-label={`${SLOT_NAMES[gear.slot]}第${runeIndex + 1}孔固定符石等级`} className="fixed-rune-level" value={rune.level} onChange={event => setRune(runeIndex, { level: Number(event.target.value) })}>
+                ? <select aria-label={`${SLOT_NAMES[gear.slot]}第${runeIndex + 1}孔固定符石等级`} className="fixed-rune-level" value={rune.level} onChange={event => setRune(runeIndex, { level: Number(event.target.value) })} onBlur={() => onRuneCommit?.(runeIndex)}>
                   {!stockTiers.some(tier => tier.level === rune.level) && <option value={rune.level}>Lv.{rune.level} · 不可用</option>}
                   {stockTiers.map(tier => {
                     const stock = inventory.find(item => item.categoryId === rune.categoryId && item.level === tier.level);
                     return <option key={tier.level} value={tier.level} disabled={rune.level !== tier.level && stock?.remaining <= 0}>Lv.{tier.level}</option>;
                   })}
                 </select>
-                : <input aria-label={`${SLOT_NAMES[gear.slot]}第${runeIndex + 1}孔符石等级`} type="number" min="0" max={maximumRune} step="1" disabled={!active} value={active ? rune.level : ''} placeholder="—" onChange={event => setRune(runeIndex, { level: numeric(event.target.value) })} />}
+                : <input aria-label={`${SLOT_NAMES[gear.slot]}第${runeIndex + 1}孔符石等级`} type="number" min="0" max={maximumRune} step="1" disabled={!active} value={rune.level !== 0 ? rune.level : ''} placeholder="—" onChange={event => setRune(runeIndex, { level: numeric(event.target.value) })} onBlur={() => onRuneCommit?.(runeIndex)} onKeyDown={event => { if (event.key === 'Enter') event.currentTarget.blur(); }} />}
             </div>
             {fixedLevel && !stockTiers.some(tier => tier.level === rune.level) && <button className="rune-repair" onClick={() => setRune(runeIndex, { level: stockTiers[0].level })}>调整为 Lv.{stockTiers[0].level}</button>}
             {issue && <p className="input-error" role="alert">{issue.message}</p>}
@@ -595,6 +595,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   const [draftStatus, setDraftStatus] = useState('已保存在此浏览器');
   const [dropTarget, setDropTarget] = useState(null);
   const [rosterDropActive, setRosterDropActive] = useState(false);
+  const [runeBatch, setRuneBatch] = useState(null);
   const importInput = useRef(null);
   const editorRef = useRef(null);
   const draftBackupDone = useRef(!restoredDraft.needsBackup);
@@ -623,6 +624,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     (character.baseRarity == null || character.baseRarity === 8)
     && (element === 'all' || character.element === element)
     && `${character.name} ${character.subtitle ?? ''} ${character.variant ?? ''} ${character.aliases?.join?.(' ') ?? ''} ${aliases.get(character.id) ?? ''} ${character.id}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+  useEffect(() => { setRuneBatch(null); }, [selectedIndex, activePage]);
   useEffect(() => {
     try {
       if (!draftBackupDone.current && restoredDraft.originalRaw) {
@@ -636,7 +638,8 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       setDraftStatus(draftBackupDone.current ? '浏览器无法保存草稿，请及时导出' : '原草稿无法备份，已暂停自动保存');
     }
   }, [team, catalog.version, restoredDraft]);
-  function changeTeam(update) {
+  function changeTeam(update, { keepRuneBatch = false } = {}) {
+    if (!keepRuneBatch) setRuneBatch(null);
     setNotice(null);
     setTeam(current => typeof update === 'function' ? update(current) : update);
   }
@@ -690,12 +693,15 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   function updateEquipment(index, equipment) {
     changeTeam(current => ({ ...current, members: current.members.map((member, i) => i === selectedIndex ? { ...member, equipment: member.equipment.map((gear, j) => j === index ? equipment : gear) } : member) }));
   }
-  function updateRune(slot, runeIndex, nextRune) {
-    const gear = selectedMember.equipment.find(item => item.slot === slot);
-    if (gear.runes[runeIndex].level === 0 && nextRune.level > 0) {
-      try { changeTeam(fillColumnEmptyRunes(team, selectedIndex, slot, runeIndex, nextRune, catalog, policy)); }
-      catch (error) { setNotice({ kind: 'error', text: error.message }); }
-    } else updateEquipment(slot - 1, { ...gear, runes: gear.runes.map((rune, index) => index === runeIndex ? nextRune : rune) });
+  function updateRune(slot, runeIndex, nextRune, kind) {
+    try {
+      const result = updateColumnRune(team, selectedIndex, slot, runeIndex, nextRune, catalog, policy, { batch: runeBatch, kind });
+      setRuneBatch(result.batch);
+      changeTeam(result.team, { keepRuneBatch: true });
+    } catch (error) { setNotice({ kind: 'error', text: error.message }); }
+  }
+  function finishRuneBatch(slot, runeIndex) {
+    if (runeBatch?.memberIndex === selectedIndex && runeBatch.slot === slot && runeBatch.runeIndex === runeIndex) setRuneBatch(null);
   }
   function chooseEquipmentPreset(presetId) {
     try {
@@ -788,7 +794,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
             <p className="equipment-default-note">新装备默认魔装 40，可按实际配置调整。</p>
             {(freeCharacters.has(selectedCharacter.id) || freeLibrary?.exclusiveWeapons?.some(item => item.characterId === selectedCharacter.id)) && <p className="free-library-note">免费库：{freeCharacters.has(selectedCharacter.id) ? `角色本体免费至 ${freeCharacters.get(selectedCharacter.id).rarity}` : ''}{freeLibrary?.exclusiveWeapons?.filter(item => item.characterId === selectedCharacter.id).map(item => `${freeCharacters.has(selectedCharacter.id) ? '；' : ''}${item.level} 级 ${item.rarity} 专武免费`).join('')}。更高配置按差额计价。</p>}
             {policy.runes?.fixedStock && <p className="fixed-stock-note">普通符石：每类 {fixedRuneCaption(policy)}，整队共享。穿透与速度可自由调整等级。</p>}
-            <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} onRuneChange={(runeIndex, nextRune) => updateRune(slot, runeIndex, nextRune)} />)}</div>
+            <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} onRuneChange={(runeIndex, nextRune, kind) => updateRune(slot, runeIndex, nextRune, kind)} onRuneCommit={runeIndex => finishRuneBatch(slot, runeIndex)} batchSourceRuneIndex={runeBatch?.memberIndex === selectedIndex && runeBatch.slot === slot ? runeBatch.runeIndex : null} />)}</div>
           </> : <div className="empty-detail"><div className="empty-detail-mark"><Icon name="gear" size={23} /></div><h2>从一名角色开始</h2><p>将角色头像拖入队伍位置，设定稀有度与六部位装备。<br />受「{curseName}」影响，全队等级固定为{policy.characterLevel}级。</p></div>}
           </div>}
         </section>
