@@ -1,7 +1,7 @@
 {
-  "id": "owner-450-v5",
-  "version": 5,
-  "ruleSetId": "mementomori-investment-equivalent-v5",
+  "id": "owner-450-v6",
+  "version": 6,
+  "ruleSetId": "mementomori-investment-equivalent-v6",
   "title": "诅咒·时之枷锁配队预算规则",
   "characterLevel": 450,
   "baseline": {
@@ -14,19 +14,31 @@
       "name": "诅咒·时之枷锁",
       "fixedCharacterLevel": 450
     },
-    "arcanaMode": "pendingAutomatic",
+    "arcanaMode": "ownedRarity",
     "playerLevelMode": "ownerConfigured",
-    "description": "诅咒·时之枷锁：所有角色等级固定为450级；秘仪加成将在后续自动计算，玩家等级加成由构建方采用统一基准。"
+    "description": "诅咒·时之枷锁：所有角色等级固定为450级；秘仪按持有角色稀有度自动解锁，战斗属性接入与玩家等级加成由构建方后续处理。"
   },
   "allowanceScope": "wholeTeam",
   "allowances": {
     "runeTickets": 100000,
-    "reinforcementMedicine": 100000,
+    "reinforcementMedicine": 60000,
     "holySteel": 3500,
     "ssrFragments": 0,
     "urLrFragments": 0,
     "exclusiveFragments": 0,
     "lifeTreeDew": 0
+  },
+  "blessings": [
+    {
+      "id": "crimson-grace",
+      "name": "赐福·绯红恩泽",
+      "resource": "reinforcementMedicine",
+      "amount": 40000
+    }
+  ],
+  "arcana": {
+    "mode": "ownedRarity",
+    "purchaseRarity": "LR"
   },
   "unitPrices": {
     "characterCopy": 12000,
@@ -104,9 +116,11 @@
     "sacredTreasureLevel": 40
   },
   "notes": [
-    "诅咒·时之枷锁使所有角色等级固定为450级；秘仪加成将在后续自动计算。",
+    "诅咒·时之枷锁使所有角色等级固定为450级；秘仪按实际持有LR／LR5角色自动解锁，展示已解锁加成，实际战斗属性后续由5830接入。",
     "每个角色本体单价为12000钻，按稀有度所需累计本体数扣除免费库后计价；装备费用不受本体单价调整影响。",
     "免费额度由管理员按450级基准设定，属于整支配队，不是每名角色。",
+    "红水免费额度由基础60000与赐福·绯红恩泽40000组成，合计100000；仅超出合计免费额度的部分按每个10钻计费。",
+    "秘仪仅开放补齐LR角色的购买，多个秘仪和配队共用同一角色，只按最高所需稀有度收费一次；常驻免费角色及R角色免费LR自然计入解锁条件，含0号占位的未开放秘仪不可购买。",
     "圣装钢以一级圣装经验等价计量：3500份免费，超额每份100钻；此为构筑预算规则，不是历史实际花费。",
     "魔装仅记录累计经验，不计费；金币、普通强化水、精炼钢和打磨资源不纳入首版预算。",
     "穿透、速度符石折算饼干。其它类别不开放购买，每类整队免费提供3颗11级和3颗10级符石；两种等级库存独立，不可合并、超库存或改变等级。",

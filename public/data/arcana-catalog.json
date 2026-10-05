@@ -1,0 +1,5485 @@
+{
+  "format": "mementomori-lr-arcana-catalog",
+  "schemaVersion": 1,
+  "version": 1,
+  "snapshotDate": "2026-10-05",
+  "source": {
+    "kind": "gameMasterSnapshot",
+    "sha256": {
+      "CharacterCollectionMB": "fffe14e12c0d06e005fdd19dab89fc27249d29572b5cfccc52e034c8756efbbe",
+      "CharacterCollectionLevelMB": "90d035bea13488b7b8c659e922796ffe4b2aae67415d184954d6baa1ee2fcb33",
+      "CharacterMB": "93ccc0cd175a340ebad0f63f5988371baad54dbf51e212c08d90114c957f3076",
+      "TextResourceZhCnMB": "4b7405653e54d2972571663684798594251b956d3594c04caf31706e067ebde3"
+    }
+  },
+  "purchaseRarity": "LR",
+  "permanentCharacterIds": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    20,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    41,
+    46
+  ],
+  "supportCharacters": [
+    {
+      "id": 2,
+      "name": "伊利亚",
+      "element": "blue",
+      "job": 1,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/2.png"
+    },
+    {
+      "id": 3,
+      "name": "艾莉丝",
+      "element": "blue",
+      "job": 1,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/3.png"
+    },
+    {
+      "id": 4,
+      "name": "洛基",
+      "element": "blue",
+      "job": 2,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/4.png"
+    },
+    {
+      "id": 12,
+      "name": "阿丽安萝德",
+      "element": "red",
+      "job": 1,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/12.png"
+    },
+    {
+      "id": 13,
+      "name": "狄奥多拉",
+      "element": "red",
+      "job": 4,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/13.png"
+    },
+    {
+      "id": 14,
+      "name": "佩特拉",
+      "element": "red",
+      "job": 2,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/14.png"
+    },
+    {
+      "id": 22,
+      "name": "萨拉",
+      "element": "green",
+      "job": 1,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/22.png"
+    },
+    {
+      "id": 23,
+      "name": "罗莎莉",
+      "element": "green",
+      "job": 4,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/23.png"
+    },
+    {
+      "id": 24,
+      "name": "莉布拉",
+      "element": "green",
+      "job": 2,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/24.png"
+    },
+    {
+      "id": 32,
+      "name": "诗寇蒂",
+      "element": "yellow",
+      "job": 4,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/32.png"
+    },
+    {
+      "id": 33,
+      "name": "切尔娜",
+      "element": "yellow",
+      "job": 4,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/33.png"
+    },
+    {
+      "id": 34,
+      "name": "索缇莉亚",
+      "element": "yellow",
+      "job": 4,
+      "baseRarity": 2,
+      "freeRarity": "LR",
+      "portrait": "./assets/arcana-characters/34.png"
+    }
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "name": "金牛座的守护",
+      "characterIds": [
+        6,
+        10
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 2,
+      "name": "天猫座的圆舞曲",
+      "characterIds": [
+        35,
+        37
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "percent",
+          "displayValue": "+15%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "percent",
+          "displayValue": "+15%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 3,
+      "name": "双子座的庇翼",
+      "characterIds": [
+        16,
+        18,
+        20
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 4,
+      "name": "大熊座的心之眼",
+      "characterIds": [
+        26,
+        27,
+        29
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 5,
+      "name": "独角兽座的咆哮",
+      "characterIds": [
+        15,
+        17,
+        25,
+        28
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 1,
+          "value": 5000,
+          "unit": "flat",
+          "displayValue": "+5,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "percent",
+          "displayValue": "+15%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 1,
+          "value": 5000,
+          "unit": "flat",
+          "displayValue": "+5,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "percent",
+          "displayValue": "+15%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 6,
+      "name": "仙女座的战剑",
+      "characterIds": [
+        36,
+        38,
+        39,
+        41
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 7,
+      "name": "天鹅座的宝石",
+      "characterIds": [
+        5,
+        7,
+        8,
+        46
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 8,
+      "name": "阿缇密斯的誓约",
+      "characterIds": [
+        49,
+        6,
+        8
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 9,
+      "name": "双鱼座的怜惜",
+      "characterIds": [
+        53,
+        35,
+        28
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "percent",
+          "displayValue": "+15%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "percent",
+          "displayValue": "+15%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 10,
+      "name": "十字架三的拥抱",
+      "characterIds": [
+        42,
+        38
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 11,
+      "name": "巨蛇座的依恋",
+      "characterIds": [
+        55,
+        17,
+        25
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 160,
+          "unit": "percent",
+          "displayValue": "+1.6%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 160,
+          "unit": "percent",
+          "displayValue": "+1.6%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 12,
+      "name": "大犬座的长啸",
+      "characterIds": [
+        54,
+        7,
+        10
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 13,
+      "name": "孤独者的烈火",
+      "characterIds": [
+        19,
+        16,
+        41
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 14,
+      "name": "水瓶座的流星",
+      "characterIds": [
+        44,
+        39
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 14,
+          "name": "物魔防御穿透",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 14,
+          "name": "物魔防御穿透",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 15,
+      "name": "乌鸦座的叹息",
+      "characterIds": [
+        52,
+        36
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 16,
+      "name": "斩魔者的勇猛",
+      "characterIds": [
+        30,
+        18
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 17,
+      "name": "御夫座的智慧",
+      "characterIds": [
+        58,
+        29
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 18,
+      "name": "阿芙萝黛蒂的亲情",
+      "characterIds": [
+        47,
+        5
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 19,
+      "name": "猫座的洞察",
+      "characterIds": [
+        67,
+        20
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 20,
+      "name": "海豚座的蓝旗",
+      "characterIds": [
+        70,
+        15
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 21,
+      "name": "飞鱼座的镇魂",
+      "characterIds": [
+        71,
+        10
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 22,
+      "name": "忆神星的契约",
+      "characterIds": [
+        40,
+        16,
+        26
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 23,
+      "name": "射手座的逆光​",
+      "characterIds": [
+        60,
+        6
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 17,
+          "name": "反弹",
+          "changeType": 1,
+          "value": 300,
+          "unit": "percent",
+          "displayValue": "+3%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 17,
+          "name": "反弹",
+          "changeType": 1,
+          "value": 310,
+          "unit": "percent",
+          "displayValue": "+3.1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 24,
+      "name": "剑鱼座的一击",
+      "characterIds": [
+        72,
+        27
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 25,
+      "name": "猎户座的击锤",
+      "characterIds": [
+        50,
+        37
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 26,
+      "name": "小白犬的双牙",
+      "characterIds": [
+        9,
+        5
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 27,
+      "name": "望远镜座的星光",
+      "characterIds": [
+        57,
+        26,
+        46
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 28,
+      "name": "北冕座的约定",
+      "characterIds": [
+        62,
+        18
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 29,
+      "name": "牧夫座的圣光",
+      "characterIds": [
+        45,
+        41,
+        46
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 30,
+      "name": "圆规座的教导",
+      "characterIds": [
+        51,
+        38
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 31,
+      "name": "南船座的腐败",
+      "characterIds": [
+        61,
+        45
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 200,
+          "unit": "flat",
+          "displayValue": "+200",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 205,
+          "unit": "flat",
+          "displayValue": "+205",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 32,
+      "name": "蝘蜓座的压制",
+      "characterIds": [
+        68,
+        20
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 33,
+      "name": "小犬座的相思",
+      "characterIds": [
+        43,
+        7
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 34,
+      "name": "后发座的情路",
+      "characterIds": [
+        73,
+        17
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 35,
+      "name": "时钟座的奇迹",
+      "characterIds": [
+        74,
+        36
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 36,
+      "name": "小熊座的真心",
+      "characterIds": [
+        48,
+        29
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 37,
+      "name": "罗盘座的激情",
+      "characterIds": [
+        66,
+        25
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 38,
+      "name": "网罟座的秘术",
+      "characterIds": [
+        64,
+        35,
+        37
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 39,
+      "name": "蛇夫座的双武",
+      "characterIds": [
+        56,
+        27
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 40,
+      "name": "吉鲁萨尼亚的玲珑",
+      "characterIds": [
+        84,
+        8
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 14,
+          "name": "物魔防御穿透",
+          "changeType": 1,
+          "value": 250,
+          "unit": "percent",
+          "displayValue": "+2.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 14,
+          "name": "物魔防御穿透",
+          "changeType": 1,
+          "value": 250,
+          "unit": "percent",
+          "displayValue": "+2.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 41,
+      "name": "乔巴里的希望",
+      "characterIds": [
+        85,
+        28
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 17,
+          "name": "反弹",
+          "changeType": 1,
+          "value": 300,
+          "unit": "percent",
+          "displayValue": "+3%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 17,
+          "name": "反弹",
+          "changeType": 1,
+          "value": 310,
+          "unit": "percent",
+          "displayValue": "+3.1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 42,
+      "name": "处女座的献身",
+      "characterIds": [
+        76,
+        39
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 43,
+      "name": "摩羯座的弹孔",
+      "characterIds": [
+        59,
+        20
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 44,
+      "name": "苍蝇座的解放",
+      "characterIds": [
+        63,
+        46
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 45,
+      "name": "波江座的神谕",
+      "characterIds": [
+        75,
+        15
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 46,
+      "name": "船底座的初恋",
+      "characterIds": [
+        88,
+        16
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 47,
+      "name": "飞鼠座的秘传",
+      "characterIds": [
+        78,
+        5
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 1,
+          "value": 1500,
+          "unit": "flat",
+          "displayValue": "+1,500",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 48,
+      "name": "猎犬座的忠诚",
+      "characterIds": [
+        82,
+        30
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 49,
+      "name": "天燕座的报应",
+      "characterIds": [
+        77,
+        25
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 50,
+      "name": "王笏座的威势",
+      "characterIds": [
+        69,
+        17
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 51,
+      "name": "小王子的冒险",
+      "characterIds": [
+        95,
+        28
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 52,
+      "name": "百合花座的誓剑",
+      "characterIds": [
+        96,
+        6
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 200,
+          "unit": "flat",
+          "displayValue": "+200",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 200,
+          "unit": "flat",
+          "displayValue": "+200",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 53,
+      "name": "巨爵座的庆宴",
+      "characterIds": [
+        80,
+        37
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 54,
+      "name": "天琴座的旋律",
+      "characterIds": [
+        65,
+        39
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 300,
+          "unit": "percent",
+          "displayValue": "+3%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 300,
+          "unit": "percent",
+          "displayValue": "+3%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 55,
+      "name": "矩尺座的分析",
+      "characterIds": [
+        79,
+        29
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 56,
+      "name": "狐狸座的恶作剧",
+      "characterIds": [
+        81,
+        35
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 57,
+      "name": "显微镜座的探求",
+      "characterIds": [
+        86,
+        26
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 58,
+      "name": "串绳星的绽放",
+      "characterIds": [
+        2,
+        12,
+        22,
+        32
+      ],
+      "published": true,
+      "lrBonuses": [],
+      "lr5Bonuses": null,
+      "lr5RarityBonus": 0,
+      "unavailableReason": ""
+    },
+    {
+      "id": 59,
+      "name": "船帆座的繁花",
+      "characterIds": [
+        105,
+        41
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 60,
+      "name": "天兔座的探知",
+      "characterIds": [
+        106,
+        36
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 61,
+      "name": "南船座的觉悟",
+      "characterIds": [
+        61,
+        2
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 62,
+      "name": "波吕克斯的亲爱",
+      "characterIds": [
+        107,
+        5
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 63,
+      "name": "卡斯托尔的亲爱",
+      "characterIds": [
+        108,
+        46
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 64,
+      "name": "六分仪座的指南",
+      "characterIds": [
+        109,
+        2
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 65,
+      "name": "巨人星的审判",
+      "characterIds": [
+        93,
+        75
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 300,
+          "unit": "percent",
+          "displayValue": "+3%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 300,
+          "unit": "percent",
+          "displayValue": "+3%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 66,
+      "name": "十字架二的未来",
+      "characterIds": [
+        111,
+        113
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 67,
+      "name": "天鹤座的白山茶",
+      "characterIds": [
+        112,
+        56
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 68,
+      "name": "三角座的距离",
+      "characterIds": [
+        114,
+        89,
+        87
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 17,
+          "name": "反弹",
+          "changeType": 1,
+          "value": 300,
+          "unit": "percent",
+          "displayValue": "+3%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 17,
+          "name": "反弹",
+          "changeType": 1,
+          "value": 300,
+          "unit": "percent",
+          "displayValue": "+3%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 69,
+      "name": "天炉座的勇气",
+      "characterIds": [
+        115,
+        26
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 3,
+          "value": 15,
+          "unit": "perLevel",
+          "displayValue": "+15 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 70,
+      "name": "八分仪座的余火",
+      "characterIds": [
+        116,
+        48
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 100,
+          "unit": "percent",
+          "displayValue": "+1%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 71,
+      "name": "腰带星的绽放",
+      "characterIds": [
+        3,
+        13,
+        23,
+        33
+      ],
+      "published": true,
+      "lrBonuses": [],
+      "lr5Bonuses": null,
+      "lr5RarityBonus": 0,
+      "unavailableReason": ""
+    },
+    {
+      "id": 72,
+      "name": "北极星的爱情",
+      "characterIds": [
+        117,
+        48,
+        29
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 200,
+          "unit": "flat",
+          "displayValue": "+200",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 200,
+          "unit": "flat",
+          "displayValue": "+200",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 73,
+      "name": "雀蜂座的使命",
+      "characterIds": [
+        100,
+        30
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 74,
+      "name": "古拉的花田",
+      "characterIds": [
+        121,
+        88
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 75,
+      "name": "旗鱼座的同台",
+      "characterIds": [
+        122,
+        72
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 15,
+          "name": "弱化效果命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 76,
+      "name": "剑鱼座的桂冠",
+      "characterIds": [
+        123,
+        27
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 9,
+          "name": "暴击伤害提升",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 77,
+      "name": "仙后座的同盟",
+      "characterIds": [
+        124,
+        126
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 78,
+      "name": "鹿豹座的虚像",
+      "characterIds": [
+        125,
+        109
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 79,
+      "name": "天鸽座的书信",
+      "characterIds": [
+        102,
+        40
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 81,
+      "name": "豺狼座的宝物",
+      "characterIds": [
+        83,
+        7
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 82,
+      "name": "小犬座的宝物",
+      "characterIds": [
+        129,
+        43
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 14,
+          "name": "物魔防御穿透",
+          "changeType": 1,
+          "value": 250,
+          "unit": "percent",
+          "displayValue": "+2.5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 14,
+          "name": "物魔防御穿透",
+          "changeType": 1,
+          "value": 250,
+          "unit": "percent",
+          "displayValue": "+2.5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 83,
+      "name": "印第安座的知己",
+      "characterIds": [
+        130,
+        128
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 84,
+      "name": "反射望远镜座的树影",
+      "characterIds": [
+        131,
+        132
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 200,
+          "unit": "flat",
+          "displayValue": "+200",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 200,
+          "unit": "flat",
+          "displayValue": "+200",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 85,
+      "name": "望远镜座的星辉",
+      "characterIds": [
+        132,
+        57
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 86,
+      "name": "蜜蜂座的依恋",
+      "characterIds": [
+        101,
+        100
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 1,
+          "value": 3000,
+          "unit": "flat",
+          "displayValue": "+3,000",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 87,
+      "name": "河尾星的神童",
+      "characterIds": [
+        135,
+        93,
+        75
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 18,
+          "name": "吸血",
+          "changeType": 1,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 7,
+          "name": "暴击",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 88,
+      "name": "金粟星的绽放",
+      "characterIds": [
+        4,
+        14,
+        24,
+        34
+      ],
+      "published": true,
+      "lrBonuses": [],
+      "lr5Bonuses": null,
+      "lr5RarityBonus": 0,
+      "unavailableReason": ""
+    },
+    {
+      "id": 89,
+      "name": "蝎虎座的试炼",
+      "characterIds": [
+        103,
+        43
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 8,
+          "name": "暴击抗性",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 90,
+      "name": "蜘蛛座的噩梦",
+      "characterIds": [
+        137,
+        125
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 11,
+          "name": "魔法暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 91,
+      "name": "玫瑰座的棘刺",
+      "characterIds": [
+        99,
+        25
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 3,
+          "name": "物理防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 92,
+      "name": "公鸡座的奇巧",
+      "characterIds": [
+        139,
+        106
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 3,
+          "name": "魔力",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 93,
+      "name": "射手座的光源",
+      "characterIds": [
+        134,
+        60
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 94,
+      "name": "马膝星的投影",
+      "characterIds": [
+        141,
+        134
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 14,
+          "name": "物魔防御穿透",
+          "changeType": 1,
+          "value": 250,
+          "unit": "percent",
+          "displayValue": "+2.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 14,
+          "name": "物魔防御穿透",
+          "changeType": 1,
+          "value": 250,
+          "unit": "percent",
+          "displayValue": "+2.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 95,
+      "name": "爱因斯坦座的真理",
+      "characterIds": [
+        92,
+        90
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 1,
+          "name": "生命",
+          "changeType": 2,
+          "value": 500,
+          "unit": "percent",
+          "displayValue": "+5%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 16,
+          "name": "弱化效果抗性",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 96,
+      "name": "河端星的还魂",
+      "characterIds": [
+        148,
+        140
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 250,
+          "unit": "flat",
+          "displayValue": "+250",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 12,
+          "name": "防御穿透",
+          "changeType": 1,
+          "value": 250,
+          "unit": "flat",
+          "displayValue": "+250",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 2,
+          "value": 150,
+          "unit": "percent",
+          "displayValue": "+1.5%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 97,
+      "name": "画眉座的歌声",
+      "characterIds": [
+        149,
+        72
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 2,
+          "name": "战技",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 4,
+          "name": "魔法防御",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 98,
+      "name": "家犬的尾巴",
+      "characterIds": [
+        153,
+        54,
+        10
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 10,
+          "name": "物理暴击伤害减免",
+          "changeType": 1,
+          "value": 1000,
+          "unit": "percent",
+          "displayValue": "+10%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 6,
+          "name": "闪避",
+          "changeType": 3,
+          "value": 50,
+          "unit": "perLevel",
+          "displayValue": "+50 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 99,
+      "name": "南十字座的约誓",
+      "characterIds": [
+        150,
+        151
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 4,
+          "name": "耐力",
+          "changeType": 3,
+          "value": 30,
+          "unit": "perLevel",
+          "displayValue": "+30 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 100,
+      "name": "杜鹃座的飞翔",
+      "characterIds": [
+        97,
+        103
+      ],
+      "published": true,
+      "lrBonuses": [
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "battle",
+          "type": 13,
+          "name": "防御力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 5,
+          "name": "命中",
+          "changeType": 3,
+          "value": 70,
+          "unit": "perLevel",
+          "displayValue": "+70 × 角色等级",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": ""
+    },
+    {
+      "id": 101,
+      "name": "巨人星的圣剑",
+      "characterIds": [
+        154,
+        0
+      ],
+      "published": false,
+      "lrBonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5Bonuses": [
+        {
+          "kind": "base",
+          "type": 1,
+          "name": "力量",
+          "changeType": 3,
+          "value": 40,
+          "unit": "perLevel",
+          "displayValue": "+40 × 角色等级",
+          "scope": "allCharacters"
+        },
+        {
+          "kind": "battle",
+          "type": 2,
+          "name": "攻击力",
+          "changeType": 2,
+          "value": 200,
+          "unit": "percent",
+          "displayValue": "+2%",
+          "scope": "allCharacters"
+        }
+      ],
+      "lr5RarityBonus": 1,
+      "unavailableReason": "该秘仪尚未开放"
+    }
+  ]
+}

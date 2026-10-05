@@ -9,8 +9,9 @@ Promise.all([
   fetch(`${base}data/pricing-policy.json`).then(r => { if (!r.ok) throw Error('计价规则加载失败'); return r.json(); }),
   fetch(`${base}data/free-library.json`).then(r => { if (!r.ok) throw Error('免费库加载失败'); return r.json(); }),
   fetch(`${base}data/name-aliases.json`).then(r => { if (!r.ok) throw Error('名称简写库加载失败'); return r.json(); }),
-]).then(([catalog, policy, freeLibrary, nameAliases]) => {
-  createRoot(document.getElementById('root')).render(<React.StrictMode><App catalog={catalog} policy={policy} freeLibrary={freeLibrary} nameAliases={nameAliases} /></React.StrictMode>);
+  fetch(`${base}data/arcana-catalog.json`, {cache:'no-cache'}).then(r => { if (!r.ok) throw Error('秘仪目录加载失败'); return r.json(); }),
+]).then(([catalog, policy, freeLibrary, nameAliases, arcana]) => {
+  createRoot(document.getElementById('root')).render(<React.StrictMode><App catalog={{...catalog, arcana}} policy={policy} freeLibrary={freeLibrary} nameAliases={nameAliases} /></React.StrictMode>);
 }).catch(error => {
   document.getElementById('root').textContent = `加载失败：${error.message}。请刷新后重试。`;
 });

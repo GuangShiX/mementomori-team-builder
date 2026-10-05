@@ -2,6 +2,7 @@ import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   createTeam, createMember, selectEquipmentRarity, calculateTeam, validateTeam,
   createExport, parseImport, cloneTeam, migrateLegacyWeaponConfiguration, getBorrowableWeapons, isWeaponOwnerClaimed, EQUIPMENT_SLOTS, RESOURCE_KEYS,
+  getArcanaState, setArcanaPurchased, getArcanaRequiredRarity, getResourceAllowance,
 } from './domain.mjs';
 import { placeRosterCharacter, swapTeamPositions } from './team-interactions.mjs';
 import teamSeat from './assets/team-seat.svg';
@@ -45,13 +46,21 @@ function restoreDraft(catalog, policy, freeLibrary) {
     const knownCharacters = new Map(catalog.characters.map(character => [character.id, character]));
     const seen = new Set();
     const sourceSeen = new Set();
+    const knownArcana = new Set((catalog.arcana?.groups ?? []).filter(group => group.published !== false).map(group => group.id));
+    const purchasedArcanaIds = [];
     let repaired = previous.members.length !== 5 || previous.level !== policy.characterLevel;
+    if (previous.purchasedArcanaIds != null && !Array.isArray(previous.purchasedArcanaIds)) repaired = true;
+    for (const id of Array.isArray(previous.purchasedArcanaIds) ? previous.purchasedArcanaIds : []) {
+      if (!Number.isSafeInteger(id) || !knownArcana.has(id) || purchasedArcanaIds.includes(id)) { repaired = true; continue; }
+      purchasedArcanaIds.push(id);
+    }
     const readableNumber = (value, fallback) => typeof value === 'number' || value === '' ? value : fallback;
     let recovered = {
       ...empty,
       name: typeof previous.name === 'string' ? previous.name : empty.name,
       author: typeof previous.author === 'string' ? previous.author : '',
       notes: typeof previous.notes === 'string' ? previous.notes : '',
+      purchasedArcanaIds,
       members: empty.members.map((_, index) => {
         const source = previous.members[index];
         if (!source) return null;
@@ -92,6 +101,11 @@ function restoreDraft(catalog, policy, freeLibrary) {
         return [{ characterId: source.characterId, characterRarity: source.characterRarity, rarity: source.rarity, level: readableNumber(source.level, 300) }];
       }),
     };
+    for (const id of purchasedArcanaIds) {
+      const purchased = setArcanaPurchased(recovered, id, true, catalog, policy, freeLibrary);
+      if (purchased.members.some((member, index) => member?.rarity !== recovered.members[index]?.rarity)) repaired = true;
+      recovered = purchased;
+    }
     for (const source of recovered.weaponSources) {
       const actor = recovered.members.find(member => member?.characterId === source.characterId);
       if (actor && source.characterRarity !== actor.rarity) { source.characterRarity = actor.rarity; repaired = true; }
@@ -212,13 +226,26 @@ function equipmentLevels(catalog, rarity, weaponKind) {
 }
 
 function EquipmentArt({ gear, member, catalog, rarity = gear.rarity }) {
+  const shadowId = `equipment-shadow-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const character = catalog.characters.find(item => item.id === member.characterId);
   const owner = catalog.characters.find(item => item.id === (gear.weaponOwnerCharacterId ?? member.characterId));
   const source = gear.slot === 1 && gear.weaponKind === 'exclusive'
     ? owner?.exclusiveWeaponIcon
     : catalog.iconArt?.equipmentIcons?.[character?.job]?.[rarity]?.[gear.slot];
+  const composition = catalog.iconArt?.equipmentComposition;
+  const hasHoly = gear.legendSacredTreasureLevel > 0;
+  const hasDark = gear.matchlessSacredTreasureLevel > 0;
+  const plateKind = hasHoly ? hasDark ? 'both' : 'holy' : hasDark ? 'dark' : 'normal';
+  const palette = composition?.plate.palettes[plateKind];
+  const rectStyle = rect => ({ left: `${rect.x / composition.canvasSize * 100}%`, top: `${rect.y / composition.canvasSize * 100}%`, width: `${rect.width / composition.canvasSize * 100}%`, height: `${rect.height / composition.canvasSize * 100}%` });
+  const lightGradient = light => `radial-gradient(circle at ${light.cx * 100}% ${light.cy * 100}%, color-mix(in srgb, ${light.color} ${light.opacity * 100}%, transparent), transparent ${light.radius * 100}%)`;
+  const plateStyle = composition && palette ? { ...rectStyle(composition.plate), borderRadius: `${composition.plate.radius / composition.plate.width * 100}%`, backgroundImage: [lightGradient(composition.plate.light), lightGradient(composition.plate.glow), `linear-gradient(180deg,${palette.colors[0]},${palette.colors[1]} ${palette.middleOffset * 100}%,${palette.colors[2]})`].join(',') } : undefined;
+  const shadows = Object.entries(composition?.foreground.shadow ?? {});
+  const foregroundStyle = composition ? { ...rectStyle(composition.foreground), objectFit: composition.foreground.fit, ...(shadows.length ? { filter: `url(#${shadowId})` } : {}) } : undefined;
   return <span className="equipment-art" data-rarity={rarity}>
-    {source ? <img className="equipment-art-image" src={source} alt="" loading="lazy" draggable={false} /> : <span className="equipment-art-fallback" aria-hidden="true">{rarity}</span>}
+    {shadows.length > 0 && <svg className="icon-filter-defs" width="0" height="0" aria-hidden="true"><defs><filter id={shadowId} x="-20%" y="-20%" width="140%" height="160%" primitiveUnits="objectBoundingBox" colorInterpolationFilters="sRGB">{shadows.map(([name, shadow]) => <feDropShadow key={name} in="SourceGraphic" dx={shadow.dx / composition.foreground.width} dy={shadow.dy / composition.foreground.height} stdDeviation={shadow.blur / composition.foreground.width} floodColor={shadow.color} floodOpacity={shadow.opacity} result={`shadow-${name}`} />)}<feMerge>{shadows.map(([name]) => <feMergeNode key={name} in={`shadow-${name}`} />)}<feMergeNode in="SourceGraphic" /></feMerge></filter></defs></svg>}
+    {plateStyle && <span className="equipment-art-plate" data-plate={plateKind} style={plateStyle} aria-hidden="true" />}
+    {source ? <img className="equipment-art-image" src={source} alt="" loading="lazy" draggable={false} style={foregroundStyle} /> : <span className="equipment-art-fallback" aria-hidden="true">{rarity}</span>}
     <GameIconFrame iconArt={catalog.iconArt} rarity={rarity} type="equipment" />
   </span>;
 }
@@ -376,7 +403,41 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
   </section>;
 }
 
-function CostSummary({ cost, errors, policy, catalog, canExport, onExport, memberCount, inventory }) {
+export function ArcanaEditor({ state, catalog, onPurchase }) {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const characters = new Map([...catalog.characters, ...(catalog.arcana?.supportCharacters ?? [])].map(character => [character.id, character]));
+  const ledger = new Map((state.ledger ?? []).map(item => [item.characterId, item]));
+  const groups = state.groups.filter(group => (filter === 'all' || filter === 'unlocked' && group.unlocked || filter === 'available' && !group.unlocked)
+    && `${group.name} ${group.characterIds.map(id => characterLabel(characters.get(id))).join(' ')}`.includes(search.trim()));
+  const held = (state.ledger ?? []).filter(item => ['LR', 'LR5'].includes(item.rarity));
+  const bonuses = state.bonusRows ?? state.lrBonuses;
+  const bonusValue = bonus => bonus.displayValue ?? `${bonus.value}${bonus.unit ?? ''}`;
+  const sourceNames = { team: '配队', arcana: '秘仪购买', freeLibrary: '免费库', permanent: '常驻免费' };
+  return <div className="arcana-page" id="arcana-page" role="tabpanel" aria-labelledby="arcana-tab">
+    {state.errors.length > 0 && <div className="notice error" role="alert">{state.errors.map((issue, index) => <p key={index}>{issue.message}</p>)}</div>}
+    <div className="arcana-intro"><h2>秘仪 · LR 档</h2><p>购买后获得全部关联角色的 LR 持有资格。配队与多个秘仪共享角色，同一角色按最高稀有度计费。</p><p>加成随关联角色实际持有档位自动解锁，购买只补齐 LR 档。卡片价格是当前补齐差额，不能直接相加；总费用请以右侧预算为准。</p></div>
+    <section className="arcana-bonus-summary" aria-label="秘仪加成汇总"><h3>当前秘仪加成汇总</h3><div className="arcana-bonus-list">{bonuses.length ? bonuses.map((bonus, index) => <span key={index}>{bonus.label}<strong>{bonusValue(bonus)}</strong></span>) : <p>当前尚无已解锁加成。</p>}</div><p>此处汇总构筑加成；5830 中的战斗属性接入将在后续完成。</p></section>
+    <details className="arcana-held"><summary>持有 LR 及以上角色 <span>{held.length} 位</span></summary><p>只读持有表。免费库、配队和秘仪合并计算，取消购买不会降低已配置队员的稀有度。</p><div>{held.map(item => <span key={item.characterId}><strong>{characterLabel(characters.get(item.characterId))}</strong><small>{item.rarity} · {(item.sourceKinds ?? []).map(source => sourceNames[source] ?? '共享持有').join('、')}</small></span>)}</div></details>
+    <div className="arcana-toolbar"><label className="search"><Icon name="search" size={14} /><input aria-label="搜索秘仪或关联角色" placeholder="搜索秘仪或关联角色" value={search} onChange={event => setSearch(event.target.value)} /></label><div className="filter-row" role="group" aria-label="秘仪状态筛选">{[['all', '全部'], ['unlocked', '已解锁'], ['available', '待补齐']].map(([id, label]) => <button key={id} className={`filter-button${filter === id ? ' active' : ''}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}</div></div>
+    <div className="arcana-groups">{groups.map(group => <section className={`arcana-card${group.unlocked ? ' unlocked' : ''}`} key={group.id} aria-label={group.name}>
+      <div className="arcana-card-header"><h3>{group.name}</h3><span>{group.published === false ? '未开放' : group.permanent && group.unlocked ? '常驻已解锁' : group.purchased ? '已购买' : group.unlocked ? '持有角色已满足' : '待补齐'}{group.unlocked && group.bonusTierLabel ? ` · ${group.bonusTierLabel}` : ''}</span></div>
+      <div className="arcana-members">{group.characterIds.map(id => {
+        const character = characters.get(id);
+        const owned = ledger.get(id);
+        const hasLR = ['LR', 'LR5'].includes(owned?.rarity);
+        if (!character) return <div className="arcana-member unpublished" key={id}><span className="arcana-unpublished-placeholder">未开放</span><small>暂不可获取</small></div>;
+        return <div className="arcana-member" key={id}><Portrait character={character} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={owned?.rarity ?? 'SR'} /><span title={characterLabel(character)}>{character?.name}</span><small>{hasLR ? `持有 ${owned.rarity}` : '购买获得 LR'}</small></div>;
+      })}</div>
+      <p className="arcana-bonus-tier">{group.unlocked ? `${group.bonusTierLabel} 档加成 · 已生效` : group.published === false ? 'LR 档加成 · 暂未开放' : 'LR 档加成 · 补齐后生效'}</p>
+      <div className="arcana-card-bonuses">{group.bonuses.map((bonus, index) => <span key={index}>{bonus.label}<strong>{bonusValue(bonus)}</strong></span>)}</div>
+      {group.missingCharacters.length > 0 && <p className="arcana-missing" title={group.missingCharacters.map(item => `${item.characterName} ${item.fromRarity ?? '未持有'} → LR：${amount(item.diamonds)} 钻`).join('；')}>补齐 {group.missingCharacters.length} 名角色的 LR</p>}
+      <div className="arcana-purchase"><strong>{group.published === false ? '尚未开放' : group.unlocked ? '已解锁' : `补齐 ${amount(group.currentPurchaseDiamonds)} 钻`}</strong>{group.purchased ? <button className="button" onClick={() => onPurchase(group.id, false)} aria-label={`取消购买${group.name}`}>取消购买</button> : <button className="button gold" disabled={group.published === false || group.unlocked} onClick={() => onPurchase(group.id, true)} aria-label={`购买${group.name}LR档`}>{group.published === false ? '暂不可购买' : group.permanent && group.unlocked ? '常驻已解锁' : group.unlocked ? '已解锁' : '购买 LR 档'}</button>}</div>
+    </section>)}{groups.length === 0 && <p className="no-results">没有找到符合条件的秘仪</p>}</div>
+  </div>;
+}
+
+function CostSummary({ cost, errors, policy, catalog, canExport, onExport, memberCount, inventory, arcanaState }) {
   const displayedResources = ['runeTickets', 'reinforcementMedicine', 'holySteel'];
   const steelRatio = policy.holySteelPerExperience || 1;
   const captionByResource = {
@@ -386,7 +447,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
   const resourceLabel = key => RESOURCE_NAMES[key] ?? key;
   const scaled = (key, value) => key === 'holySteel' ? value / steelRatio : value;
   const leafCosts = cost?.equipmentCosts?.filter(item => (item.resources?.lifeTreeDew ?? 0) > 0) ?? [];
-  const costKey = item => `${item.sourceKind ?? 'team'}-${item.sourceIndex ?? item.position}-${item.slot ?? 'weapon'}`;
+  const costKey = item => `${item.sourceKind ?? 'team'}-${item.characterId}-${item.sourceIndex ?? item.position}-${item.slot ?? 'weapon'}`;
   const catalogCharacter = id => catalog.characters.find(character => character.id === id);
   return <aside className="panel summary-panel" aria-label="资源与费用摘要">
     <div className="panel-header"><div className="panel-heading"><span className="section-index">03</span><h2>资源预算</h2></div><Icon name="sparkle" size={16} /></div>
@@ -400,12 +461,13 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
     <div className="resource-list">{displayedResources.map(key => {
       const resource = cost?.resources?.[key];
       const consumed = resource ? scaled(key, resource.consumed) : null;
-      const free = scaled(key, resource?.freeAllowance ?? policy.allowances?.[key] ?? 0);
+      const free = scaled(key, resource?.freeAllowance ?? getResourceAllowance(policy, key));
       const charged = resource ? scaled(key, resource.charged) : null;
       const ratio = consumed == null ? 0 : free > 0 ? Math.min(1, consumed / free) : consumed > 0 ? 1 : 0;
       return <div className="resource-item" key={key}>
         <div className="resource-item-top"><span>{resourceLabel(key)}</span><strong>{amount(consumed)}</strong></div>
         <div className="resource-caption"><span>{captionByResource[key]}</span><span>{amount(free)} 免费</span></div>
+        {(resource?.blessingAllowance ?? 0) > 0 && <p className="resource-blessing-breakdown">基础 {amount(scaled(key, resource.baseAllowance))} ＋ 赐福 {amount(scaled(key, resource.blessingAllowance))} ＝ {amount(free)}</p>}
         <div className={`resource-bar${charged > 0 ? ' exceeded' : ''}`}><span style={{ width: `${ratio * 100}%` }} /></div>
         {charged > 0 && <p className="resource-extra">超出 {amount(charged)} · +{amount(resource.diamonds)} 钻</p>}
       </div>;
@@ -422,6 +484,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       <div className="price-line"><span>角色本体</span><strong>{amount(cost?.characterDiamonds)} 钻</strong></div>
       <div className="price-line"><span>超额材料</span><strong>{amount(cost?.resourceDiamonds)} 钻</strong></div>
     </div>
+    {(cost?.characterCosts?.some(item => item.sourceKind === 'arcana') || arcanaState?.groups?.some(group => group.purchased)) && <p className="shared-ownership-note">配队与秘仪按角色最高持有稀有度合并，同一角色只计一次本体费用。</p>}
     {cost?.characterCosts?.some(item => item.freeDiamonds > 0) && <div className="free-credit-note">免费库已抵扣本体 {amount(cost.characterCosts.reduce((sum, item) => sum + (item.freeDiamonds ?? 0), 0))} 钻</div>}
     {cost?.exclusiveWeaponCosts?.length > 0 && <section className="weapon-costs" aria-label="专武造价">
       <div className="resource-section-title"><span>专武造价</span><span>已计入总额</span></div>
@@ -444,7 +507,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       })}
     </section>}
     <details className="price-details"><summary>查看费用细目与规则</summary><div className="cost-detail-content">
-      <dl>{cost?.characterCosts?.map(item => <React.Fragment key={costKey(item)}><dt>{item.characterName} · {item.rarity} · {item.copies} 本体{item.freeRarity ? `（免费至 ${item.freeRarity}）` : ''}</dt><dd>{amount(item.diamonds)} 钻</dd></React.Fragment>)}
+      <dl>{cost?.characterCosts?.map(item => <React.Fragment key={costKey(item)}><dt>{item.characterName} · {item.rarity} · {item.copies} 本体{item.freeRarity ? `（免费至 ${item.freeRarity}）` : ''}{item.sourceKind === 'arcana' ? ' · 秘仪持有' : ''}</dt><dd>{amount(item.diamonds)} 钻</dd></React.Fragment>)}
         {RESOURCE_KEYS.filter(key => key !== 'unidentifiedRune7').map(key => {
           const resource = cost?.resources?.[key];
           if (!resource || resource.consumed === 0) return null;
@@ -469,6 +532,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   const [selectedIndex, setSelectedIndex] = useState(() => team.members.findIndex(Boolean));
   const [search, setSearch] = useState('');
   const [element, setElement] = useState('all');
+  const [activePage, setActivePage] = useState('team');
   const [notice, setNotice] = useState(restoredDraft.notice);
   const [draftStatus, setDraftStatus] = useState('已保存在此浏览器');
   const [dropTarget, setDropTarget] = useState(null);
@@ -482,7 +546,9 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   const freeCharacters = useMemo(() => new Map((freeLibrary?.characters ?? []).map(item => [item.characterId, item])), [freeLibrary]);
   const selectedMember = team.members[selectedIndex];
   const selectedCharacter = selectedMember ? characters.get(selectedMember.characterId) : null;
+  const arcanaRequiresLR = Boolean(selectedMember && getArcanaRequiredRarity(team, selectedMember.characterId, catalog));
   const memberCount = team.members.filter(Boolean).length;
+  const arcanaState = useMemo(() => getArcanaState(team, catalog, policy, freeLibrary), [team, catalog, policy, freeLibrary]);
   const valuation = useMemo(() => {
     const validation = validateTeam(team, catalog, policy, { freeLibrary });
     if (!validation.valid) return { cost: null, errors: validation.errors };
@@ -517,9 +583,17 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   function applyPlacement(result) {
     changeTeam(result.team);
     setSelectedIndex(result.selectedIndex);
+    setActivePage('team');
   }
   function selectMember(index) {
     setSelectedIndex(index);
+    setActivePage('team');
+  }
+  function purchaseArcana(id, purchased) {
+    try {
+      changeTeam(setArcanaPurchased(team, id, purchased, catalog, policy, freeLibrary));
+      setNotice({ kind: 'success', text: purchased ? '已获得关联角色的 LR 持有资格，配队与秘仪费用已合并更新。' : '已取消秘仪购买，已配置队员的稀有度保留，费用已按当前持有重新计算。' });
+    } catch (error) { setNotice({ kind: 'error', text: error.message }); }
   }
   function startDrag(event, payload) {
     dragPayload.current = payload;
@@ -587,7 +661,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       <div className="topbar-right"><span className="local-note"><span className="status-dot" />{draftStatus}</span><button className="button" onClick={() => importInput.current?.click()}><Icon name="upload" size={14} />导入方案</button><button className="button primary" disabled={!canExport} onClick={exportTeam}><Icon name="download" size={14} />导出方案</button></div>
       <input ref={importInput} type="file" accept="application/json,.json" aria-label="导入配队 JSON 文件" onChange={importTeam} />
     </header>
-    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成</h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><span>秘仪加成将在后续自动计算</span></aside></div>
+    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成</h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><div className="intro-mechanisms"><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><span>秘仪加成随角色实际持有汇总</span></aside>{(policy.blessings ?? []).map(blessing => <aside className="intro-note blessing-note" aria-label="赐福机制" key={blessing.id}><strong>{blessing.name}</strong><p>额外免费 {amount(blessing.amount)} {RESOURCE_NAMES[blessing.resource]?.split(' · ')[0] ?? ''}</p><span>基础免费 {amount(policy.allowances?.[blessing.resource] ?? 0)} · 合计免费 {amount(getResourceAllowance(policy, blessing.resource))}</span></aside>)}</div></div>
     {notice && <div className={`notice ${notice.kind}`} role="status" style={{ marginBottom: 16 }}>{notice.text}</div>}
     <main className="workspace">
       <aside className="panel catalog-panel left-column" aria-label="选择角色">
@@ -612,7 +686,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
           <div className="panel-heading gear-panel-heading"><span className="section-index">02</span><h2>角色与装备</h2></div>
           <div className="character-workbench-header">
             <div className="character-overview">{selectedMember && selectedCharacter ? (
-            <div className="selected-character-header"><div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={selectedMember.rarity} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div><label className="rarity-control"><span className="field-label">角色稀有度</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => updateMember({ rarity: event.target.value })}><option value="SR">SR</option><option value="LR">LR</option><option value="LR5">LR5</option></select></label></div>
+            <div className="selected-character-header"><div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={selectedMember.rarity} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div><label className="rarity-control"><span className="field-label">角色稀有度</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => updateMember({ rarity: event.target.value })}><option value="SR" disabled={arcanaRequiresLR}>SR</option><option value="LR">LR</option><option value="LR5">LR5</option></select>{arcanaRequiresLR && <span className="arcana-rarity-note">已购秘仪至少需 LR</span>}</label></div>
             ) : <div className="character-overview-empty"><Icon name="gear" size={20} /><p>将角色拖入右侧队伍位置<br />即可编辑装备</p></div>}</div>
         <section className="team-panel" aria-label="当前五人配队">
           <div className="panel-header"><div className="panel-heading"><h3>我的配队 <span className="count">{memberCount} / 5</span></h3></div><div className="team-header-controls"><button className="quiet-button reset-button" onClick={() => { changeTeam({ ...createTeam(), level: policy.characterLevel }); setSelectedIndex(-1); }}>新建方案</button></div></div>
@@ -629,6 +703,8 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
           <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
         </section>
           </div>
+          <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>配队与装备</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button></nav>
+          {activePage === 'arcana' ? <ArcanaEditor state={arcanaState} catalog={catalog} onPurchase={purchaseArcana} /> : <div id="team-page" role="tabpanel" aria-labelledby="team-tab">
           {selectedMember && selectedCharacter ? <>
             {valuation.errors.length > 0 && <div className="notice error validation-notice" role="alert"><strong>当前配置需要修正</strong><ul>{valuation.errors.slice(0, 6).map((issue, i) => <li key={`${issue.path}-${i}`}>{issue.message}</li>)}</ul>{valuation.errors.length > 6 && <p>另有 {valuation.errors.length - 6} 项，请逐项检查。</p>}</div>}
             <div className="equip-intro"><span>六部位装备</span><span>未装备部位不消耗材料</span></div>
@@ -637,10 +713,11 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
             {policy.runes?.fixedStock && <p className="fixed-stock-note">普通符石：每类 {fixedRuneCaption(policy)}，整队共享。穿透与速度可自由调整等级。</p>}
             <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} />)}</div>
           </> : <div className="empty-detail"><div className="empty-detail-mark"><Icon name="gear" size={23} /></div><h2>从一名角色开始</h2><p>将角色头像拖入队伍位置，设定稀有度与六部位装备。<br />受「{curseName}」影响，全队等级固定为{policy.characterLevel}级。</p></div>}
+          </div>}
         </section>
         <section className="panel plan-panel" aria-label="方案信息"><div className="panel-header"><h2>为方案留下一些说明</h2><span className="count">自动保存草稿</span></div><div className="plan-fields"><Field label="配队名称" path="name" errors={valuation.errors}><input aria-label="配队名称" maxLength={120} value={team.name} onChange={event => changeTeam(current => ({ ...current, name: event.target.value }))} /></Field><Field label="作者 / 昵称（可选）" path="author" errors={valuation.errors}><input aria-label="作者昵称" maxLength={120} placeholder="你的昵称" value={team.author} onChange={event => changeTeam(current => ({ ...current, author: event.target.value }))} /></Field><Field label="备注（可选）" path="notes" errors={valuation.errors} full><textarea aria-label="方案备注" rows={3} maxLength={4000} placeholder="例如：配队思路、主力角色或希望测试的对手……" value={team.notes} onChange={event => changeTeam(current => ({ ...current, notes: event.target.value }))} /></Field></div></section>
       </div>
-      <CostSummary cost={valuation.cost} errors={valuation.errors} policy={policy} catalog={catalog} memberCount={memberCount} inventory={inventory} canExport={canExport} onExport={exportTeam} />
+      <CostSummary cost={valuation.cost} errors={valuation.errors} policy={policy} catalog={catalog} memberCount={memberCount} inventory={inventory} arcanaState={arcanaState} canExport={canExport} onExport={exportTeam} />
     </main>
     <footer className="footer"><span>配队与草稿保存在你的浏览器中 · 不自动上传 · {draftStatus}</span><span>资源价值参考 <a href="https://hitazuki.github.io/mementomori-calculator/#packCompare" target="_blank" rel="noopener noreferrer">MementoMori Calculator</a> · 最终按站主规则复核</span></footer>
   </div>;

@@ -4,26 +4,37 @@ import { readFile } from 'node:fs/promises';
 import { createServer } from 'vite';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createTeam, createMember, cloneTeam, calculateTeam, migrateLegacyWeaponConfiguration, selectEquipmentRarity } from '../src/domain.mjs';
+import { createTeam, createMember, cloneTeam, calculateTeam, migrateLegacyWeaponConfiguration, selectEquipmentRarity, getArcanaState, setArcanaPurchased, getResourceAllowance } from '../src/domain.mjs';
 import { placeRosterCharacter } from '../src/team-interactions.mjs';
 
-const [catalog, policy, freeLibrary, nameAliases] = await Promise.all(['catalog', 'pricing-policy', 'free-library', 'name-aliases'].map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
+const [baseCatalog, policy, freeLibrary, nameAliases, arcana] = await Promise.all(['catalog', 'pricing-policy', 'free-library', 'name-aliases', 'arcana-catalog'].map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
+const catalog = { ...baseCatalog, arcana };
 const amount = value => new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 }).format(value);
 
-async function renderDraft(team, displayedCatalog = catalog) {
+async function renderDraft(team, displayedCatalog = catalog, displayedPolicy = policy) {
   const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
   const original = globalThis.localStorage;
   const raw = JSON.stringify({ schemaVersion: 1, catalogVersion: catalog.version, team });
   try {
     globalThis.localStorage = { getItem: () => raw };
     const { default: App } = await server.ssrLoadModule('/src/App.jsx');
-    return renderToStaticMarkup(React.createElement(App, { catalog: displayedCatalog, policy, freeLibrary, nameAliases }));
+    return renderToStaticMarkup(React.createElement(App, { catalog: displayedCatalog, policy: displayedPolicy, freeLibrary, nameAliases }));
   } finally {
     if (original === undefined) delete globalThis.localStorage;
     else globalThis.localStorage = original;
     await server.close();
   }
 }
+
+async function renderArcana(team) {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
+  try {
+    const { ArcanaEditor } = await server.ssrLoadModule('/src/App.jsx');
+    return renderToStaticMarkup(React.createElement(ArcanaEditor, { state: getArcanaState(team, catalog, policy, freeLibrary), catalog, onPurchase() {} }));
+  } finally { await server.close(); }
+}
+
+const arcanaCard = (markup, group) => markup.split(`aria-label="${group.name}"`)[1]?.split('</section>')[0];
 
 function assertAutomaticControls(markup) {
   assert.doesNotMatch(markup, /aria-label="武器同步配置"|aria-label="武器同步位"|aria-label="队外基准费用"|添加队外基准|将队外专武装备给队员|基准武器等级/);
@@ -192,4 +203,132 @@ test('borrowed free UR weapon keeps its ownership warning without manual synchro
   const owner = catalog.characters.find(item => item.id === 27);
   assert.ok(markup.includes(`class="equipment-art-image" src="${owner.exclusiveWeaponIcon}"`), 'borrowed equipment icons show the weapon owner');
   assertAutomaticControls(markup);
+});
+
+test('equipment composition displays the verified normal, holy, dark and combined plates below the original foreground and frame', async () => {
+  const team = createTeam();
+  team.members[0] = createMember(124);
+  for (const gear of team.members[0].equipment.slice(1, 5)) Object.assign(gear, { rarity: 'SSR', seriesId: 12, level: 450 });
+  team.members[0].equipment[2].legendSacredTreasureLevel = 1;
+  team.members[0].equipment[3].matchlessSacredTreasureLevel = 17;
+  Object.assign(team.members[0].equipment[4], { legendSacredTreasureLevel: 1, matchlessSacredTreasureLevel: 40 });
+  const before = JSON.stringify(team);
+  const markup = await renderDraft(cloneTeam(team));
+  for (const kind of ['normal', 'holy', 'dark', 'both']) {
+    assert.match(markup, new RegExp(`class="equipment-art-plate" data-plate="${kind}"`));
+    assert.ok(markup.includes(catalog.iconArt.equipmentComposition.plate.palettes[kind].colors[0]));
+  }
+  assert.match(markup, /left:4\.6875%;top:4\.6875%;width:90\.625%;height:90\.625%/);
+  assert.match(markup, /class="equipment-art-image"[^>]*style="left:7\.8125%;top:7\.8125%;width:84\.375%;height:84\.375%;object-fit:contain;filter:url\(#equipment-shadow-/);
+  assert.match(markup, /<feDropShadow[^>]*flood-opacity="0\.5"/);
+  assert.match(markup, /<feMergeNode in="SourceGraphic"/);
+  const character = catalog.characters.find(item => item.id === 124);
+  for (const slot of [2, 3, 4, 5]) assert.ok(markup.includes(`src="${catalog.iconArt.equipmentIcons[character.job].SSR[slot]}"`));
+  assert.equal(JSON.stringify(team), before, 'visual treasure backgrounds never change the configured magic or holy levels');
+  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(css, /\.equipment-art-plate\{position:absolute;z-index:0/);
+  assert.match(css, /\.equipment-art-image\{position:absolute;z-index:1/);
+  assert.match(css, /\.game-icon-frame\{[^}]*z-index:3/);
+});
+
+test('arcana shows actual owned LR5 bonuses, free R portraits and disabled unpublished groups without adding R to the team roster', async () => {
+  const team = createTeam();
+  const state = getArcanaState(team, catalog, policy, freeLibrary);
+  const markup = await renderArcana(team);
+  const lr5 = state.groups.find(group => group.unlocked && group.bonusTierLabel === 'LR5');
+  assert.ok(lr5);
+  const activeCard = arcanaCard(markup, lr5);
+  assert.match(activeCard, /常驻已解锁 · LR5/);
+  assert.match(activeCard, /LR5 档加成 · 已生效/);
+  for (const bonus of lr5.bonuses) assert.ok(activeCard.includes(bonus.displayValue));
+  assert.match(markup, /只读持有表/);
+  assert.match(markup, /5830 中的战斗属性接入将在后续完成/);
+  assert.match(markup, /卡片价格是当前补齐差额，不能直接相加/);
+  assert.doesNotMatch(markup, /赠最高档|全阶赠送|购买 LR5|购买 SSR|NaN|undefined/);
+  for (const support of catalog.arcana.supportCharacters) assert.ok(markup.includes(`src="${support.portrait}"`), `R support ${support.id} retains its verified portrait`);
+  const unpublished = state.groups.find(group => group.published === false);
+  const unpublishedCard = arcanaCard(markup, unpublished);
+  assert.match(unpublishedCard, /class="arcana-unpublished-placeholder">未开放/);
+  assert.match(unpublishedCard, /disabled=""[^>]*>暂不可购买/);
+  assert.doesNotMatch(unpublishedCard, /取消购买|补齐 .* 钻/);
+  const app = await renderDraft(cloneTeam(team));
+  const roster = app.match(/<aside class="panel catalog-panel left-column" aria-label="选择角色">([\s\S]*?)<\/aside>/)[1];
+  assert.equal((roster.match(/class="tile-name"/g) ?? []).length, catalog.characters.length);
+  for (const support of catalog.arcana.supportCharacters) assert.ok(!roster.includes(`src="${support.portrait}"`), 'R holdings stay outside the selectable SR team catalog');
+});
+
+test('arcana purchases render marginal LR prices, one shared character fee and cancellation that preserves the configured team', async () => {
+  const team = createTeam();
+  team.members[0] = createMember(54);
+  const first = 12;
+  const second = 98;
+  const before = getArcanaState(team, catalog, policy, freeLibrary);
+  const beforeMarkup = await renderArcana(team);
+  const firstGroup = before.groups.find(group => group.id === first);
+  assert.match(arcanaCard(beforeMarkup, firstGroup), /LR 档加成 · 补齐后生效/);
+  assert.ok(arcanaCard(beforeMarkup, firstGroup).includes(`补齐 ${amount(firstGroup.currentPurchaseDiamonds)} 钻`));
+  let purchased = setArcanaPurchased(team, first, true, catalog, policy, freeLibrary);
+  const next = getArcanaState(purchased, catalog, policy, freeLibrary);
+  const nextGroup = next.groups.find(group => group.id === second);
+  assert.ok(nextGroup.currentPurchaseDiamonds < before.groups.find(group => group.id === second).currentPurchaseDiamonds);
+  const nextMarkup = await renderArcana(purchased);
+  assert.ok(arcanaCard(nextMarkup, nextGroup).includes(`补齐 ${amount(nextGroup.currentPurchaseDiamonds)} 钻`));
+  assert.match(arcanaCard(nextMarkup, next.groups.find(group => group.id === first)), /aria-label="取消购买大犬座的长啸"/);
+  purchased = setArcanaPurchased(purchased, second, true, catalog, policy, freeLibrary);
+  const cost = calculateTeam(purchased, catalog, policy, freeLibrary);
+  assert.equal(cost.characterCosts.filter(item => item.characterId === 54).length, 1);
+  const app = await renderDraft(cloneTeam(purchased));
+  assert.ok(app.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`));
+  assert.match(app, /配队与秘仪按角色最高持有稀有度合并，同一角色只计一次本体费用/);
+  assert.match(app, /小白 · LR · 8 本体（免费至 SR） · 秘仪持有/);
+  assert.match(app, /aria-label="角色稀有度"[\s\S]*?<option value="LR" selected="">LR<\/option>/);
+  assert.match(app, /aria-label="角色稀有度"[^>]*><option value="SR" disabled="">SR<\/option>/);
+  assert.match(app, /已购秘仪至少需 LR/);
+  assert.doesNotMatch(app, /已恢复可识别的草稿配置|NaN|undefined/);
+  const canceled = setArcanaPurchased(purchased, first, false, catalog, policy, freeLibrary);
+  assert.equal(canceled.members[0].rarity, 'LR');
+  const canceledState = getArcanaState(canceled, catalog, policy, freeLibrary);
+  const canceledMarkup = await renderArcana(canceled);
+  assert.doesNotMatch(arcanaCard(canceledMarkup, canceledState.groups.find(group => group.id === first)), /取消购买/);
+  assert.match(canceledMarkup, /取消购买不会降低已配置队员的稀有度/);
+});
+
+test('draft purchases recover associated SR to LR while malformed IDs trigger a recoverable original backup', async () => {
+  const team = cloneTeam(createTeam());
+  team.members[0] = createMember(54);
+  team.purchasedArcanaIds = [12];
+  const raw = JSON.stringify(team);
+  const repaired = await renderDraft(team);
+  assert.match(repaired, /已恢复可识别的草稿配置，原始草稿会另存备份/);
+  assert.match(repaired, /aria-label="角色稀有度"[\s\S]*?<option value="LR" selected="">LR<\/option>/);
+  assert.doesNotMatch(repaired, /已购买 LR 秘仪的队内角色必须至少为 LR|待修正|NaN/);
+  assert.equal(JSON.stringify(team), raw, 'recovery retains the original SR draft for backup');
+  const canonical = setArcanaPurchased(team, 12, true, catalog, policy, freeLibrary);
+  const markup = await renderDraft(cloneTeam(canonical));
+  assert.doesNotMatch(markup, /已恢复可识别的草稿配置/);
+  canonical.members[0].rarity = 'LR5';
+  const higher = await renderDraft(cloneTeam(canonical));
+  assert.match(higher, /aria-label="角色稀有度"[\s\S]*?<option value="LR5" selected="">LR5<\/option>/);
+  assert.doesNotMatch(higher, /已恢复可识别的草稿配置/);
+  const malformed = { ...canonical, purchasedArcanaIds: [12, 12, 101, '98', 999999] };
+  const sanitized = await renderDraft(malformed);
+  assert.match(sanitized, /已恢复可识别的草稿配置，原始草稿会另存备份/);
+  assert.doesNotMatch(sanitized, /秘仪编号未知、重复|原草稿无法完整恢复/);
+  const expected = calculateTeam(canonical, catalog, policy, freeLibrary);
+  assert.ok(sanitized.includes(`<strong>${amount(expected.totalDiamonds)}</strong>`));
+});
+
+test('the blessing header and resource budget consume dynamic base plus blessing allowances', async () => {
+  const markup = await renderDraft(cloneTeam(createTeam()));
+  assert.match(markup, /aria-label="赐福机制"[\s\S]*?赐福·绯红恩泽/);
+  assert.match(markup, /额外免费 40,000 红水/);
+  assert.match(markup, /基础免费 60,000 · 合计免费 100,000/);
+  assert.match(markup, /class="resource-blessing-breakdown">基础 60,000 ＋ 赐福 40,000 ＝ 100,000/);
+  const configuredPolicy = { ...policy, allowances: { ...policy.allowances, reinforcementMedicine: 62000 }, blessings: policy.blessings.map(blessing => ({ ...blessing, name: '赐福·自定义额度', amount: 41000 })) };
+  const configured = await renderDraft(cloneTeam(createTeam()), catalog, configuredPolicy);
+  assert.equal(getResourceAllowance(configuredPolicy, 'reinforcementMedicine'), 103000);
+  assert.match(configured, /赐福·自定义额度/);
+  assert.match(configured, /额外免费 41,000 红水/);
+  assert.match(configured, /基础免费 62,000 · 合计免费 103,000/);
+  assert.match(configured, /class="resource-blessing-breakdown">基础 62,000 ＋ 赐福 41,000 ＝ 103,000/);
 });

@@ -4,10 +4,38 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 const root = path.resolve(import.meta.dirname, '..');
+// Minimal display geometry and colors only; the private final renderer is never imported.
+const equipmentComposition = {
+  schemaVersion:1,
+  canvasSize:128,
+  layers:['plate','foreground','rarityFrame'],
+  plate:{
+    x:6,y:6,width:116,height:116,radius:14,
+    palettes:{
+      normal:{colors:['#a7a7a7','#717171','#454545'],middleOffset:0.56},
+      holy:{colors:['#f0b36a','#c66b2c','#71371e'],middleOffset:0.52},
+      dark:{colors:['#a184c5','#64408c','#302043'],middleOffset:0.52},
+      both:{colors:['#a5e8ee','#479dc0','#304e85'],middleOffset:0.52},
+    },
+    light:{cx:0.46,cy:0.32,radius:0.42,color:'#ffffff',opacity:0.42},
+    glow:{cx:0.70,cy:0.72,radius:0.48,color:'#ffffff',opacity:0.10},
+  },
+  foreground:{x:10,y:10,width:108,height:108,fit:'contain',shadow:{highlight:{dx:0,dy:1,blur:1,color:'#ffffff',opacity:0.24},depth:{dx:0,dy:4,blur:3,color:'#000000',opacity:0.50}}},
+};
+if (process.argv.includes('--display-only')) {
+  const catalogPath = path.join(root,'public/data/catalog.json');
+  const catalog = JSON.parse(await readFile(catalogPath));
+  if (catalog.iconArt?.schemaVersion !== 1) throw new Error('Unsupported original-art display contract.');
+  catalog.iconArt.equipmentComposition = equipmentComposition;
+  await writeFile(catalogPath,JSON.stringify(catalog,null,2)+'\n');
+  console.log('Updated equipment composition display metadata; existing locked art and character catalog preserved.');
+  process.exit(0);
+}
 const elementsOnly = process.argv.includes('--elements-only') || process.argv.includes('--ui-only');
-const previousLock = elementsOnly ? JSON.parse(await readFile(path.join(root, 'public/data/asset-lock.json'))) : null;
+const arcanaPortraitsOnly = process.argv.includes('--arcana-portraits-only');
+const previousLock = elementsOnly || arcanaPortraitsOnly ? JSON.parse(await readFile(path.join(root, 'public/data/asset-lock.json'))) : null;
 const ref = process.env.ASSET_REF || previousLock?.ref || '440e579724fa1fa11c737c308ef59266d41f0453';
-if (elementsOnly && ref !== previousLock.ref) throw new Error('Element-only synchronization must use the existing locked asset ref.');
+if ((elementsOnly || arcanaPortraitsOnly) && ref !== previousLock.ref) throw new Error('Partial synchronization must use the existing locked asset ref.');
 const base = `https://raw.githubusercontent.com/GuangShiX/mmtm-assets-fallback/${ref}`;
 const cache = process.env.PUBLIC_ASSET_CACHE;
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -21,7 +49,7 @@ async function fetchBytes(relative, hash) {
   if (hash && sha(bytes) !== hash) throw new Error(`${relative}: canonical SHA-256 mismatch`);
   return bytes;
 }
-const index = JSON.parse(await fetchBytes('skills/index.json'));
+const index = arcanaPortraitsOnly ? {characters:[]} : JSON.parse(await fetchBytes('skills/index.json'));
 const manifest = JSON.parse(await fetchBytes('manifest.json'));
 function pngSize(bytes, name) {
   if (bytes.length < 24 || !bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) throw new Error(`Invalid original PNG: ${name}`);
@@ -40,6 +68,31 @@ async function syncArt(category, name, expectedSize, identity = {}) {
   await mkdir(path.join(root, 'public', `assets/${category}`), {recursive:true});
   await writeFile(path.join(root, 'public', target), bytes);
   return {...identity,path:target,sha256:asset.sha256,sourcePath:asset.path,sourceResourceKey:asset.source_resource_key,...dimensions};
+}
+async function syncArcanaPortraits() {
+  const ids = [2,3,4,12,13,14,22,23,24,32,33,34];
+  const portraits = [];
+  await mkdir(path.join(root,'public/assets/arcana-characters'),{recursive:true});
+  for (const id of ids) {
+    const stem = `CHR_${String(id).padStart(6,'0')}`;
+    const name = `${stem}_00_s.png`;
+    const asset = manifest.assets.find(item => item.category === 'characters' && item.name === name);
+    if (!asset?.sha256 || asset.path !== `assets/characters/${name}`
+      || !asset.source_resource_key?.endsWith(`/CharacterIcon/${stem}/${name}`)) throw new Error(`Canonical published arcana portrait missing: ${name}`);
+    const bytes = await fetchBytes(asset.path,asset.sha256);
+    const dimensions = pngSize(bytes,name);
+    if (dimensions.width !== 128 || dimensions.height !== 128) throw new Error(`Invalid original arcana portrait size: ${name}`);
+    const target = `assets/arcana-characters/${id}.png`;
+    await writeFile(path.join(root,'public',target),bytes);
+    portraits.push({id,path:target,sourcePath:asset.path,sha256:asset.sha256,sourceResourceKey:asset.source_resource_key});
+  }
+  return portraits;
+}
+const arcanaPortraits = await syncArcanaPortraits();
+if (arcanaPortraitsOnly) {
+  await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify({...previousLock,arcanaPortraits},null,2)+'\n');
+  console.log(`Synced ${arcanaPortraits.length} original arcana-only portraits; SR catalog and existing art preserved.`);
+  process.exit(0);
 }
 const elements = {1:'blue',2:'red',3:'green',4:'yellow',5:'light',6:'dark'};
 const elementEntries = [];
@@ -158,10 +211,11 @@ catalog.iconArt = {
   equipmentRarities:{SSR:{frame:'common',tintMatrix:diagonalTint('0.682353','0.407843','0.929412'),starCount:0},UR:{frame:'common',tintMatrix:diagonalTint('0.890196','0.333333','0.4'),starCount:0},LR:{frame:'lr',tintMatrix:null,starCount:0}},
   characterGeometry:{canvasSize:154,sourceSize:62,sourceInsets:{left:25,top:26,right:25,bottom:25},targetInsets:{left:28,top:29,right:28,bottom:28},outward:3},
   equipmentGeometry:{canvasSize:128,sourceSize:62,sourceInsets:{left:20,top:20,right:20,bottom:20},targetInsets:{left:20,top:20,right:20,bottom:20},outward:0},
+  equipmentComposition,
   characterStars:{canvasSize:154,x:23,y:127,step:21,width:23,height:22},
   equipmentIcons,
   representativeExclusiveWeapons:representatives,
 };
 await writeFile(path.join(root,'public/data/catalog.json'),JSON.stringify(catalog,null,2)+'\n');
-await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify(elementsOnly ? {...previousLock,elementIcons:elementEntries,uiAssets,equipmentAssets} : {ref,source:base,portraits:entries,elementIcons:elementEntries,uiAssets,equipmentAssets},null,2)+'\n');
-console.log(`Synced ${elementEntries.length} original element icons, ${uiAssets.length} UI Sprites and ${equipmentAssets.length} unique equipment icons; ${elementsOnly ? 'existing' : characters.length + ' public SR'} character catalog preserved.`);
+await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify(elementsOnly ? {...previousLock,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits} : {ref,source:base,portraits:entries,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits},null,2)+'\n');
+console.log(`Synced ${elementEntries.length} original element icons, ${uiAssets.length} UI Sprites, ${equipmentAssets.length} unique equipment icons and ${arcanaPortraits.length} arcana portraits; ${elementsOnly ? 'existing' : characters.length + ' public SR'} character catalog preserved.`);

@@ -37,7 +37,7 @@ test('current curse policy prices every required copy at twelve thousand while k
   }
   assert.equal(policy.baseline.curse.name,'诅咒·时之枷锁');
   assert.equal(policy.baseline.curse.fixedCharacterLevel,450);
-  assert.equal(policy.baseline.arcanaMode,'pendingAutomatic');
+  assert.equal(policy.baseline.arcanaMode,'ownedRarity');
 });
 test('older seventeen-thousand-copy exports import under the current price without losing equipment or free entitlements',()=>{
   const team=five();
@@ -59,6 +59,9 @@ test('actual gear data computes full reinforcement investment and team-wide free
   for(const member of team.members) for(const gear of member.equipment){Object.assign(gear,{rarity:'SSR',seriesId:12,level:450,reinforcementLevel:450});}
   const result=calculateTeam(team,catalog,policy);
   assert.equal(result.resources.reinforcementMedicine.consumed,147315);
+  assert.equal(result.resources.reinforcementMedicine.baseAllowance,60000);
+  assert.equal(result.resources.reinforcementMedicine.blessingAllowance,40000);
+  assert.equal(result.resources.reinforcementMedicine.freeAllowance,100000);
   assert.equal(result.resources.reinforcementMedicine.charged,47315);
   assert.equal(result.resources.reinforcementMedicine.diamonds,473150);
   const next=structuredClone(policy);next.allowances.reinforcementMedicine=147315;
@@ -213,7 +216,7 @@ test('legacy manual borrowed UR gift uses its physical owner and can serve as an
   assert.equal(validateTeam(team,catalog,policy,{freeLibrary}).errors.some(item=>item.code==='DUPLICATE_WEAPON_SOURCE'),true);
 });
 test('actual automatic policy discounts the third450 weapon only, with crafting300 and all actual levels450',()=>{
-  assert.equal(policy.version,5);
+  assert.equal(policy.version,6);
   assert.deepEqual(policy.weaponSync,{mode:'automatic',targetLevel:450,billedLevel:300,discountedOrdinals:[3,6]});
   const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
   for(const member of team.members)Object.assign(member.equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:450,reinforcementLevel:450});

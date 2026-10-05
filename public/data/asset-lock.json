@@ -2010,5 +2010,91 @@
       "width": 128,
       "height": 128
     }
+  ],
+  "arcanaPortraits": [
+    {
+      "id": 2,
+      "path": "assets/arcana-characters/2.png",
+      "sourcePath": "assets/characters/CHR_000002_00_s.png",
+      "sha256": "099cf3c245795954870e5d9f35fa373f38ed72ab5ba60d5c3cd1e6f3fe7861a7",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000002/CHR_000002_00_s.png"
+    },
+    {
+      "id": 3,
+      "path": "assets/arcana-characters/3.png",
+      "sourcePath": "assets/characters/CHR_000003_00_s.png",
+      "sha256": "25af105593b03ebd4a60b9ea432839372485d17542812c33d62348bda9a51f3c",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000003/CHR_000003_00_s.png"
+    },
+    {
+      "id": 4,
+      "path": "assets/arcana-characters/4.png",
+      "sourcePath": "assets/characters/CHR_000004_00_s.png",
+      "sha256": "412ea2e66407e040539b4b41462d030747a71f34dbb506c56f4ca690c2f47241",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000004/CHR_000004_00_s.png"
+    },
+    {
+      "id": 12,
+      "path": "assets/arcana-characters/12.png",
+      "sourcePath": "assets/characters/CHR_000012_00_s.png",
+      "sha256": "5d887b10ecbcd729304863c3e19d011999f2381a48d33b7d6c231a557c0de5c2",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000012/CHR_000012_00_s.png"
+    },
+    {
+      "id": 13,
+      "path": "assets/arcana-characters/13.png",
+      "sourcePath": "assets/characters/CHR_000013_00_s.png",
+      "sha256": "4b6ecaaef8615463efb4d6c3a5afd0c426e1cc2ec0adb0d1eea29954443ce3eb",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000013/CHR_000013_00_s.png"
+    },
+    {
+      "id": 14,
+      "path": "assets/arcana-characters/14.png",
+      "sourcePath": "assets/characters/CHR_000014_00_s.png",
+      "sha256": "eb2837739ab3b55baa0bac04d79c7d8da95fe67f9628abbd43478ea9d1a1e442",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000014/CHR_000014_00_s.png"
+    },
+    {
+      "id": 22,
+      "path": "assets/arcana-characters/22.png",
+      "sourcePath": "assets/characters/CHR_000022_00_s.png",
+      "sha256": "0016542c22bcdfa9a84dd26b37daf3d1536a56a0845bd48f08a4f60abc7240aa",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000022/CHR_000022_00_s.png"
+    },
+    {
+      "id": 23,
+      "path": "assets/arcana-characters/23.png",
+      "sourcePath": "assets/characters/CHR_000023_00_s.png",
+      "sha256": "c21b3c131c92ee206232c6b21f63e359d4fad775f5b880c79e22f828f226913e",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000023/CHR_000023_00_s.png"
+    },
+    {
+      "id": 24,
+      "path": "assets/arcana-characters/24.png",
+      "sourcePath": "assets/characters/CHR_000024_00_s.png",
+      "sha256": "b22c7d6f826621b6281c62739dc3a5b82fe141f705eef928a2b934a78f8d469d",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000024/CHR_000024_00_s.png"
+    },
+    {
+      "id": 32,
+      "path": "assets/arcana-characters/32.png",
+      "sourcePath": "assets/characters/CHR_000032_00_s.png",
+      "sha256": "60fb870c817332b48af5da149d7f328752aed87437ee183727e3793f0c01bf88",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000032/CHR_000032_00_s.png"
+    },
+    {
+      "id": 33,
+      "path": "assets/arcana-characters/33.png",
+      "sourcePath": "assets/characters/CHR_000033_00_s.png",
+      "sha256": "b85f6295fb593b241877f164a28faad1b071ddc8adb062d99de757cfc7b6df92",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000033/CHR_000033_00_s.png"
+    },
+    {
+      "id": 34,
+      "path": "assets/arcana-characters/34.png",
+      "sourcePath": "assets/characters/CHR_000034_00_s.png",
+      "sha256": "4231ff69dd8ce2f370098fd5640207f5842c0f317200ce2226a50d9639f9fa22",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000034/CHR_000034_00_s.png"
+    }
   ]
 }

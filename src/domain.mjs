@@ -24,6 +24,221 @@ const legacySyncSettings = () => ({ minimumLevel: 300, maximumSourceCount: 3, sl
 const automaticWeaponPricing = policy => policy.weaponSync?.mode === 'automatic';
 const syncSettings = policy => automaticWeaponPricing(policy) ? legacySyncSettings() : policy.weaponSync ?? legacySyncSettings();
 const weaponOwnerId = (member, gear = member?.equipment?.[0]) => gear?.weaponOwnerCharacterId ?? member?.characterId;
+const highestRarity = (left, right) => RARITIES[Math.max(RARITIES.indexOf(left), RARITIES.indexOf(right))] ?? null;
+
+function validateResourceAllowances(policy, errors) {
+  for (const key of RESOURCE_KEYS) {
+    if (!finiteNonnegative(policy.allowances?.[key] ?? 0)) error(errors, `policy.allowances.${key}`, 'INVALID_ALLOWANCE', '免费材料额度必须为非负数。');
+  }
+  if (policy.blessings === undefined) return;
+  if (!Array.isArray(policy.blessings)) {
+    error(errors, 'policy.blessings', 'INVALID_BLESSINGS', '赐福必须为有效的额度列表。');
+    return;
+  }
+  const seen = new Set();
+  policy.blessings.forEach((blessing, index) => {
+    const path = `policy.blessings[${index}]`;
+    if (!isObject(blessing) || typeof blessing.id !== 'string' || blessing.id.length === 0 || seen.has(blessing.id)
+      || typeof blessing.name !== 'string' || blessing.name.length === 0 || !RESOURCE_KEYS.includes(blessing.resource) || !finiteNonnegative(blessing.amount)) {
+      error(errors, path, 'INVALID_BLESSING', '赐福必须包含唯一编号、名称、已知材料及非负额度。');
+      return;
+    }
+    seen.add(blessing.id);
+  });
+  if (errors.length === 0) for (const key of RESOURCE_KEYS) {
+    if (!finiteNonnegative(resourceAllowanceDetails(policy, key).freeAllowance)) error(errors, `policy.blessings`, 'INVALID_ALLOWANCE', '赐福与基础额度之和必须为有效非负数。');
+  }
+}
+
+function resourceAllowanceDetails(policy, resource) {
+  const baseAllowance = policy.allowances?.[resource] ?? 0;
+  const blessingAllowance = (policy.blessings ?? []).filter(blessing => blessing.resource === resource).reduce((sum, blessing) => sum + blessing.amount, 0);
+  return { baseAllowance, blessingAllowance, freeAllowance: baseAllowance + blessingAllowance };
+}
+
+export function getResourceAllowance(policy, resource) {
+  const errors = [];
+  if (!RESOURCE_KEYS.includes(resource)) error(errors, 'resource', 'UNKNOWN_RESOURCE', '材料类型未知，无法取得免费额度。');
+  validateResourceAllowances(policy, errors);
+  if (errors.length) throw new DomainValidationError(errors);
+  return resourceAllowanceDetails(policy, resource).freeAllowance;
+}
+
+const arcanaGroups = catalog => Array.isArray(catalog?.arcana?.groups) ? catalog.arcana.groups : [];
+const arcanaSupport = catalog => Array.isArray(catalog?.arcana?.supportCharacters) ? catalog.arcana.supportCharacters : [];
+const arcanaCharacter = (catalog, id) => catalog.characters.find(character => character.id === id) ?? arcanaSupport(catalog).find(character => character?.id === id);
+const publishedArcana = group => group?.published !== false;
+
+function validateArcanaBonuses(bonuses, path, errors) {
+  if (!Array.isArray(bonuses)) { error(errors, path, 'INVALID_ARCANA_BONUS', '秘仪加成列表无效。'); return; }
+  bonuses.forEach((bonus, index) => {
+    if (!isObject(bonus) || !['base', 'battle'].includes(bonus.kind) || !Number.isSafeInteger(bonus.type) || bonus.type < 1
+      || typeof bonus.name !== 'string' || bonus.name.length === 0 || ![1, 2, 3].includes(bonus.changeType)
+      || !Number.isSafeInteger(bonus.value) || bonus.value < 1
+      || (bonus.unit !== undefined && !['flat', 'percent', 'perLevel'].includes(bonus.unit))
+      || (bonus.scope !== undefined && bonus.scope !== 'allCharacters')) {
+      error(errors, `${path}[${index}]`, 'INVALID_ARCANA_BONUS', '秘仪加成必须包含有效属性、变化类型及正整数原值。');
+    }
+  });
+}
+
+function formatArcanaBonus(bonus, characterLevel) {
+  const unit = bonus.unit ?? (bonus.changeType === 2 ? 'percent' : bonus.changeType === 3 ? 'perLevel' : 'flat');
+  const effectiveValue = unit === 'percent' ? bonus.value / 100 : unit === 'perLevel' ? bonus.value * characterLevel : bonus.value;
+  return { ...bonus, unit, label: bonus.label ?? bonus.name, effectiveValue,
+    displayValue: `+${effectiveValue.toLocaleString('zh-CN', { maximumFractionDigits: 4 })}${unit === 'percent' ? '%' : unit === 'perLevel' ? `（${characterLevel}级）` : ''}` };
+}
+
+function validateArcanaCatalog(catalog, errors) {
+  const arcana = catalog.arcana;
+  if (arcana === undefined) return;
+  if (!isObject(arcana) || arcana.schemaVersion !== 1 || !Array.isArray(arcana.groups) || !Array.isArray(arcana.permanentCharacterIds)) {
+    error(errors, 'catalog.arcana', 'INVALID_ARCANA_CATALOG', '秘仪目录必须包含有效的 LR 组及常驻角色名单。');
+    return;
+  }
+  if (arcana.format !== undefined && arcana.format !== 'mementomori-lr-arcana-catalog') error(errors, 'catalog.arcana.format', 'INVALID_ARCANA_CATALOG', '秘仪目录格式不受支持。');
+  if (arcana.purchaseRarity !== undefined && arcana.purchaseRarity !== 'LR') error(errors, 'catalog.arcana.purchaseRarity', 'INVALID_ARCANA_TIER', '只提供 LR 档秘仪购买。');
+  if (arcana.supportCharacters !== undefined && !Array.isArray(arcana.supportCharacters)) error(errors, 'catalog.arcana.supportCharacters', 'INVALID_ARCANA_SUPPORT', '秘仪 R 角色列表无效。');
+  const supportIds = new Set();
+  arcanaSupport(catalog).forEach((character, index) => {
+    if (!isObject(character) || !Number.isSafeInteger(character.id) || character.id < 1 || supportIds.has(character.id)
+      || catalog.characters.some(actor => actor.id === character.id) || typeof character.name !== 'string' || !character.name
+      || !['blue', 'red', 'green', 'yellow', 'light', 'dark'].includes(character.element) || ![1, 2, 4].includes(character.job)
+      || character.baseRarity !== 2 || character.freeRarity !== 'LR') error(errors, `catalog.arcana.supportCharacters[${index}]`, 'INVALID_ARCANA_SUPPORT', '秘仪支持角色只能包含不重复的免费 LR 档 R 角色。');
+    supportIds.add(character?.id);
+  });
+  if (new Set(arcana.permanentCharacterIds).size !== arcana.permanentCharacterIds.length
+    || arcana.permanentCharacterIds.some(id => !Number.isSafeInteger(id) || !arcanaCharacter(catalog, id))) {
+    error(errors, 'catalog.arcana.permanentCharacterIds', 'INVALID_PERMANENT_CHARACTER_IDS', '常驻角色名单必须是目录中不重复的角色编号。');
+  }
+  const seen = new Set();
+  arcana.groups.forEach((group, index) => {
+    const path = `catalog.arcana.groups[${index}]`;
+    if (!isObject(group) || !Number.isSafeInteger(group.id) || group.id < 1 || seen.has(group.id)
+      || typeof group.name !== 'string' || group.name.length === 0 || !Array.isArray(group.characterIds) || group.characterIds.length === 0
+      || new Set(group.characterIds).size !== group.characterIds.length || group.characterIds.some(id => !Number.isSafeInteger(id) || (!arcanaCharacter(catalog, id) && !(group.published === false && id === 0)))
+      || !Array.isArray(group.lrBonuses) || (group.rarity !== undefined && group.rarity !== 'LR')
+      || (group.published !== undefined && typeof group.published !== 'boolean')
+      || (group.rarityFlag !== undefined && group.rarityFlag !== 512)
+      || (group.collectionLevel !== undefined && group.collectionLevel !== 3)
+      || (group.lr5RarityBonus !== undefined && (!Number.isSafeInteger(group.lr5RarityBonus) || group.lr5RarityBonus < 0))) {
+      error(errors, path, 'INVALID_ARCANA_GROUP', '秘仪组必须包含唯一编号、已知角色及 LR 加成。');
+      return;
+    }
+    seen.add(group.id);
+    validateArcanaBonuses(group.lrBonuses, `${path}.lrBonuses`, errors);
+    if (group.lr5Bonuses !== undefined && group.lr5Bonuses !== null) validateArcanaBonuses(group.lr5Bonuses, `${path}.lr5Bonuses`, errors);
+  });
+}
+
+function validateArcanaSelection(team, catalog, errors) {
+  const purchased = team?.purchasedArcanaIds === undefined ? [] : team.purchasedArcanaIds;
+  if (!Array.isArray(purchased)) {
+    error(errors, 'purchasedArcanaIds', 'INVALID_ARCANA_SELECTION', '购买秘仪必须为不重复的 LR 秘仪编号列表。');
+    return;
+  }
+  const seen = new Set();
+  purchased.forEach((id, index) => {
+    if (!Number.isSafeInteger(id) || seen.has(id) || !arcanaGroups(catalog).some(group => group?.id === id && publishedArcana(group))) {
+      error(errors, `purchasedArcanaIds[${index}]`, 'INVALID_ARCANA_SELECTION', '秘仪编号未知、重复或不是可购买的 LR 秘仪。');
+    }
+    seen.add(id);
+  });
+}
+
+export function getArcanaRequiredRarity(team, characterId, catalog) {
+  const purchased = Array.isArray(team?.purchasedArcanaIds) ? team.purchasedArcanaIds : [];
+  return arcanaGroups(catalog).some(group => publishedArcana(group) && purchased.includes(group?.id) && group?.characterIds?.includes(characterId)) ? 'LR' : null;
+}
+
+function characterLedger(team, catalog, freeLibrary) {
+  const ledger = new Map();
+  const add = (id, rarity, source, metadata = {}) => {
+    const character = arcanaCharacter(catalog, id);
+    if (!character || !RARITIES.includes(rarity)) return;
+    const entry = ledger.get(id) ?? { characterId: id, characterName: character.name, element: character.element,
+      rarity: null, requiredRarity: null, freeRarity: null, teamRarity: null, reserveRarity: null,
+      position: null, sourceIndex: null, purchasedArcanaIds: [], sourceKinds: [], support: character.baseRarity === 2 };
+    entry.rarity = highestRarity(entry.rarity, rarity);
+    if (source === 'freeLibrary') entry.freeRarity = rarity;
+    else entry.requiredRarity = highestRarity(entry.requiredRarity, rarity);
+    if (!entry.sourceKinds.includes(source)) entry.sourceKinds.push(source);
+    Object.assign(entry, metadata);
+    ledger.set(id, entry);
+  };
+  (Array.isArray(team?.members) ? team.members : []).forEach((member, index) => {
+    if (member) add(member.characterId, member.rarity, 'team', { teamRarity: member.rarity, position: index + 1 });
+  });
+  (Array.isArray(team?.weaponSources) ? team.weaponSources : []).forEach((source, index) => add(source.characterId, source.characterRarity, 'reserve', { reserveRarity: source.characterRarity, sourceIndex: index }));
+  for (const group of arcanaGroups(catalog)) {
+    if (!publishedArcana(group) || !(Array.isArray(team?.purchasedArcanaIds) ? team.purchasedArcanaIds : []).includes(group.id)) continue;
+    for (const id of Array.isArray(group.characterIds) ? group.characterIds : []) {
+      add(id, 'LR', 'arcana');
+      const entry = ledger.get(id);
+      if (entry) entry.purchasedArcanaIds.push(group.id);
+    }
+  }
+  for (const entry of Array.isArray(freeLibrary?.characters) ? freeLibrary.characters : []) add(entry.characterId, entry.rarity, 'freeLibrary');
+  for (const character of arcanaSupport(catalog)) add(character.id, character.freeRarity, 'freeLibrary');
+  return [...ledger.values()];
+}
+
+export function getArcanaState(team, catalog, policy, freeLibrary) {
+  const errors = [];
+  validateArcanaCatalog(catalog, errors);
+  validateArcanaSelection(team, catalog, errors);
+  if (policy.arcana?.mode !== undefined && policy.arcana.mode !== 'ownedRarity') error(errors, 'policy.arcana.mode', 'INVALID_ARCANA_MODE', '秘仪档位必须按角色实际持有稀有度判断。');
+  if (errors.length) return { groups: [], ledger: [], lrBonuses: [], bonusRows: [], errors };
+  const ledger = characterLedger(team, catalog, freeLibrary);
+  const groups = errors.length ? [] : arcanaGroups(catalog).map(group => {
+    const published = publishedArcana(group);
+    const missingCharacters = published ? group.characterIds.flatMap(id => {
+      const character = arcanaCharacter(catalog, id);
+      const owned = ledger.find(entry => entry.characterId === id);
+      if (RARITIES.indexOf(owned?.rarity) >= RARITIES.indexOf('LR')) return [];
+      const tier = ['light', 'dark'].includes(character.element) ? 'lightDark' : 'normal';
+      const copies = policy.copies?.LR?.[tier];
+      const ownedCopies = owned?.rarity ? policy.copies?.[owned.rarity]?.[tier] : 0;
+      const unitPrice = policy.unitPrices?.characterCopy;
+      if (!Number.isSafeInteger(copies) || copies < 1 || !Number.isSafeInteger(ownedCopies) || ownedCopies < 0 || !finiteNonnegative(unitPrice)) error(errors, 'policy.copies', 'INVALID_CHARACTER_PRICE', 'LR 秘仪的本体数量或单价规则无效。');
+      return [{ characterId: id, characterName: character.name, fromRarity: owned?.rarity ?? null, targetRarity: 'LR', diamonds: round(Math.max(0, copies - ownedCopies) * unitPrice, policy.rounding?.precision ?? 2) }];
+    }) : [];
+    const purchased = (team?.purchasedArcanaIds ?? []).includes(group.id);
+    const permanent = group.characterIds.every(id => catalog.arcana.permanentCharacterIds.includes(id));
+    const automaticallyUnlocked = published && permanent && group.characterIds.every(id => RARITIES.indexOf(ledger.find(entry => entry.characterId === id)?.freeRarity) >= RARITIES.indexOf('LR'));
+    const lr5Unlocked = published && Array.isArray(group.lr5Bonuses) && group.characterIds.every(id => ledger.find(entry => entry.characterId === id)?.rarity === 'LR5');
+    const bonuses = lr5Unlocked ? group.lr5Bonuses : group.lrBonuses;
+    return { id: group.id, name: group.name, characterIds: [...group.characterIds], purchased, permanent, published,
+      automaticallyUnlocked, unlocked: published && missingCharacters.length === 0,
+      missingCharacters, missingCharacterIds: missingCharacters.map(character => character.characterId),
+      currentPurchaseDiamonds: published ? round(missingCharacters.reduce((sum, character) => sum + character.diamonds, 0), policy.rounding?.precision ?? 2) : null,
+      bonusTierLabel: lr5Unlocked ? 'LR5' : 'LR', lr5Unlocked, unavailableReason: group.unavailableReason ?? '',
+      lr5RarityBonus: lr5Unlocked ? group.lr5RarityBonus ?? null : null,
+      bonuses: bonuses.map(bonus => formatArcanaBonus(bonus, policy.characterLevel)) };
+  });
+  const totals = new Map();
+  for (const group of groups.filter(item => item.unlocked)) for (const bonus of group.bonuses) {
+    const key = JSON.stringify([bonus.kind, bonus.type, bonus.changeType]);
+    const row = totals.get(key) ?? { ...bonus, value: 0, arcanaIds: [] };
+    row.value += bonus.value;
+    row.arcanaIds.push(group.id);
+    totals.set(key, row);
+  }
+  const lrBonuses = [...totals.values()].map(bonus => formatArcanaBonus(bonus, policy.characterLevel));
+  return { groups, ledger, lrBonuses, bonusRows: lrBonuses, errors };
+}
+
+export function setArcanaPurchased(team, id, purchased, catalog, policy, freeLibrary) {
+  const errors = [];
+  validateArcanaCatalog(catalog, errors);
+  validateArcanaSelection(team, catalog, errors);
+  const group = arcanaGroups(catalog).find(item => item?.id === id && publishedArcana(item));
+  if (!group || typeof purchased !== 'boolean') error(errors, 'purchasedArcanaIds', 'INVALID_ARCANA_SELECTION', '仅支持购买或取消当前目录中的 LR 秘仪。');
+  if (errors.length) throw new DomainValidationError(errors);
+  const selected = new Set(team.purchasedArcanaIds ?? []);
+  if (purchased) selected.add(id); else selected.delete(id);
+  return { ...team, purchasedArcanaIds: [...selected], members: team.members.map(member => member && purchased && group.characterIds.includes(member.characterId) && member.rarity === 'SR' ? { ...member, rarity: 'LR' } : member) };
+}
 
 export function isWeaponOwnerClaimed(team, memberIndex, ownerId) {
   return (team?.members ?? []).some((member, index) => index !== memberIndex && member?.equipment?.[0]?.weaponKind === 'exclusive' && member.equipment[0].rarity !== 'NONE' && weaponOwnerId(member) === ownerId)
@@ -176,12 +391,13 @@ export function createMember(character) {
 }
 
 export function createTeam() {
-  return { name: '我的配队', author: '', notes: '', level: 450, members: Array(5).fill(null), weaponSources: [] };
+  return { name: '我的配队', author: '', notes: '', level: 450, members: Array(5).fill(null), weaponSources: [], purchasedArcanaIds: [] };
 }
 
 export function cloneTeam(team) {
   return {
     name: team.name, author: team.author ?? '', notes: team.notes ?? '', level: team.level,
+    purchasedArcanaIds: [...(team.purchasedArcanaIds ?? [])],
     weaponSources: (team.weaponSources ?? []).map(weapon => ({ characterId: weapon.characterId, characterRarity: weapon.characterRarity, rarity: weapon.rarity, level: weapon.level })),
     members: team.members.map(member => member === null ? null : {
       characterId: member.characterId, rarity: member.rarity,
@@ -212,6 +428,8 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false, fre
   if (policy.allowanceScope != null && policy.allowanceScope !== 'wholeTeam') error(errors, 'policy.allowanceScope', 'UNSUPPORTED_ALLOWANCE_SCOPE', '当前规则仅支持整支配队共享免费材料额度。');
   if (policy.rounding?.mode != null && policy.rounding.mode !== 'roundFinalTotal') error(errors, 'policy.rounding.mode', 'UNSUPPORTED_ROUNDING_MODE', '当前规则按原始费用求和后舍入总价。');
   if (!integerIn(policy.rounding?.precision ?? 2, 0, 6)) error(errors, 'policy.rounding.precision', 'INVALID_ROUNDING_PRECISION', '报价小数位数必须为 0 至 6 的整数。');
+  validateResourceAllowances(policy, errors);
+  validateArcanaCatalog(catalog, errors);
   if (automaticWeaponPricing(policy)) {
     const rules = policy.weaponSync;
     if (rules.targetLevel !== 450 || rules.billedLevel !== 300 || !Array.isArray(rules.discountedOrdinals)
@@ -257,6 +475,7 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false, fre
     error(errors, 'team', 'INVALID_TEAM', '配队必须为一个对象。');
     return errors;
   }
+  validateArcanaSelection(team, catalog, errors);
   for (const [field, maximum] of [['name', 120], ['author', 120], ['notes', 4000]]) {
     if (typeof team[field] !== 'string' || team[field].length > maximum) {
       error(errors, field, 'INVALID_TEXT', `${field === 'name' ? '配队名称' : field === 'author' ? '作者' : '备注'}必须为不超过 ${maximum} 字的文字。`);
@@ -289,6 +508,7 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false, fre
     if (seenCharacters.has(member.characterId)) error(errors, `${memberPath}.characterId`, 'DUPLICATE_CHARACTER', '同一角色不能重复加入配队。');
     seenCharacters.add(member.characterId);
     if (!RARITIES.includes(member.rarity)) error(errors, `${memberPath}.rarity`, 'INVALID_RARITY', '角色稀有度仅支持 SR、LR 和 LR5。');
+    if (member.rarity === 'SR' && getArcanaRequiredRarity(team, member.characterId, catalog)) error(errors, `${memberPath}.rarity`, 'ARCANA_REQUIRES_LR', '已购买 LR 秘仪的队内角色必须至少为 LR。');
     if (!Array.isArray(member.equipment) || member.equipment.length !== 6) {
       error(errors, `${memberPath}.equipment`, 'INVALID_EQUIPMENT_SIZE', '每名角色必须保留六个固定装备槽。');
       return;
@@ -427,7 +647,25 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
   const precision = policy.rounding?.precision ?? 2;
   const consumed = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
   const libraryCredits = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
-  const characterCosts = [];
+  const arcanaState = getArcanaState(team, catalog, policy, freeLibrary);
+  errors.push(...arcanaState.errors);
+  const characterCosts = arcanaState.ledger.filter(entry => entry.requiredRarity !== null).map(entry => {
+    const lightDark = ['light', 'dark'].includes(entry.element);
+    const tier = lightDark ? 'lightDark' : 'normal';
+    const copies = policy.copies?.[entry.requiredRarity]?.[tier];
+    const copyPrice = policy.unitPrices?.characterCopy;
+    const entitlementCopies = entry.freeRarity ? policy.copies?.[entry.freeRarity]?.[tier] : 0;
+    if (!Number.isSafeInteger(copies) || copies < 1 || !finiteNonnegative(copyPrice)) error(errors, `policy.copies.${entry.requiredRarity}`, 'INVALID_CHARACTER_PRICE', '角色本体数量或单价规则无效。');
+    if (!Number.isSafeInteger(entitlementCopies) || entitlementCopies < 0) error(errors, 'freeLibrary.characters', 'INVALID_FREE_CHARACTER_PRICE', '免费库角色对应的累计本体规则无效。');
+    const freeCopies = Math.min(copies, entitlementCopies);
+    const chargedCopies = copies - freeCopies;
+    const sourceKind = entry.teamRarity ? 'team' : entry.reserveRarity ? 'reserve' : 'arcana';
+    return { position: entry.position, sourceKind, sourceIndex: sourceKind === 'reserve' ? entry.sourceIndex : null,
+      characterId: entry.characterId, characterName: entry.characterName, rarity: entry.requiredRarity,
+      copies, freeCopies, chargedCopies, freeRarity: entry.freeRarity, arcanaIds: [...entry.purchasedArcanaIds],
+      unitPrice: copyPrice, grossDiamonds: round(copies * copyPrice, precision),
+      freeDiamonds: round(freeCopies * copyPrice, precision), diamonds: round(chargedCopies * copyPrice, precision) };
+  });
   const equipmentCosts = [];
   const exclusiveWeaponCosts = [];
   const fixedStock = policy.runes?.fixedStock;
@@ -454,19 +692,6 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
     const sourceIndex = sourceKind === 'reserve' ? memberIndex - 5 : null;
     const position = sourceKind === 'team' ? memberIndex + 1 : null;
     const character = catalog.characters.find(item => item.id === member.characterId);
-    const lightDark = ['light', 'dark'].includes(character.element);
-    const copies = policy.copies?.[member.rarity]?.[lightDark ? 'lightDark' : 'normal'];
-    const copyPrice = policy.unitPrices?.characterCopy;
-    if (!Number.isSafeInteger(copies) || copies < 1 || !finiteNonnegative(copyPrice)) {
-      error(errors, `policy.copies.${member.rarity}`, 'INVALID_CHARACTER_PRICE', '角色本体数量或单价规则无效。');
-    }
-    const freeCharacter = freeLibrary?.characters.find(entry => entry.characterId === character.id);
-    const entitlementCopies = freeCharacter ? policy.copies?.[freeCharacter.rarity]?.[lightDark ? 'lightDark' : 'normal'] : 0;
-    if (!Number.isSafeInteger(entitlementCopies) || entitlementCopies < 0) error(errors, 'freeLibrary.characters', 'INVALID_FREE_CHARACTER_PRICE', '免费库角色对应的累计本体规则无效。');
-    const freeCopies = Math.min(copies, entitlementCopies);
-    const chargedCopies = copies - freeCopies;
-    const alreadyPricedActor = sourceKind === 'reserve' && team.members.some(actor => actor?.characterId === character.id);
-    if (!alreadyPricedActor) characterCosts.push({ position, sourceKind, sourceIndex, characterId: character.id, characterName: character.name, rarity: member.rarity, copies, freeCopies, chargedCopies, freeRarity: freeCharacter?.rarity ?? null, unitPrice: copyPrice, grossDiamonds: round(copies * copyPrice, precision), freeDiamonds: round(freeCopies * copyPrice, precision), diamonds: round(chargedCopies * copyPrice, precision) });
     member.equipment.forEach((gear, gearIndex) => {
       if (gear.rarity === 'NONE') return;
       const path = sourceKind === 'team' ? `members[${memberIndex}].equipment[${gearIndex}]` : `weaponSources[${sourceIndex}]`;
@@ -564,13 +789,14 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
   const resources = {};
   for (const key of RESOURCE_KEYS) {
     const amount = consumed[key];
-    const allowance = policy.allowances?.[key] ?? 0;
+    const allowanceDetails = resourceAllowanceDetails(policy, key);
+    const allowance = allowanceDetails.freeAllowance;
     const unitPrice = policy.unitPrices?.[key];
     if (!finiteNonnegative(allowance)) error(errors, `policy.allowances.${key}`, 'INVALID_ALLOWANCE', '免费材料额度必须为非负数。');
     if (amount > 0 && !finiteNonnegative(unitPrice)) error(errors, `policy.unitPrices.${key}`, 'UNKNOWN_RESOURCE_PRICE', `${key} 单价尚未确认，无法估价。`);
     const freeLibraryCredit = libraryCredits[key];
     const charged = finiteNonnegative(allowance) ? Math.max(0, amount - freeLibraryCredit - allowance) : NaN;
-    resources[key] = { consumed: amount, freeLibraryCredit, freeAllowance: allowance, charged, unitPrice: finiteNonnegative(unitPrice) ? unitPrice : null, diamonds: amount === 0 ? 0 : round(charged * unitPrice, precision) };
+    resources[key] = { consumed: amount, freeLibraryCredit, ...allowanceDetails, charged, unitPrice: finiteNonnegative(unitPrice) ? unitPrice : null, diamonds: amount === 0 ? 0 : round(charged * unitPrice, precision) };
     const hardLimit = policy.hardLimits?.[key];
     if (hardLimit != null && (!finiteNonnegative(hardLimit) || amount > hardLimit)) error(errors, `resources.${key}`, 'RESOURCE_LIMIT_EXCEEDED', `${key} 超出当前规则允许的材料额度。`);
   }
@@ -604,7 +830,7 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
     const characterDiamonds = character?.diamonds ?? 0;
     return { sourceIndex, characterId: source.characterId, characterName: weapon.characterName, characterRarity: source.characterRarity, rarity: source.rarity, level: source.level, characterDiamonds, weaponDiamonds: weapon.diamonds, diamonds: round((character ? character.chargedCopies * character.unitPrice : 0) + weapon.chargedFragments * resources.exclusiveFragments.unitPrice + weapon.chargedLifeTreeDew * resources.lifeTreeDew.unitPrice, precision) };
   });
-  return { characterCosts, equipmentCosts, exclusiveWeaponCosts, weaponSourceCosts, reserveSourceCosts: weaponSourceCosts, weaponSync, weaponPricing, resources, legendExperience, matchlessExperience, fixedRuneInventory, freeLibraryVersion: freeLibrary?.version ?? null };
+  return { characterCosts, equipmentCosts, exclusiveWeaponCosts, weaponSourceCosts, reserveSourceCosts: weaponSourceCosts, weaponSync, weaponPricing, arcanaState, resources, legendExperience, matchlessExperience, fixedRuneInventory, freeLibraryVersion: freeLibrary?.version ?? null };
 }
 
 export function validateTeam(team, catalog, policy, options = {}) {

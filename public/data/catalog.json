@@ -2846,6 +2846,93 @@
         "characterId": 5,
         "iconId": 206
       }
+    },
+    "equipmentComposition": {
+      "schemaVersion": 1,
+      "canvasSize": 128,
+      "layers": [
+        "plate",
+        "foreground",
+        "rarityFrame"
+      ],
+      "plate": {
+        "x": 6,
+        "y": 6,
+        "width": 116,
+        "height": 116,
+        "radius": 14,
+        "palettes": {
+          "normal": {
+            "colors": [
+              "#a7a7a7",
+              "#717171",
+              "#454545"
+            ],
+            "middleOffset": 0.56
+          },
+          "holy": {
+            "colors": [
+              "#f0b36a",
+              "#c66b2c",
+              "#71371e"
+            ],
+            "middleOffset": 0.52
+          },
+          "dark": {
+            "colors": [
+              "#a184c5",
+              "#64408c",
+              "#302043"
+            ],
+            "middleOffset": 0.52
+          },
+          "both": {
+            "colors": [
+              "#a5e8ee",
+              "#479dc0",
+              "#304e85"
+            ],
+            "middleOffset": 0.52
+          }
+        },
+        "light": {
+          "cx": 0.46,
+          "cy": 0.32,
+          "radius": 0.42,
+          "color": "#ffffff",
+          "opacity": 0.42
+        },
+        "glow": {
+          "cx": 0.7,
+          "cy": 0.72,
+          "radius": 0.48,
+          "color": "#ffffff",
+          "opacity": 0.1
+        }
+      },
+      "foreground": {
+        "x": 10,
+        "y": 10,
+        "width": 108,
+        "height": 108,
+        "fit": "contain",
+        "shadow": {
+          "highlight": {
+            "dx": 0,
+            "dy": 1,
+            "blur": 1,
+            "color": "#ffffff",
+            "opacity": 0.24
+          },
+          "depth": {
+            "dx": 0,
+            "dy": 4,
+            "blur": 3,
+            "color": "#000000",
+            "opacity": 0.5
+          }
+        }
+      }
     }
   }
 }
