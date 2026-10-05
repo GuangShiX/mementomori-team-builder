@@ -15,11 +15,11 @@ const catalog = {
   },
 };
 const policy = {
-  version: 7, characterLevel: 450, unitPrices: { characterCopy: 12000, ssrFragments: 4, urLrFragments: 10, exclusiveFragments: 100, lifeTreeDew: 400 },
+  version: 8, characterLevel: 450, unitPrices: { characterCopy: 12000, ssrFragments: 4, urLrFragments: 10, exclusiveFragments: 100, lifeTreeDew: 400 },
   copies: { SR: { normal: 1, lightDark: 1 }, LR: { normal: 8, lightDark: 14 }, LR5: { normal: 20, lightDark: 26 } },
   equipment: { urLifeTreeDew: 0, lrLifeTreeDew: 50, exclusiveUrLifeTreeDew: 15, exclusiveLrLifeTreeDew: 65 }, holySteelPerExperience: 1,
-  allowances: { reinforcementMedicine: 60000 }, blessings: [
-    { id: 'red', name: '红水赐福', resource: 'reinforcementMedicine', amount: 40000 },
+  allowances: { reinforcementMedicine: 0 }, blessings: [
+    { id: 'red', name: '红水赐福', resource: 'reinforcementMedicine', amount: 88888 },
     { id: 'forge', name: '制作赐福', effect: 'freeEquipmentCrafting', rarity: 'SSR', weaponKind: 'normal', resource: 'ssrFragments' },
     { id: 'dew', name: '叶子赐福', effect: 'resourceDiamondAllowance', resource: 'lifeTreeDew', amount: 60000 },
     { id: 'crystal', name: '紫晶赐福', effect: 'resourceDiamondAllowance', resource: 'exclusiveFragments', amount: 80000 },
@@ -35,6 +35,17 @@ const equip = (team, index, slot, rarity, overrides = {}) => {
   return gear;
 };
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-8, `${actual} differs from ${expected}`);
+const baselinePolicy = () => {
+  const configured = copy(policy);
+  configured.blessings = configured.blessings.map(row => row.id === 'crystal'
+    ? { id: 'crystal', name: '紫晶基线赐福', effect: 'freeExclusiveFragmentBaseline', resource: 'exclusiveFragments', rarity: 'UR', level: 240 } : row);
+  return configured;
+};
+const baselineCatalog = () => {
+  const configured = copy(catalog);
+  configured.equipmentCosts.fragments.exclusiveUR[240] = 360;
+  return configured;
+};
 
 test('SSR exclusives consume finite purple budget while ordinary SSR crafting and free library credits never consume it twice', () => {
   const team = fullTeam();
@@ -71,7 +82,7 @@ test('leaf and purple budgets are shared once across weapons and itemized net fe
   assert.equal(result.exclusiveWeaponCosts[2].chargedLifeTreeDew, 45);
   assert.equal(getResourceAllowance(policy, 'lifeTreeDew'), 0);
   assert.equal(getResourceDiamondAllowance(policy, 'lifeTreeDew'), 60000);
-  assert.equal(getResourceAllowance(policy, 'reinforcementMedicine'), 100000);
+  assert.equal(getResourceAllowance(policy, 'reinforcementMedicine'), 88888);
 });
 
 test('automatic450 to300 crafting, free library and quantity allowances all apply before any diamond budget', () => {
@@ -177,4 +188,148 @@ test('diamond blessings reject unknown resource pools, malformed amounts, duplic
   equip(team, 0, 1, 'SSR', { weaponKind: 'exclusive', level: 180 });
   assert.equal(calculateTeam(team, catalog, older, library).resourceDiamonds, 8000);
   assert.equal(getResourceDiamondAllowance(older, 'exclusiveFragments'), 0);
+});
+
+test('each exclusive gets its own UR240 baseline after automatic fabrication rather than drawing from a shared crystal cash pool', () => {
+  const team = fullTeam();
+  for (let index = 0; index < 3; index++) equip(team, index, 1, 'UR', { weaponKind: 'exclusive' });
+  const configured = baselinePolicy();
+  configured.weaponSync = { mode: 'automatic', targetLevel: 450, billedLevel: 300, discountedOrdinals: [3, 6] };
+  const result = calculateTeam(team, baselineCatalog(), configured, library);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(row => row.fragments), [600, 600, 400]);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(row => row.blessingFragments), [360, 360, 360]);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(row => row.chargedFragments), [240, 240, 40]);
+  assert.equal(result.resources.exclusiveFragments.consumed, 1600);
+  assert.equal(result.resources.exclusiveFragments.baselineBlessingCredit, 1080);
+  assert.equal(result.resources.exclusiveFragments.charged, 520);
+  assert.equal(result.resources.exclusiveFragments.diamondAllowance, 0);
+  assert.equal(result.resources.exclusiveFragments.diamonds, 52000);
+  assert.equal(getResourceDiamondAllowance(configured, 'exclusiveFragments'), 0);
+  assert.equal(result.resources.lifeTreeDew.diamondAllowance, 60000);
+  assert.equal(result.resources.lifeTreeDew.diamondAllowanceCredit, 18000);
+  assert.equal(result.resources.lifeTreeDew.remainingDiamondAllowance, 42000);
+  assert.equal(result.exclusiveWeaponCosts[2].level, 450);
+  assert.equal(result.exclusiveWeaponCosts[2].billedLevel, 300);
+});
+
+test('exclusive fragment baseline and library use the larger entitlement once, cap at actual investment and never cover ordinary crafting', () => {
+  const team = fullTeam();
+  equip(team, 0, 1, 'UR', { weaponKind: 'exclusive' });
+  equip(team, 1, 1, 'UR', { weaponKind: 'exclusive' });
+  equip(team, 2, 1, 'SSR', { weaponKind: 'exclusive', level: 180 });
+  equip(team, 3, 2, 'UR');
+  const granted = { ...library, exclusiveWeapons: [{ characterId: 1, rarity: 'UR', level: 300 }, { characterId: 2, rarity: 'SSR', level: 180 }] };
+  const result = calculateTeam(team, baselineCatalog(), baselinePolicy(), granted);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(row => row.freeFragments), [400, 80, 0]);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(row => row.blessingFragments), [0, 280, 80]);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(row => row.chargedFragments), [200, 240, 0]);
+  assert.equal(result.resources.exclusiveFragments.freeLibraryCredit, 480);
+  assert.equal(result.resources.exclusiveFragments.baselineBlessingCredit, 360);
+  assert.equal(result.resources.exclusiveFragments.consumed, 1280);
+  assert.equal(result.resources.exclusiveFragments.charged, 440);
+  assert.equal(result.resources.urLrFragments.charged, 200);
+  assert.equal(result.resources.urLrFragments.baselineBlessingCredit, 0);
+  const ordinary = result.equipmentCosts.find(row => row.position === 4);
+  assert.equal(ordinary.equivalentArtifactMaterials, 8);
+  assert.equal(ordinary.chargedEquivalentArtifactMaterials, 8);
+  assert.equal(ordinary.craftingDiamonds, 2000);
+  assert.equal(result.equipmentCosts.find(row => row.position === 1).equivalentArtifactMaterials, null);
+});
+
+test('per-weapon crystal baseline does not exempt leaves, reinforcement, rune or sacred investment and member totals use every net resource once', () => {
+  const team = fullTeam();
+  const gear = equip(team, 0, 1, 'UR', { weaponKind: 'exclusive', reinforcementLevel: 100, legendSacredTreasureLevel: 40 });
+  gear.runes[0] = { categoryId: 5, level: 15 };
+  const configured = baselinePolicy();
+  configured.unitPrices.reinforcementMedicine = 10;
+  configured.unitPrices.runeTickets = 10;
+  configured.unitPrices.holySteel = 100;
+  configured.blessings = configured.blessings.filter(row => row.id !== 'dew');
+  const costs = baselineCatalog();
+  costs.equipmentCosts.reinforcement.weapon[100] = 90000;
+  costs.equipmentCosts.sacredExperience[40] = 4000;
+  const result = calculateTeam(team, costs, configured, library);
+  assert.equal(result.resources.exclusiveFragments.charged, 240);
+  assert.equal(result.resources.lifeTreeDew.charged, 15);
+  assert.equal(result.resources.lifeTreeDew.diamonds, 6000);
+  assert.equal(result.resources.reinforcementMedicine.diamonds, 11120);
+  assert.equal(result.resources.runeTickets.diamonds, 327680);
+  assert.equal(result.resources.holySteel.diamonds, 400000);
+  assert.equal(result.memberCosts[0].equipmentDiamonds, 768800);
+  assert.equal(result.memberCosts[0].characterDiamonds, 12000);
+  assert.equal(result.memberCosts[0].totalDiamonds, 780800);
+  assert.equal(result.offTeamDiamonds, 0);
+  assert.equal(result.memberCosts.reduce((sum, row) => sum + row.rawTotalDiamonds, 0), result.totalDiamonds);
+  assert.equal(result.equipmentCosts[0].craftingDiamonds, 24000);
+  assert.equal(result.equipmentCosts[0].diamonds, result.memberCosts[0].equipmentDiamonds);
+});
+
+test('member net costs follow shared allowances and leaf cash allocation without counting weapon rows twice', () => {
+  const team = fullTeam();
+  for (let index = 0; index < 3; index++) equip(team, index, 1, 'LR', { weaponKind: 'exclusive' });
+  const result = calculateTeam(team, baselineCatalog(), baselinePolicy(), library);
+  assert.deepEqual(result.memberCosts.slice(0, 3).map(row => row.equipmentDiamonds), [24000, 24000, 42000]);
+  assert.equal(result.resourceDiamonds, 90000);
+  for (const member of result.memberCosts) {
+    const items = result.equipmentCosts.filter(row => row.position === member.position);
+    close(member.rawEquipmentDiamonds, items.reduce((sum, row) => sum + Object.values(row.chargedResourceDiamonds).reduce((subtotal, amount) => subtotal + amount, 0), 0));
+  }
+  close(result.memberCosts.reduce((sum, row) => sum + row.rawEquipmentDiamonds, 0), result.resourceDiamonds);
+  close(result.memberCosts.reduce((sum, row) => sum + row.rawTotalDiamonds, 0) + result.rawOffTeamDiamonds, result.totalDiamonds);
+});
+
+test('old shared-crystal quotes import using current per-weapon baselines and ignore forged member totals', () => {
+  const team = fullTeam();
+  equip(team, 0, 1, 'UR', { weaponKind: 'exclusive' });
+  const old = createExport(team, baselineCatalog(), policy, library);
+  assert.equal(old.costBreakdown.resources.exclusiveFragments.diamonds, 0);
+  old.costBreakdown.memberCosts[0].totalDiamonds = 0;
+  const imported = parseImport(old, baselineCatalog(), baselinePolicy(), library);
+  assert.equal(imported.costBreakdown.resources.exclusiveFragments.diamonds, 24000);
+  assert.equal(imported.costBreakdown.resources.exclusiveFragments.diamondAllowance, 0);
+  assert.equal(imported.costBreakdown.memberCosts[0].equipmentDiamonds, 24000);
+  assert.equal(imported.costBreakdown.memberCosts[0].totalDiamonds, 36000);
+  assert.equal(old.policySnapshot.blessings.find(row => row.id === 'crystal').amount, 80000);
+  const current = createExport(imported.team, baselineCatalog(), baselinePolicy(), library);
+  assert.equal(current.policySnapshot.blessings.find(row => row.id === 'crystal').effect, 'freeExclusiveFragmentBaseline');
+  assert.deepEqual(imported.team, old.team);
+});
+
+test('exclusive baseline requires one valid current UR fragment table level and malformed or duplicate entitlements fail', () => {
+  for (const patch of [{ resource: 'lifeTreeDew' }, { rarity: 'SSR' }, { level: 241 }, { level: -1 }, { level: 240.5 }, { amount: 80000 }]) {
+    const configured = baselinePolicy();
+    Object.assign(configured.blessings.find(row => row.id === 'crystal'), patch);
+    assert.equal(validateTeam(createTeam(), baselineCatalog(), configured, { freeLibrary: library }).valid, false);
+  }
+  const missing = baselineCatalog();
+  delete missing.equipmentCosts.fragments.exclusiveUR[240];
+  assert.equal(validateTeam(createTeam(), missing, baselinePolicy()).valid, false);
+  const duplicate = baselinePolicy();
+  duplicate.blessings.push({ ...duplicate.blessings.find(row => row.id === 'crystal'), id: 'second-baseline', level: 300 });
+  assert.throws(() => calculateTeam(fullTeam(), baselineCatalog(), duplicate, library), DomainValidationError);
+  const zero = baselinePolicy();
+  zero.unitPrices.exclusiveFragments = 0;
+  const team = fullTeam();
+  equip(team, 0, 1, 'UR', { weaponKind: 'exclusive' });
+  const result = calculateTeam(team, baselineCatalog(), zero, library);
+  assert.equal(result.resources.exclusiveFragments.baselineBlessingCredit, 360);
+  assert.equal(result.resources.exclusiveFragments.charged, 240);
+  assert.equal(result.resources.exclusiveFragments.diamonds, 0);
+  assert.ok(Number.isFinite(result.memberCosts[0].totalDiamonds));
+});
+
+test('ordinary high-rarity crafting reports fractional artifact equivalents with its net fragment fee and rejects zero exchange denominators', () => {
+  const team = fullTeam();
+  equip(team, 0, 2, 'UR');
+  const costs = baselineCatalog();
+  costs.equipmentCosts.fragments.UR[450] = 201;
+  const result = calculateTeam(team, costs, baselinePolicy(), library);
+  const ordinary = result.equipmentCosts[0];
+  assert.equal(ordinary.equivalentArtifactMaterials, 8.04);
+  assert.equal(ordinary.chargedEquivalentArtifactMaterials, 8.04);
+  assert.equal(ordinary.craftingDiamonds, 2010);
+  assert.equal(ordinary.diamonds, 2010);
+  const invalid = baselinePolicy();
+  invalid.conversions = { relicMaterialsPerExchange: 2, urLrFragmentsPerExchange: 0 };
+  assert.throws(() => calculateTeam(team, costs, invalid, library), error => error.errors.some(item => item.code === 'INVALID_RELIC_CONVERSION'));
 });

@@ -5,7 +5,7 @@ import {createServer} from 'vite';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createTeam,createMember} from '../src/domain.mjs';
-const catalog={...JSON.parse(await readFile(new URL('../public/data/catalog.json',import.meta.url))),arcana:JSON.parse(await readFile(new URL('../public/data/arcana-catalog.json',import.meta.url))),equipmentBonuses:JSON.parse(await readFile(new URL('../public/data/equipment-bonuses.json',import.meta.url)))};
+const catalog={...JSON.parse(await readFile(new URL('../public/data/catalog.json',import.meta.url))),arcana:JSON.parse(await readFile(new URL('../public/data/arcana-catalog.json',import.meta.url))),equipmentBonuses:JSON.parse(await readFile(new URL('../public/data/equipment-bonuses.json',import.meta.url))),characterStats:JSON.parse(await readFile(new URL('../public/data/character-stats.json',import.meta.url)))};
 const policy=JSON.parse(await readFile(new URL('../public/data/pricing-policy.json',import.meta.url)));
 const fiveMemberCost=new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2}).format(policy.unitPrices.characterCopy*5);
 
@@ -23,8 +23,10 @@ test('production UI renders the shipped empty and restored five-member draft wit
     assert.match(empty,/诅咒·时之枷锁/);
     assert.match(empty,/等级固定为450级/);
     assert.match(empty,/秘仪加成随角色实际持有汇总/);
+    assert.match(empty,/<h1>身为剑所天成<span class="intro-heading-suffix">· 简易杯初筛<\/span><\/h1>/);
     assert.match(empty,/aria-label="构筑页面"/);
     assert.match(empty,/id="arcana-tab" role="tab"/);
+    assert.match(empty,/id="stats-tab" role="tab"/);
     assert.doesNotMatch(empty,/统一链接模拟基准/);
     assert.doesNotMatch(empty,/NaN/);
     const configuredPolicy={...policy,baseline:{...policy.baseline,curse:{...policy.baseline?.curse,name:'诅咒·自定义展示'}},unitPrices:{...policy.unitPrices,characterCopy:12345}};

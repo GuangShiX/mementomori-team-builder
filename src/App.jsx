@@ -3,9 +3,12 @@ import {
   createTeam, createMember, selectEquipmentRarity, calculateTeam, validateTeam,
   createExport, parseImport, cloneTeam, migrateLegacyWeaponConfiguration, getBorrowableWeapons, isWeaponOwnerClaimed, EQUIPMENT_SLOTS, RESOURCE_KEYS,
   getArcanaState, setArcanaPurchased, getArcanaRequiredRarity, getResourceAllowance,
+  POLISH_ATTRIBUTES as VALID_POLISH_ATTRIBUTES,
 } from './domain.mjs';
 import { placeRosterCharacter, swapTeamPositions } from './team-interactions.mjs';
 import { getEquipmentPresetOptions, applyEquipmentPreset, changeMemberRarity } from './equipment-presets.mjs';
+import { calculateCharacterStats } from './character-stats.mjs';
+import { fillColumnEmptyRunes } from './rune-interactions.mjs';
 import teamSeat from './assets/team-seat.svg';
 
 const DRAFT_KEY = 'mementomori-team-builder:draft:v1';
@@ -35,6 +38,7 @@ const runeSlots = category => category.slots ?? category.allowedSlots ?? categor
 const fixedRuneTiers = policy => policy.runes?.fixedStock?.tiers ?? (policy.runes?.fixedStock ? [{ level: policy.runes.fixedStock.level, perCategory: policy.runes.fixedStock.perCategory }] : []);
 const fixedRuneCaption = policy => fixedRuneTiers(policy).map(tier => `Lv.${tier.level} × ${tier.perCategory}`).join('、');
 const TEAM_DRAG_TYPE = 'application/x-mementomori-team';
+const POLISH_ATTRIBUTES = [['main', '主属性'], ['muscle', '力量'], ['energy', '战技'], ['health', '耐力'], ['intelligence', '魔力'], ['none', '四维均分']];
 
 function restoreDraft(catalog, policy, freeLibrary) {
   const empty = { ...createTeam(), level: policy.characterLevel };
@@ -76,10 +80,13 @@ function restoreDraft(catalog, policy, freeLibrary) {
         member.equipment = member.equipment.map((emptyGear, gearIndex) => {
           const saved = source.equipment.find(gear => gear?.slot === emptyGear.slot) ?? source.equipment[gearIndex];
           if (!saved || !['NONE', 'SSR', 'UR', 'LR'].includes(saved.rarity)) { repaired = true; return emptyGear; }
-          if (saved.rarity === 'NONE') return emptyGear;
+          const savedPolish = saved.polishAttribute === undefined ? 'main' : saved.polishAttribute;
+          const polishAttribute = VALID_POLISH_ATTRIBUTES.includes(savedPolish) ? savedPolish : 'main';
+          if (polishAttribute !== savedPolish) repaired = true;
+          if (saved.rarity === 'NONE') return { ...emptyGear, polishAttribute };
           if (!Array.isArray(saved.runes) || saved.runes.length !== 4) repaired = true;
           return {
-            ...emptyGear, rarity: saved.rarity, seriesId: saved.seriesId ?? RARITY_SERIES[saved.rarity],
+            ...emptyGear, rarity: saved.rarity, polishAttribute, seriesId: saved.seriesId ?? RARITY_SERIES[saved.rarity],
             weaponKind: ['normal', 'exclusive'].includes(saved.weaponKind) ? saved.weaponKind : 'normal',
             syncSlot: emptyGear.slot === 1 ? readableNumber(saved.syncSlot, 0) : 0,
             weaponOwnerCharacterId: emptyGear.slot === 1 ? Number.isSafeInteger(saved.weaponOwnerCharacterId) ? saved.weaponOwnerCharacterId : character.id : null,
@@ -276,7 +283,7 @@ function MemberEquipmentSummary({ member, position, catalog }) {
   </div>;
 }
 
-function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, onChange, errors, memberIndex, inventory, borrowableWeapons, ownWeaponClaimed }) {
+function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, onChange, onRuneChange, errors, memberIndex, inventory, borrowableWeapons, ownWeaponClaimed }) {
   const prefix = `members[${memberIndex}].equipment[${index}]`;
   const availableRunes = catalog.runeCategories.filter(category => runeSlots(category).includes(gear.slot));
   const levels = equipmentLevels(catalog, gear.rarity, gear.weaponKind).filter(level => level <= policy.characterLevel);
@@ -322,7 +329,9 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
     onChange({ ...gear, weaponKind: 'exclusive', weaponOwnerCharacterId: nextOwnerId, rarity, seriesId: RARITY_SERIES[rarity], level, reinforcementLevel: Math.min(Number(gear.reinforcementLevel) || 0, level) });
   }
   function setRune(runeIndex, updates) {
-    onChange({ ...gear, runes: gear.runes.map((rune, i) => i === runeIndex ? { ...rune, ...updates } : rune) });
+    const nextRune = { ...gear.runes[runeIndex], ...updates };
+    if (onRuneChange) onRuneChange(runeIndex, nextRune);
+    else onChange({ ...gear, runes: gear.runes.map((rune, i) => i === runeIndex ? nextRune : rune) });
   }
   return <section className={`equipment-card${gear.rarity === 'NONE' ? ' empty-equipment' : ''}`} aria-label={SLOT_NAMES[gear.slot]}>
     <div className="equipment-card-header">
@@ -362,6 +371,10 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
         <Field label="强化等级" path={`${prefix}.reinforcementLevel`} errors={errors}>
           <input aria-label={`${SLOT_NAMES[gear.slot]}强化等级`} type="number" min="0" max={gear.level} step="1" value={gear.reinforcementLevel} onChange={event => onChange({ ...gear, reinforcementLevel: numeric(event.target.value) })} />
         </Field>
+        <Field label="满打磨属性" path={`${prefix}.polishAttribute`} errors={errors} full>
+          <select aria-label={`${SLOT_NAMES[gear.slot]}满打磨属性`} value={gear.polishAttribute ?? 'main'} onChange={event => onChange({ ...gear, polishAttribute: event.target.value })}>{POLISH_ATTRIBUTES.map(([id, label]) => <option value={id} key={id}>{label}</option>)}</select>
+          <span className="polish-note">{gear.polishAttribute === 'none' ? '四维均分，不定向打磨；不计费用。' : '满打磨：所选属性 60%，其余均分；不计费用。'}</span>
+        </Field>
         <Field label={<><span>圣装等级</span><SacredBonus kind="legend" level={gear.legendSacredTreasureLevel} slot={gear.slot} catalog={catalog} /></>} path={`${prefix}.legendSacredTreasureLevel`} errors={errors}>
           <input aria-label={`${SLOT_NAMES[gear.slot]}圣装等级`} type="number" min="0" max={maximumSacred} step="1" value={gear.legendSacredTreasureLevel} onChange={event => onChange({ ...gear, legendSacredTreasureLevel: numeric(event.target.value) })} />
         </Field>
@@ -371,6 +384,7 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
       </div>
       <div className="rune-section">
         <div className="rune-heading"><span>符石孔</span><span>{gear.slot <= 3 ? '攻击类' : '防御类'} · 同类不可重复</span></div>
+        <p className="rune-auto-note">首次新增会填入同列对应空孔，已有符石保留；库存允许时同步，后续独立调整。</p>
         <div className="rune-holes">{gear.runes.map((rune, runeIndex) => {
           const active = rune.level !== 0;
           const fixedLevel = active && isFixedCategory(rune.categoryId);
@@ -459,8 +473,8 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
   const leafCosts = cost?.equipmentCosts?.filter(item => (item.resources?.lifeTreeDew ?? 0) > 0) ?? [];
   const costKey = item => `${item.sourceKind ?? 'team'}-${item.characterId}-${item.sourceIndex ?? item.position}-${item.slot ?? 'weapon'}`;
   const catalogCharacter = id => catalog.characters.find(character => character.id === id);
-  const craftingCredit = cost?.resources?.ssrFragments;
-  const craftingBlessingName = policy.blessings?.find(blessing => blessing.effect === 'freeEquipmentCrafting' && blessing.resource === 'ssrFragments')?.name ?? '制作赐福';
+  const ordinaryCosts = cost?.equipmentCosts?.filter(item => item.weaponKind === 'normal') ?? [];
+  const offTeamCosts = cost?.offTeamCharacterCosts?.filter(item => item.diamonds > 0) ?? [];
   const diamondResourceNames = DIAMOND_RESOURCE_NAMES;
   const diamondBudgetResources = Object.keys(diamondResourceNames).filter(key => policy.blessings?.some(blessing => blessing.effect === 'resourceDiamondAllowance' && blessing.resource === key));
   return <aside className="panel summary-panel" aria-label="资源与费用摘要">
@@ -481,7 +495,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       return <div className="resource-item" key={key}>
         <div className="resource-item-top"><span>{resourceLabel(key)}</span><strong>{amount(consumed)}</strong></div>
         <div className="resource-caption"><span>{captionByResource[key]}</span><span>{amount(free)} 免费</span></div>
-        {(resource?.blessingAllowance ?? 0) > 0 && <p className="resource-blessing-breakdown">基础 {amount(scaled(key, resource.baseAllowance))} ＋ 赐福 {amount(scaled(key, resource.blessingAllowance))} ＝ {amount(free)}</p>}
+        {(resource?.blessingAllowance ?? 0) > 0 && <p className="resource-blessing-breakdown">{resource.baseAllowance > 0 ? <>基础 {amount(scaled(key, resource.baseAllowance))} ＋ 赐福 {amount(scaled(key, resource.blessingAllowance))} ＝ {amount(free)}</> : <>整队免费总额度 {amount(free)} {resourceLabel(key).split(' · ')[0]}</>}</p>}
         <div className={`resource-bar${charged > 0 ? ' exceeded' : ''}`}><span style={{ width: `${ratio * 100}%` }} /></div>
         {charged > 0 && <p className="resource-extra">超出 {amount(charged)} · +{amount(resource.diamonds)} 钻</p>}
       </div>;
@@ -489,7 +503,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
     {diamondBudgetResources.length > 0 && <section className="diamond-budget-list" aria-label="材料免费钻石预算"><div className="resource-section-title"><span>材料免费预算</span><span>整队共享</span></div>{diamondBudgetResources.map(key => {
       const resource = cost?.resources?.[key];
       const ratio = resource?.diamondAllowance > 0 ? Math.min(1, (resource.diamondAllowanceCredit ?? 0) / resource.diamondAllowance) : 0;
-      return <div className="resource-item" key={key}><div className="resource-item-top"><span>{diamondResourceNames[key]}</span><strong>{amount(resource?.diamondAllowance)} 钻免费</strong></div><div className="resource-caption"><span>已抵扣 {amount(resource?.diamondAllowanceCredit)} 钻</span><span>剩余 {amount(resource?.remainingDiamondAllowance)} 钻</span></div><div className="resource-bar"><span style={{ width: `${ratio * 100}%` }} /></div>{resource?.diamonds > 0 && <p className="resource-extra">本项应付 {amount(resource.diamonds)} 钻</p>}</div>})}</section>}
+      return <div className="resource-item" key={key}><div className="resource-item-top"><span>{diamondResourceNames[key]}</span><strong>{amount(resource?.diamondAllowance)} 钻免费</strong></div><div className="resource-caption"><span>已使用 {amount(resource?.diamondAllowanceCredit)} 钻</span><span>剩余 {amount(resource?.remainingDiamondAllowance)} 钻</span></div><div className="resource-bar"><span style={{ width: `${ratio * 100}%` }} /></div>{resource?.diamonds > 0 && <p className="resource-extra">本项应付 {amount(resource.diamonds)} 钻</p>}</div>})}</section>}
     {inventory.length > 0 && <details className="inventory-details" open={inventory.some(item => item.remaining < 0)}>
       <summary>普通符石库存 <span>{fixedRuneCaption(policy)} / 类</span></summary>
       <p className="inventory-caption">两套库存按类别与等级分别共享，可选择 11 级或 10 级。穿透、速度使用兑换券。</p>
@@ -502,20 +516,17 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       <div className="price-line"><span>角色本体</span><strong>{amount(cost?.characterDiamonds)} 钻</strong></div>
       <div className="price-line"><span>超额材料</span><strong>{amount(cost?.resourceDiamonds)} 钻</strong></div>
     </div>
-    {craftingCredit?.craftingBlessingCredit > 0 && <p className="crafting-blessing-summary">{craftingBlessingName}：普通 SSR 制作抵扣 {amount(craftingCredit.craftingBlessingCredit)} 碎片 · {amount(craftingCredit.craftingBlessingDiamonds)} 钻</p>}
     {(cost?.characterCosts?.some(item => item.sourceKind === 'arcana') || arcanaState?.groups?.some(group => group.purchased)) && <p className="shared-ownership-note">配队与秘仪按角色最高持有稀有度合并，同一角色只计一次本体费用。</p>}
-    {cost?.characterCosts?.some(item => item.freeDiamonds > 0) && <div className="free-credit-note">免费库已抵扣本体 {amount(cost.characterCosts.reduce((sum, item) => sum + (item.freeDiamonds ?? 0), 0))} 钻</div>}
+    {cost?.memberCosts?.length > 0 && <section className="member-investments" aria-label="队员实际投入"><div className="resource-section-title"><span>队员实际投入</span><span>已计入总额</span></div><p className="inventory-caption">共享免费额度按队伍顺序使用；以下投入已计入总额。</p>{cost.memberCosts.map(item => <div className="member-investment-row" key={item.characterId}><div><span title={characterLabel(catalogCharacter(item.characterId))}>{item.position}. {characterLabel(catalogCharacter(item.characterId)) || item.characterName}</span><strong>{amount(item.totalDiamonds)} 钻</strong></div><p>本体 {amount(item.characterDiamonds)} · 装备与养成 {amount(item.equipmentDiamonds)} 钻</p></div>)}</section>}
+    {offTeamCosts.length > 0 && <section className="off-team-investments" aria-label="秘仪队外投入"><div className="resource-section-title"><span>秘仪队外投入</span><span>已计入总额</span></div>{offTeamCosts.map(item => <div className="member-investment-row" key={item.characterId}><div><span>{item.characterName}</span><strong>{amount(item.diamonds)} 钻</strong></div></div>)}</section>}
     {cost?.exclusiveWeaponCosts?.length > 0 && <section className="weapon-costs" aria-label="专武造价">
       <div className="resource-section-title"><span>专武造价</span><span>已计入总额</span></div>
       {cost.exclusiveWeaponCosts.map(item => <div className="weapon-cost-item" key={costKey(item)}>
         <div className="weapon-cost-heading"><span>{item.characterName} · {item.rarity} Lv.{item.level}</span><strong>{amount(item.diamonds)} 钻</strong></div>
         {item.borrowed && <p className="borrowed-weapon-note">借用 {item.weaponOwnerCharacterName} 专武 · 不提供当前角色的专武技能</p>}
         {item.discounted && <p className="automatic-weapon-credit">自动同步 · 制作材料按 Lv.{item.billedLevel} 计算；强化与叶子按实际配置计费。</p>}
-        <p>紫水晶等价 {amount(item.magicCrystals)} 个 · 应付 {amount(item.chargedMagicCrystals * item.magicCrystalUnitPrice)} 钻</p>
-        {item.lifeTreeDew > 0 && <p>叶子 {amount(item.lifeTreeDew)} 个 · 应付 {amount(item.chargedLifeTreeDew * (policy.unitPrices?.lifeTreeDew ?? 0))} 钻</p>}
-        {item.freeDiamonds > 0 && <p className="free-weapon-credit">免费库抵扣 {amount(item.freeMagicCrystals)} 紫水晶等价{item.freeLifeTreeDew > 0 ? `、${amount(item.freeLifeTreeDew)} 叶子` : ''} · {amount(item.freeDiamonds)} 钻</p>}
-        {item.diamondAllowanceCredits?.exclusiveFragments > 0 && <p className="free-weapon-credit">紫水晶赐福抵扣 {amount(item.diamondAllowanceCredits.exclusiveFragments)} 钻</p>}
-        {item.diamondAllowanceCredits?.lifeTreeDew > 0 && <p className="free-weapon-credit">叶子赐福抵扣 {amount(item.diamondAllowanceCredits.lifeTreeDew)} 钻</p>}
+        <p>紫水晶等价 {amount(item.magicCrystals)} 个 · 实际投入 {amount(item.chargedFragmentDiamonds ?? item.chargedMagicCrystals * item.magicCrystalUnitPrice)} 钻</p>
+        {item.lifeTreeDew > 0 && <p>叶子 {amount(item.lifeTreeDew)} 个 · 实际投入 {amount(item.chargedLifeTreeDewDiamonds ?? item.chargedLifeTreeDew * (policy.unitPrices?.lifeTreeDew ?? 0))} 钻</p>}
       </div>)}
     </section>}
     {leafCosts.length > 0 && <section className="weapon-costs leaf-costs" aria-label="叶子造价">
@@ -524,15 +535,16 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       {leafCosts.map(item => {
         const consumed = item.resources.lifeTreeDew;
         const charged = item.chargedResources?.lifeTreeDew ?? Math.max(0, consumed - (item.freeLibraryCredits?.lifeTreeDew ?? 0));
-        return <div className="leaf-cost-row" key={costKey(item)}><span>{characterLabel(catalogCharacter(item.characterId))} · {item.weaponKind === 'exclusive' ? `${item.rarity} 专武` : `${SLOT_NAMES[item.slot]} ${item.rarity}`}<small>{consumed} 个{item.freeLibraryCredits?.lifeTreeDew > 0 ? ` · 免费库 ${amount(item.freeLibraryCredits.lifeTreeDew)} 个` : ''}{item.diamondAllowanceCredits?.lifeTreeDew > 0 ? ` · 赐福 ${amount(item.diamondAllowanceCredits.lifeTreeDew)} 钻` : ''}</small></span><strong>{amount(charged * (policy.unitPrices?.lifeTreeDew ?? 0))} 钻</strong></div>;
+        return <div className="leaf-cost-row" key={costKey(item)}><span>{characterLabel(catalogCharacter(item.characterId))} · {item.weaponKind === 'exclusive' ? `${item.rarity} 专武` : `${SLOT_NAMES[item.slot]} ${item.rarity}`}<small>{consumed} 个</small></span><strong>{amount(item.chargedResourceDiamonds?.lifeTreeDew ?? charged * (policy.unitPrices?.lifeTreeDew ?? 0))} 钻</strong></div>;
       })}
     </section>}
+    {ordinaryCosts.length > 0 && <section className="ordinary-crafting-costs" aria-label="普通装备制作"><div className="resource-section-title"><span>普通装备制作</span><span>已计入总额</span></div><p className="inventory-caption">{amount(policy.conversions?.urLrFragmentsPerExchange ?? 50)} 碎片 = {amount(policy.conversions?.relicMaterialsPerExchange ?? 2)} 个圣遗物材料。</p>{ordinaryCosts.map(item => <div className="leaf-cost-row" key={costKey(item)}><span>{characterLabel(catalogCharacter(item.characterId))} · {SLOT_NAMES[item.slot]} {item.rarity}<small>{item.equivalentArtifactMaterials != null ? `圣遗物等价 ${amount(item.equivalentArtifactMaterials)} 个 · ${amount(item.fragments)} 碎片` : `SSR 制作碎片 ${amount(item.fragments)} 片`}</small></span><strong>{amount(item.craftingDiamonds)} 钻</strong></div>)}</section>}
     <details className="price-details"><summary>查看费用细目与规则</summary><div className="cost-detail-content">
       <dl>{cost?.characterCosts?.map(item => <React.Fragment key={costKey(item)}><dt>{item.characterName} · {item.rarity} · {item.copies} 本体{item.freeRarity ? `（免费至 ${item.freeRarity}）` : ''}{item.sourceKind === 'arcana' ? ' · 秘仪持有' : ''}</dt><dd>{amount(item.diamonds)} 钻</dd></React.Fragment>)}
         {RESOURCE_KEYS.filter(key => key !== 'unidentifiedRune7').map(key => {
           const resource = cost?.resources?.[key];
           if (!resource || resource.consumed === 0) return null;
-          return <React.Fragment key={key}><dt>{RESOURCE_NAMES[key] ?? key} · {amount(resource.consumed)}{resource.craftingBlessingCredit > 0 && <small className="crafting-blessing-credit">普通 SSR 制作赐福抵扣 {amount(resource.craftingBlessingCredit)}</small>}{resource.diamondAllowanceCredit > 0 && <small className="crafting-blessing-credit">赐福预算抵扣 {amount(resource.diamondAllowanceCredit)} 钻</small>}</dt><dd>{amount(resource.diamonds)} 钻</dd></React.Fragment>;
+          return <React.Fragment key={key}><dt>{RESOURCE_NAMES[key] ?? key} · {amount(resource.consumed)}</dt><dd>{amount(resource.diamonds)} 钻</dd></React.Fragment>;
         })}
       </dl>
       <p>角色本体：{amount(policy.unitPrices?.characterCopy)} 钻 / 个。</p>
@@ -544,6 +556,31 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
     <p className="summary-export-note">{memberCount < 5 ? '选齐 5 名角色即可导出' : errors.length ? '修正无效配置后即可导出' : '下载 JSON 文件，发送给站主用于构建'}</p>
     <p className="policy-footnote">规则版本：{policy.version ?? policy.revision ?? '当前规则'}<br />费用为构筑预算，不代表战力或战斗结果。</p>
   </aside>;
+}
+
+export function getCharacterStatsResult(member, catalog, policy, arcanaState, validationErrors = []) {
+  if (!member) return null;
+  if (validationErrors.length) return { valid: false, rows: [], errors: validationErrors, notes: [] };
+  try { return calculateCharacterStats(member, catalog, policy, arcanaState); }
+  catch (error) { return { valid: false, rows: [], errors: [{ message: error.message }], notes: [] }; }
+}
+
+export function CharacterStatsPanel({ result, policy }) {
+  if (!result) return <div className="empty-detail" id="stats-page" role="tabpanel" aria-labelledby="stats-tab"><h2>先选择一名队员</h2><p>将角色拖入队伍位置，再查看角色属性。</p></div>;
+  const groups = new Map();
+  const groupLabels = { main: '主要属性', base: '四维属性', advanced: '进阶属性' };
+  for (const row of result.rows ?? []) {
+    const group = groupLabels[row.group] ?? '属性总览';
+    if (!groups.has(group)) groups.set(group, []);
+    groups.get(group).push(row);
+  }
+  return <div className="character-stats-page" id="stats-page" role="tabpanel" aria-labelledby="stats-tab"><div className="character-stats-intro"><h2>角色属性</h2><p>玩家等级 {amount(policy.baseline?.playerLevel)} · 战斗技能增益不计入</p></div>{result.errors?.length > 0 && <div className="notice error" role="alert">{result.errors.map((issue, index) => <p key={index}>{issue.message}</p>)}</div>}{result.valid && [...groups].map(([group, rows]) => <section className="character-stat-group" aria-label={group} key={group}><h3>{group}</h3><div className="character-stat-grid">{rows.map(row => row.parts?.length > 0 ? <details className="character-stat-row" key={row.key}><summary><span>{row.label}</span><strong>{row.displayValue}</strong></summary><dl>{row.parts.map((part, index) => <React.Fragment key={index}><dt>{part.label}</dt><dd>{part.displayValue}</dd></React.Fragment>)}</dl></details> : <div className="character-stat-row" key={row.key}><div className="character-stat-value"><span>{row.label}</span><strong>{row.displayValue}</strong></div></div>)}</div></section>)}{result.notes?.length > 0 && <div className="character-stats-notes" aria-label="属性计算口径">{result.notes.map((note, index) => <p key={index}>{note}</p>)}</div>}</div>;
+}
+
+function BlessingCard({ blessing, policy }) {
+  const resourceName = RESOURCE_NAMES[blessing.resource]?.split(' · ')[0] ?? '';
+  const baseAllowance = policy.allowances?.[blessing.resource] ?? 0;
+  return <aside className="intro-note blessing-note" aria-label="赐福机制"><strong>{blessing.name}</strong>{blessing.effect === 'freeEquipmentCrafting' ? <><p>普通 {blessing.rarity} 装备制作免费</p><span>{blessing.rarity} 专武按原规则计价；强化与养成按实际配置计算</span></> : blessing.effect === 'freeExclusiveFragmentBaseline' ? <><p>每把专武紫水晶制作免费至 {blessing.rarity} Lv.{blessing.level}</p><span>更高等级只收基础以上差额</span></> : blessing.effect === 'resourceDiamondAllowance' ? <><p>{DIAMOND_RESOURCE_NAMES[blessing.resource]}免费 {amount(blessing.amount)} 钻</p><span>独立材料预算 · 整队共享</span></> : baseAllowance > 0 ? <><p>额外免费 {amount(blessing.amount)} {resourceName}</p><span>基础免费 {amount(baseAllowance)} · 合计免费 {amount(getResourceAllowance(policy, blessing.resource))}</span></> : <><p>整队免费总额度 {amount(getResourceAllowance(policy, blessing.resource))} {resourceName}</p><span>超过总额度后按超额计价</span></>}</aside>;
 }
 
 export default function App({ catalog, policy, freeLibrary, nameAliases }) {
@@ -577,6 +614,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     try { return { cost: calculateTeam(team, catalog, policy, freeLibrary), errors: [] }; }
     catch (error) { return { cost: null, errors: error.errors ?? [{ message: error.message }] }; }
   }, [team, catalog, policy, freeLibrary]);
+  const characterStats = useMemo(() => getCharacterStatsResult(selectedMember, catalog, policy, arcanaState, valuation.errors), [selectedMember, catalog, policy, arcanaState, valuation.errors]);
   const canExport = memberCount === 5 && valuation.errors.length === 0;
   const inventory = useMemo(() => fixedRuneInventory(team, catalog, policy, valuation.cost), [team, catalog, policy, valuation.cost]);
   const borrowableWeapons = useMemo(() => selectedMember ? getBorrowableWeapons(team, selectedIndex, catalog, freeLibrary) : [], [team, selectedMember, selectedIndex, catalog, freeLibrary]);
@@ -654,6 +692,13 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   function updateEquipment(index, equipment) {
     changeTeam(current => ({ ...current, members: current.members.map((member, i) => i === selectedIndex ? { ...member, equipment: member.equipment.map((gear, j) => j === index ? equipment : gear) } : member) }));
   }
+  function updateRune(slot, runeIndex, nextRune) {
+    const gear = selectedMember.equipment.find(item => item.slot === slot);
+    if (gear.runes[runeIndex].level === 0 && nextRune.level > 0) {
+      try { changeTeam(fillColumnEmptyRunes(team, selectedIndex, slot, runeIndex, nextRune, catalog, policy)); }
+      catch (error) { setNotice({ kind: 'error', text: error.message }); }
+    } else updateEquipment(slot - 1, { ...gear, runes: gear.runes.map((rune, index) => index === runeIndex ? nextRune : rune) });
+  }
   function chooseEquipmentPreset(presetId) {
     try {
       const member = applyEquipmentPreset(selectedMember, presetId, catalog, policy);
@@ -693,7 +738,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       <div className="topbar-right"><span className="local-note"><span className="status-dot" />{draftStatus}</span><button className="button" onClick={() => importInput.current?.click()}><Icon name="upload" size={14} />导入方案</button><button className="button primary" disabled={!canExport} onClick={exportTeam}><Icon name="download" size={14} />导出方案</button></div>
       <input ref={importInput} type="file" accept="application/json,.json" aria-label="导入配队 JSON 文件" onChange={importTeam} />
     </header>
-    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成</h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><div className="intro-mechanisms"><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><span>秘仪加成随角色实际持有汇总</span></aside>{(policy.blessings ?? []).map(blessing => <aside className="intro-note blessing-note" aria-label="赐福机制" key={blessing.id}><strong>{blessing.name}</strong>{blessing.effect === 'freeEquipmentCrafting' ? <><p>普通 {blessing.rarity} 装备制作免费</p><span>{blessing.rarity} 专武按原规则计价；强化与养成按实际配置计算</span></> : blessing.effect === 'resourceDiamondAllowance' ? <><p>{DIAMOND_RESOURCE_NAMES[blessing.resource]}免费 {amount(blessing.amount)} 钻</p><span>独立材料预算 · 整队共享</span></> : <><p>额外免费 {amount(blessing.amount)} {RESOURCE_NAMES[blessing.resource]?.split(' · ')[0] ?? ''}</p><span>基础免费 {amount(policy.allowances?.[blessing.resource] ?? 0)} · 合计免费 {amount(getResourceAllowance(policy, blessing.resource))}</span></>}</aside>)}</div></div>
+    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成<span className="intro-heading-suffix">· 简易杯初筛</span></h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><div className="intro-mechanisms"><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><span>秘仪加成随角色实际持有汇总</span></aside>{(policy.blessings ?? []).map(blessing => <BlessingCard blessing={blessing} policy={policy} key={blessing.id} />)}</div></div>
     {notice && <div className={`notice ${notice.kind}`} role="status" style={{ marginBottom: 16 }}>{notice.text}</div>}
     <main className="workspace">
       <aside className="panel catalog-panel left-column" aria-label="选择角色">
@@ -735,8 +780,8 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
           <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
         </section>
           </div>
-          <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>配队与装备</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button></nav>
-          {activePage === 'arcana' ? <ArcanaEditor state={arcanaState} catalog={catalog} onPurchase={purchaseArcana} /> : <div id="team-page" role="tabpanel" aria-labelledby="team-tab">
+          <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>配队与装备</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button><button id="stats-tab" role="tab" aria-selected={activePage === 'stats'} aria-controls="stats-page" onClick={() => setActivePage('stats')}>角色属性</button></nav>
+          {activePage === 'arcana' ? <ArcanaEditor state={arcanaState} catalog={catalog} onPurchase={purchaseArcana} /> : activePage === 'stats' ? <CharacterStatsPanel result={characterStats} policy={policy} /> : <div id="team-page" role="tabpanel" aria-labelledby="team-tab">
           {selectedMember && selectedCharacter ? <>
             {valuation.errors.length > 0 && <div className="notice error validation-notice" role="alert"><strong>当前配置需要修正</strong><ul>{valuation.errors.slice(0, 6).map((issue, i) => <li key={`${issue.path}-${i}`}>{issue.message}</li>)}</ul>{valuation.errors.length > 6 && <p>另有 {valuation.errors.length - 6} 项，请逐项检查。</p>}</div>}
             <div className="equip-intro"><span>六部位装备</span><span>未装备部位不消耗材料</span></div>
@@ -745,7 +790,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
             <p className="equipment-default-note">新装备默认魔装 40，可按实际配置调整。</p>
             {(freeCharacters.has(selectedCharacter.id) || freeLibrary?.exclusiveWeapons?.some(item => item.characterId === selectedCharacter.id)) && <p className="free-library-note">免费库：{freeCharacters.has(selectedCharacter.id) ? `角色本体免费至 ${freeCharacters.get(selectedCharacter.id).rarity}` : ''}{freeLibrary?.exclusiveWeapons?.filter(item => item.characterId === selectedCharacter.id).map(item => `${freeCharacters.has(selectedCharacter.id) ? '；' : ''}${item.level} 级 ${item.rarity} 专武免费`).join('')}。更高配置按差额计价。</p>}
             {policy.runes?.fixedStock && <p className="fixed-stock-note">普通符石：每类 {fixedRuneCaption(policy)}，整队共享。穿透与速度可自由调整等级。</p>}
-            <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} />)}</div>
+            <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} onRuneChange={(runeIndex, nextRune) => updateRune(slot, runeIndex, nextRune)} />)}</div>
           </> : <div className="empty-detail"><div className="empty-detail-mark"><Icon name="gear" size={23} /></div><h2>从一名角色开始</h2><p>将角色头像拖入队伍位置，设定稀有度与六部位装备。<br />受「{curseName}」影响，全队等级固定为{policy.characterLevel}级。</p></div>}
           </div>}
         </section>

@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {createTeam,createMember,calculateTeam,createExport,parseImport,validateTeam,deriveWeaponSync,deriveWeaponPricing} from '../src/domain.mjs';
+import {createTeam,createMember,calculateTeam,createExport,parseImport,validateTeam,deriveWeaponSync,deriveWeaponPricing,getResourceAllowance} from '../src/domain.mjs';
 const catalog = JSON.parse(await readFile(new URL('../public/data/catalog.json',import.meta.url)));
 const policy = JSON.parse(await readFile(new URL('../public/data/pricing-policy.json',import.meta.url)));
 const lock = JSON.parse(await readFile(new URL('../public/data/asset-lock.json',import.meta.url)));
 const freeLibrary = JSON.parse(await readFile(new URL('../public/data/free-library.json',import.meta.url)));
-const materialOnlyPolicy = () => ({...policy,blessings:policy.blessings.filter(blessing=>blessing.effect!=='resourceDiamondAllowance')});
+const materialOnlyPolicy = () => ({...policy,blessings:policy.blessings.filter(blessing=>!['resourceDiamondAllowance','freeExclusiveFragmentBaseline'].includes(blessing.effect))});
 const manualPolicy = () => ({...materialOnlyPolicy(),weaponSync:{minimumLevel:300,maximumSourceCount:3,slots:[{slot:1,requiredAnchors:2},{slot:2,requiredAnchors:3}]}});
 const five = () => {const team=createTeam();team.members=catalog.characters.slice(0,5).map(createMember);return team;};
 
@@ -39,6 +39,9 @@ test('current curse policy prices every required copy at twelve thousand while k
   assert.equal(policy.baseline.curse.name,'诅咒·时之枷锁');
   assert.equal(policy.baseline.curse.fixedCharacterLevel,450);
   assert.equal(policy.baseline.arcanaMode,'ownedRarity');
+  assert.equal(policy.baseline.playerLevel,560);
+  assert.equal(policy.baseline.playerLevelMode,'fixed');
+  assert.equal(policy.baseline.polishMode,'selectedAttributeMaximum');
 });
 test('older seventeen-thousand-copy exports import under the current price without losing equipment or free entitlements',()=>{
   const team=five();
@@ -60,15 +63,66 @@ test('actual gear data computes full reinforcement investment and team-wide free
   for(const member of team.members) for(const gear of member.equipment){Object.assign(gear,{rarity:'SSR',seriesId:12,level:450,reinforcementLevel:450});}
   const result=calculateTeam(team,catalog,policy);
   assert.equal(result.resources.reinforcementMedicine.consumed,147315);
-  assert.equal(result.resources.reinforcementMedicine.baseAllowance,60000);
-  assert.equal(result.resources.reinforcementMedicine.blessingAllowance,40000);
-  assert.equal(result.resources.reinforcementMedicine.freeAllowance,100000);
-  assert.equal(result.resources.reinforcementMedicine.charged,47315);
-  assert.equal(result.resources.reinforcementMedicine.diamonds,473150);
+  assert.equal(result.resources.reinforcementMedicine.baseAllowance,0);
+  assert.equal(result.resources.reinforcementMedicine.blessingAllowance,88888);
+  assert.equal(result.resources.reinforcementMedicine.freeAllowance,88888);
+  assert.equal(result.resources.reinforcementMedicine.charged,58427);
+  assert.equal(result.resources.reinforcementMedicine.diamonds,584270);
   const next=structuredClone(policy);next.allowances.reinforcementMedicine=147315;
   assert.equal(calculateTeam(team,catalog,next).resources.reinforcementMedicine.diamonds,0);
 });
-test('forge grace applies only to ordinary SSR and an SSR exclusive consumes the shared crystal budget at its original price',()=>{
+test('current red blessing shares exactly88888 across members and only the first excess medicine costs ten diamonds',()=>{
+  assert.equal(policy.id,'owner-450-v8');
+  assert.equal(policy.ruleSetId,'mementomori-investment-equivalent-v8');
+  assert.equal(getResourceAllowance(policy,'reinforcementMedicine'),88888);
+  assert.equal(getResourceAllowance(policy,'runeTickets'),100000);
+  assert.equal(policy.unitPrices.reinforcementMedicine,10);
+  const controlledCatalog=structuredClone(catalog);
+  // Controlled cumulative entries isolate the precise boundary using the shipped policy.
+  controlledCatalog.equipmentCosts.reinforcement.weapon[100]=44444;
+  controlledCatalog.equipmentCosts.reinforcement.other[100]=44444;
+  controlledCatalog.equipmentCosts.reinforcement.other[1]=1;
+  const team=five();
+  Object.assign(team.members[0].equipment[0],{rarity:'SSR',seriesId:12,level:450,reinforcementLevel:100});
+  Object.assign(team.members[1].equipment[1],{rarity:'SSR',seriesId:12,level:450,reinforcementLevel:100});
+  const atThreshold=calculateTeam(team,controlledCatalog,policy).resources.reinforcementMedicine;
+  assert.equal(atThreshold.consumed,88888);
+  assert.equal(atThreshold.baseAllowance,0);
+  assert.equal(atThreshold.blessingAllowance,88888);
+  assert.equal(atThreshold.freeAllowance,88888);
+  assert.equal(atThreshold.charged,0);
+  assert.equal(atThreshold.diamonds,0);
+  Object.assign(team.members[2].equipment[1],{rarity:'SSR',seriesId:12,level:450,reinforcementLevel:1});
+  const oneOver=calculateTeam(team,controlledCatalog,policy).resources.reinforcementMedicine;
+  assert.equal(oneOver.consumed,88889);
+  assert.equal(oneOver.charged,1);
+  assert.equal(oneOver.diamonds,10);
+});
+test('v7 exports with a hundred-thousand red allowance are repriced under v8 without restoring the old base allowance',()=>{
+  const team=five();
+  for(const member of team.members) for(const gear of member.equipment) Object.assign(gear,{rarity:'SSR',seriesId:12,level:450,reinforcementLevel:450});
+  const oldPolicy=structuredClone(policy);
+  Object.assign(oldPolicy,{id:'owner-450-v7',version:7,ruleSetId:'mementomori-investment-equivalent-v7'});
+  oldPolicy.allowances.reinforcementMedicine=60000;
+  oldPolicy.blessings.find(blessing=>blessing.id==='crimson-grace').amount=40000;
+  const old=createExport(team,catalog,oldPolicy,freeLibrary);
+  assert.equal(old.costBreakdown.resources.reinforcementMedicine.freeAllowance,100000);
+  assert.equal(old.costBreakdown.resources.reinforcementMedicine.diamonds,473150);
+  const imported=parseImport(old,catalog,policy,freeLibrary);
+  assert.deepEqual(imported.team,old.team);
+  assert.equal(imported.costBreakdown.policyVersion,8);
+  assert.equal(imported.costBreakdown.resources.reinforcementMedicine.freeAllowance,88888);
+  assert.equal(imported.costBreakdown.resources.reinforcementMedicine.diamonds,584270);
+  assert.equal(imported.costBreakdown.totalDiamonds-old.costBreakdown.totalDiamonds,111120);
+  assert.deepEqual(imported.costBreakdown.resources.lifeTreeDew,old.costBreakdown.resources.lifeTreeDew);
+  assert.deepEqual(imported.costBreakdown.resources.exclusiveFragments,old.costBreakdown.resources.exclusiveFragments);
+  assert.equal(imported.costBreakdown.characterDiamonds,old.costBreakdown.characterDiamonds);
+  const current=createExport(imported.team,catalog,policy,freeLibrary);
+  assert.equal(current.policySnapshot.id,'owner-450-v8');
+  assert.equal(current.policySnapshot.allowances.reinforcementMedicine,0);
+  assert.equal(current.policySnapshot.blessings.find(blessing=>blessing.id==='crimson-grace').amount,88888);
+});
+test('forge grace applies only to ordinary SSR and an SSR exclusive retains its original price while using its per-weapon baseline',()=>{
   const team=createTeam();team.members[0]=createMember(6);
   const member=team.members[0];
   Object.assign(member.equipment[0],{rarity:'SSR',seriesId:12,weaponKind:'exclusive',level:180});
@@ -79,8 +133,11 @@ test('forge grace applies only to ordinary SSR and an SSR exclusive consumes the
   assert.equal(cost.resources.ssrFragments.unitPrice,policy.unitPrices.ssrFragments);
   assert.equal(cost.resources.ssrFragments.diamonds,0);
   assert.equal(cost.resources.exclusiveFragments.craftingBlessingCredit,0);
-  assert.equal(cost.resources.exclusiveFragments.chargedBeforeDiamondAllowance,80);
-  assert.equal(Math.round(cost.resources.exclusiveFragments.diamondAllowanceCredit*100)/100,3685.41);
+  assert.equal(cost.resources.exclusiveFragments.baselineBlessingCredit,80);
+  assert.equal(cost.resources.exclusiveFragments.baselineBlessingDiamonds,3685.41);
+  assert.equal(cost.resources.exclusiveFragments.chargedBeforeDiamondAllowance,0);
+  assert.equal(cost.resources.exclusiveFragments.diamondAllowance,0);
+  assert.equal(cost.resources.exclusiveFragments.diamondAllowanceCredit,0);
   assert.equal(cost.resources.exclusiveFragments.charged,0);
   assert.equal(cost.totalDiamonds,0);
   const withoutForge=structuredClone(policy);
@@ -90,6 +147,29 @@ test('forge grace applies only to ordinary SSR and an SSR exclusive consumes the
   const upgraded=calculateTeam(team,catalog,policy,freeLibrary);
   assert.equal(upgraded.resources.urLrFragments.charged,650);
   assert.equal(upgraded.resources.urLrFragments.craftingBlessingCredit,0);
+});
+test('actual per-weapon UR240 crystal baselines take the larger free entitlement after automatic fabrication and keep the leaf budget unchanged',()=>{
+  const grace=policy.blessings.find(blessing=>blessing.resource==='exclusiveFragments');
+  assert.deepEqual(grace,{id:'crystal-diamond-grace',name:'赐福·紫晶恩泽',effect:'freeExclusiveFragmentBaseline',resource:'exclusiveFragments',rarity:'UR',level:240});
+  const team=createTeam();team.members=[85,100,107,8,27].map(createMember);
+  for(const member of team.members) Object.assign(member.equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:450});
+  const cost=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.deepEqual(cost.exclusiveWeaponCosts.map(row=>row.fragments),[950,950,380,950,950]);
+  assert.deepEqual(cost.exclusiveWeaponCosts.map(row=>row.freeFragments),[80,80,80,380,380]);
+  assert.deepEqual(cost.exclusiveWeaponCosts.map(row=>row.blessingFragments),[195,195,195,0,0]);
+  assert.deepEqual(cost.exclusiveWeaponCosts.map(row=>row.chargedFragments),[675,675,105,570,570]);
+  assert.equal(cost.resources.exclusiveFragments.consumed,4180);
+  assert.equal(cost.resources.exclusiveFragments.freeLibraryCredit,1000);
+  assert.equal(cost.resources.exclusiveFragments.baselineBlessingCredit,585);
+  assert.equal(cost.resources.exclusiveFragments.charged,2595);
+  assert.equal(cost.resources.exclusiveFragments.diamonds,119545.64);
+  assert.equal(cost.resources.exclusiveFragments.diamondAllowance,0);
+  assert.equal(cost.resources.lifeTreeDew.diamondAllowance,60000);
+  assert.equal(cost.resources.lifeTreeDew.consumed,75);
+  assert.equal(cost.resources.lifeTreeDew.freeLibraryCredit,30);
+  assert.equal(cost.resources.lifeTreeDew.diamondAllowanceCredit,18000);
+  assert.equal(cost.resources.lifeTreeDew.remainingDiamondAllowance,42000);
+  assert.equal(Math.round(cost.memberCosts.reduce((sum,row)=>sum+row.rawTotalDiamonds,0)*100)/100,cost.totalDiamonds);
 });
 test('actual catalog rejects SSR exclusive450 and permits exclusive240',()=>{
   const team=five(); const gear=team.members[0].equipment[0];
@@ -244,7 +324,7 @@ test('legacy manual borrowed UR gift uses its physical owner and can serve as an
   assert.equal(validateTeam(team,catalog,policy,{freeLibrary}).errors.some(item=>item.code==='DUPLICATE_WEAPON_SOURCE'),true);
 });
 test('automatic policy discounts the third450 fabrication before applying diamond budgets, with actual levels450',()=>{
-  assert.equal(policy.version,7);
+  assert.equal(policy.version,8);
   assert.deepEqual(policy.weaponSync,{mode:'automatic',targetLevel:450,billedLevel:300,discountedOrdinals:[3,6]});
   const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
   for(const member of team.members)Object.assign(member.equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:450,reinforcementLevel:450});

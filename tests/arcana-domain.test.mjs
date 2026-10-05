@@ -93,6 +93,28 @@ test('existing LR and LR5 ownership unlocks LR bonuses without buying and never 
   assert.equal(after.characterCosts.length, 5);
 });
 
+test('member net investment includes its merged arcana body and all equipment while off-team arcana bodies are listed once', () => {
+  const team = purchase(purchase(fullTeam(), 102), 103);
+  Object.assign(team.members[0].equipment[1], { rarity: 'SSR', seriesId: 12, level: 450, reinforcementLevel: 300 });
+  const cost = calculateTeam(team, catalog, policy, freeLibrary);
+  assert.equal(cost.memberCosts.length, 5);
+  assert.equal(cost.memberCosts[2].characterDiamonds, 84000);
+  assert.deepEqual(cost.offTeamCharacterCosts.map(row => [row.characterId, row.sourceKind, row.diamonds]), [[6, 'arcana', 96000], [7, 'arcana', 96000]]);
+  assert.equal(cost.offTeamCharacterDiamonds, 192000);
+  assert.equal(cost.offTeamEquipmentDiamonds, 0);
+  assert.equal(cost.offTeamDiamonds, 192000);
+  const memberEquipment = cost.equipmentCosts.filter(row => row.position === 1);
+  assert.equal(cost.memberCosts[0].rawEquipmentDiamonds, memberEquipment.reduce((sum, row) => sum + Object.values(row.chargedResourceDiamonds).reduce((subtotal, amount) => subtotal + amount, 0), 0));
+  assert.equal(cost.memberCosts.reduce((sum, row) => sum + row.rawTotalDiamonds, 0) + cost.rawOffTeamDiamonds, cost.totalDiamonds);
+  const joined = cloneTeam(team);
+  joined.members[4] = { ...createMember(6), rarity: 'LR' };
+  const next = calculateTeam(joined, catalog, policy, freeLibrary);
+  assert.deepEqual(next.offTeamCharacterCosts.map(row => row.characterId), [7]);
+  assert.equal(next.offTeamDiamonds, 96000);
+  assert.equal(next.memberCosts[4].characterDiamonds, 96000);
+  assert.equal(next.characterCosts.filter(row => row.characterId === 6).length, 1);
+});
+
 test('light dark LR charges fourteen cumulative copies minus its free SR and LR5 only adds its extra twelve copies', () => {
   const bought = purchase(createTeam(), 104);
   const baseline = calculateTeam(bought, catalog, policy, freeLibrary);

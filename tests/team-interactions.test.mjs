@@ -91,9 +91,12 @@ test('replacement keeps the equipped exclusive weapon but recalculates the new c
   assert.equal(replaced.team.members[0].equipment[0], weapon);
   assert.equal(after.exclusiveWeaponCosts[0].characterId, candidate.id);
   assert.equal(after.exclusiveWeaponCosts[0].freeFragments, 0);
-  assert.ok(after.exclusiveWeaponCosts[0].chargedFragmentsBeforeDiamondAllowance > 0);
-  assert.ok(after.exclusiveWeaponCosts[0].diamondAllowanceFragments > 0);
-  assert.equal(after.exclusiveWeaponCosts[0].diamonds, 0, 'the replacement loses its gift credit but may use the shared crystal blessing');
+  assert.ok(after.exclusiveWeaponCosts[0].blessingFragments > 0);
+  assert.equal(after.exclusiveWeaponCosts[0].chargedFragmentsBeforeDiamondAllowance, 0);
+  assert.equal(after.exclusiveWeaponCosts[0].diamondAllowanceFragments, 0);
+  assert.equal(after.exclusiveWeaponCosts[0].diamonds, 0, 'the replacement loses its gift credit but remains within the UR240 crafting baseline');
+  const withoutBaseline = { ...policy, blessings: policy.blessings.filter(item => item.effect !== 'freeExclusiveFragmentBaseline') };
+  assert.ok(calculateTeam(replaced.team, catalog, withoutBaseline, freeLibrary).exclusiveWeaponCosts[0].diamonds > 0);
   assert.ok(after.totalDiamonds > before.totalDiamonds);
 });
 

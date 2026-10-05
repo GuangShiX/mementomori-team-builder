@@ -6,6 +6,7 @@ import {
   deriveWeaponSync,
   getBorrowableWeapons, isWeaponOwnerClaimed,
   deriveWeaponPricing, migrateLegacyWeaponConfiguration, getResourceAllowance,
+  POLISH_ATTRIBUTES,
 } from '../src/domain.mjs';
 
 const catalog = {
@@ -80,6 +81,66 @@ test('empty slots keep stable positions and cost no character or equipment resou
   assert.deepEqual(createMember(catalog.characters[0]).equipment.map(item => item.slot), [1, 2, 3, 4, 5, 6]);
   assert.equal(validateTeam(team, catalog, policy).valid, true);
   assert.equal(validateTeam(team, catalog, policy, { requireFullTeam: true }).errors.filter(item => item.code === 'EMPTY_MEMBER').length, 5);
+});
+
+test('new equipment defaults to main-attribute polish without adding any empty-slot investment', () => {
+  assert.deepEqual(POLISH_ATTRIBUTES, ['main', 'none', 'muscle', 'energy', 'health', 'intelligence']);
+  const team = fullTeam();
+  assert.deepEqual(team.members[0].equipment.map(gear => gear.polishAttribute), Array(6).fill('main'));
+  const before = calculateTeam(team, catalog, policy);
+  for (const gear of team.members[0].equipment) gear.polishAttribute = 'health';
+  assert.equal(validateTeam(team, catalog, policy, { requireFullTeam: true }).valid, true);
+  const after = calculateTeam(team, catalog, policy);
+  assert.deepEqual(after.resources, before.resources);
+  assert.equal(after.totalDiamonds, before.totalDiamonds);
+  assert.equal(after.equipmentCosts.length, 0);
+});
+
+test('all polish choices survive cloning and export import without changing equipment fees', () => {
+  const team = fullTeam();
+  for (const slot of [1, 2, 3, 4, 5, 6]) equip(team.members[0], slot);
+  const before = calculateTeam(team, catalog, policy);
+  team.members[0].equipment.forEach((gear, index) => { gear.polishAttribute = POLISH_ATTRIBUTES[index]; });
+  const expected = [...POLISH_ATTRIBUTES];
+  assert.deepEqual(cloneTeam(team).members[0].equipment.map(gear => gear.polishAttribute), expected);
+  const exported = createExport(team, catalog, policy);
+  assert.deepEqual(exported.team.members[0].equipment.map(gear => gear.polishAttribute), expected);
+  const imported = parseImport(exported, catalog, policy);
+  assert.deepEqual(imported.team.members[0].equipment.map(gear => gear.polishAttribute), expected);
+  assert.equal(imported.costBreakdown.totalDiamonds, before.totalDiamonds);
+  assert.deepEqual(imported.costBreakdown.resources, before.resources);
+  assert.equal(selectEquipmentRarity(team.members[0].equipment[1], 'UR').polishAttribute, 'none');
+});
+
+test('old drafts and imports missing polish use main while explicit no-polish is preserved', () => {
+  const team = fullTeam();
+  for (const member of team.members) for (const gear of member.equipment) delete gear.polishAttribute;
+  team.members[0].equipment[1].polishAttribute = 'none';
+  const cloned = cloneTeam(team);
+  assert.equal(cloned.members[0].equipment[0].polishAttribute, 'main');
+  assert.equal(cloned.members[0].equipment[1].polishAttribute, 'none');
+  assert.equal(team.members[0].equipment[0].polishAttribute, undefined);
+  assert.equal(selectEquipmentRarity(team.members[0].equipment[0], 'SSR').polishAttribute, 'main');
+  const exported = createExport(team, catalog, policy);
+  for (const member of exported.team.members) for (const gear of member.equipment) delete gear.polishAttribute;
+  exported.team.members[0].equipment[1].polishAttribute = 'none';
+  const imported = parseImport(exported, catalog, policy);
+  assert.equal(imported.team.members[0].equipment[0].polishAttribute, 'main');
+  assert.equal(imported.team.members[0].equipment[1].polishAttribute, 'none');
+  assert.equal(exported.team.members[0].equipment[0].polishAttribute, undefined);
+});
+
+test('unknown polish selections are rejected instead of becoming a different attribute on export or import', () => {
+  for (const value of ['attack', '', 0, null, ['main']]) {
+    const team = fullTeam();
+    team.members[0].equipment[1].polishAttribute = value;
+    const invalid = error => error instanceof DomainValidationError && error.errors.some(item => item.code === 'INVALID_POLISH_ATTRIBUTE');
+    assert.equal(validateTeam(team, catalog, policy).errors.some(item => item.code === 'INVALID_POLISH_ATTRIBUTE'), true);
+    assert.throws(() => createExport(team, catalog, policy), invalid);
+    const exported = createExport(fullTeam(), catalog, policy);
+    exported.team.members[0].equipment[1].polishAttribute = value;
+    assert.throws(() => parseImport(exported, catalog, policy), invalid);
+  }
 });
 
 test('first equipment selection defaults magic armor to forty without changing empty equipment factories', () => {
