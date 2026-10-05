@@ -798,3 +798,65 @@ test('member clicks and drag placement select the new member without leaving the
     assert.deepEqual(pageChanges, [], 'only an explicit tab click should change pages');
   }
 });
+
+test('the curse shows dynamic original and current copy prices without applying its displayed saving a second time', async () => {
+  const team = createTeam();
+  team.members[0] = { ...createMember(54), rarity: 'LR5' };
+  const markup = await renderDraft(team);
+  const card = markup.match(/<aside class="intro-note curse-note" aria-label="诅咒机制">([\s\S]*?)<\/aside>/)?.[1];
+  assert.ok(card);
+  assert.match(card, /class="curse-character-price">每个角色本体 17,000 → 12,000 钻<\/p>/);
+  assert.match(card, /class="curse-character-saving">受诅咒影响，每个本体减少 5,000 钻<\/span>/);
+  assert.ok(markup.includes(`<strong>${amount(calculateTeam(team, catalog, policy, freeLibrary).totalDiamonds)}</strong>`));
+  const configuredPolicy = { ...policy, baseline: { ...policy.baseline, curse: { ...policy.baseline.curse, characterCopyOriginalPrice: 22500 } }, unitPrices: { ...policy.unitPrices, characterCopy: 15000 } };
+  const configured = await renderDraft(team, catalog, configuredPolicy);
+  const configuredCard = configured.match(/aria-label="诅咒机制">([\s\S]*?)<\/aside>/)[1];
+  assert.match(configuredCard, /每个角色本体 22,500 → 15,000 钻/);
+  assert.match(configuredCard, /每个本体减少 7,500 钻/);
+  assert.ok(configured.includes(`<strong>${amount(calculateTeam(team, catalog, configuredPolicy, freeLibrary).totalDiamonds)}</strong>`));
+  const legacyPolicy = structuredClone(configuredPolicy);
+  delete legacyPolicy.baseline.curse.characterCopyOriginalPrice;
+  const legacy = await renderDraft(team, catalog, legacyPolicy);
+  const legacyCard = legacy.match(/aria-label="诅咒机制">([\s\S]*?)<\/aside>/)[1];
+  assert.match(legacyCard, /每个角色本体 15,000 钻/);
+  assert.doesNotMatch(legacyCard, /curse-character-saving|减少|→|22,500|17,000/);
+  assert.ok(legacy.includes(`<strong>${amount(calculateTeam(team, catalog, legacyPolicy, freeLibrary).totalDiamonds)}</strong>`));
+});
+
+test('LR equipment fabrication lists exclusive weapons and armor with their allocated net leaf prices as an already included subtotal', async () => {
+  const team = createTeam();
+  team.members[0] = applyEquipmentPreset({ ...createMember(54), rarity: 'LR5' }, 'lr6', catalog, policy);
+  team.members[1] = applyEquipmentPreset({ ...createMember(85), rarity: 'LR5' }, 'lr6', catalog, policy);
+  team.members[2] = applyEquipmentPreset(createMember(124), 'ur2-ssr4', catalog, policy);
+  const snapshot = JSON.stringify(team);
+  const cost = calculateTeam(team, catalog, policy, freeLibrary);
+  const lrItems = cost.equipmentCosts.filter(item => item.rarity === 'LR');
+  assert.equal(lrItems.length, 12);
+  const markup = await renderDraft(team);
+  const section = markup.match(/<section class="ordinary-crafting-costs lr-crafting-costs" aria-label="LR装备造价">([\s\S]*?)<\/section>/)?.[1];
+  assert.ok(section);
+  assert.match(section, /制作碎片与叶子进化的实际投入，已计入总额/);
+  assert.equal((section.match(/class="leaf-cost-row"/g) ?? []).length, lrItems.length);
+  assert.doesNotMatch(section, /data-position="3"|\bUR\b|\bSSR\b/);
+  assert.ok(lrItems.some(item => item.weaponKind === 'exclusive'));
+  assert.ok(lrItems.some(item => item.weaponKind === 'normal'));
+  assert.ok(lrItems.some(item => item.chargedResourceDiamonds.lifeTreeDew === 0));
+  assert.ok(lrItems.some(item => item.chargedResourceDiamonds.lifeTreeDew > 0 && item.chargedResourceDiamonds.lifeTreeDew < item.resources.lifeTreeDew * policy.unitPrices.lifeTreeDew), 'the shared leaf budget partially covers one LR item');
+  let lrTotal = 0;
+  for (const item of lrItems) {
+    const row = section.match(new RegExp(`<div class="leaf-cost-row" data-position="${item.position}" data-slot="${item.slot}">([\\s\\S]*?)<\\/div>`))?.[1];
+    assert.ok(row, `LR equipment at position ${item.position}, slot ${item.slot}`);
+    const fragments = item.chargedResourceDiamonds[item.fragmentResource] ?? 0;
+    const leaf = item.chargedResourceDiamonds.lifeTreeDew ?? 0;
+    lrTotal += fragments + leaf;
+    assert.ok(row.includes(`制作 ${amount(fragments)} · 叶子 ${amount(leaf)} 钻`));
+    assert.ok(row.includes(`<strong>${amount(fragments + leaf)} 钻</strong>`));
+    assert.ok(row.includes(item.weaponKind === 'exclusive' ? 'LR 专武' : `${['', '武器', '项链', '手套', '头盔', '衣服', '脚'][item.slot]} LR`));
+  }
+  assert.ok(section.includes(`<strong>${amount(lrTotal)} 钻</strong>`));
+  assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`), 'displaying the LR subtotal must not add it to the team quote again');
+  assert.equal(JSON.stringify(team), snapshot);
+  const lower = createTeam();
+  lower.members[0] = applyEquipmentPreset(createMember(54), 'lr6', catalog, policy);
+  assert.doesNotMatch(await renderDraft(lower), /aria-label="LR装备造价"|class="ordinary-crafting-costs lr-crafting-costs"/);
+});

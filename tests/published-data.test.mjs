@@ -38,6 +38,8 @@ test('current curse policy prices every required copy at twelve thousand while k
   }
   assert.equal(policy.baseline.curse.name,'诅咒·时之枷锁');
   assert.equal(policy.baseline.curse.fixedCharacterLevel,450);
+  assert.equal(policy.baseline.curse.characterCopyOriginalPrice,17000);
+  assert.equal(policy.baseline.curse.characterCopyOriginalPrice-policy.unitPrices.characterCopy,5000);
   assert.equal(policy.baseline.arcanaMode,'ownedRarity');
   assert.equal(policy.baseline.playerLevel,560);
   assert.equal(policy.baseline.playerLevelMode,'fixed');
@@ -57,6 +59,7 @@ test('older seventeen-thousand-copy exports import under the current price witho
   assert.equal(current.costBreakdown.characterDiamonds,current.costBreakdown.characterCosts.reduce((sum,item)=>sum+item.chargedCopies*12000,0));
   assert.equal(oldExport.costBreakdown.characterDiamonds-current.costBreakdown.characterDiamonds,current.costBreakdown.characterCosts.reduce((sum,item)=>sum+item.chargedCopies*5000,0));
   assert.equal(createExport(current.team,catalog,policy,freeLibrary).policySnapshot.baseline.curse.name,'诅咒·时之枷锁');
+  assert.equal(createExport(current.team,catalog,policy,freeLibrary).policySnapshot.baseline.curse.characterCopyOriginalPrice,17000);
 });
 test('actual gear data computes full reinforcement investment and team-wide free allowance',()=>{
   const team=five();
@@ -72,8 +75,8 @@ test('actual gear data computes full reinforcement investment and team-wide free
   assert.equal(calculateTeam(team,catalog,next).resources.reinforcementMedicine.diamonds,0);
 });
 test('current red blessing shares exactly88888 across members and only the first excess medicine costs ten diamonds',()=>{
-  assert.equal(policy.id,'owner-450-v8');
-  assert.equal(policy.ruleSetId,'mementomori-investment-equivalent-v8');
+  assert.equal(policy.id,'owner-450-v9');
+  assert.equal(policy.ruleSetId,'mementomori-investment-equivalent-v9');
   assert.equal(getResourceAllowance(policy,'reinforcementMedicine'),88888);
   assert.equal(getResourceAllowance(policy,'runeTickets'),100000);
   assert.equal(policy.unitPrices.reinforcementMedicine,10);
@@ -98,7 +101,7 @@ test('current red blessing shares exactly88888 across members and only the first
   assert.equal(oneOver.charged,1);
   assert.equal(oneOver.diamonds,10);
 });
-test('v7 exports with a hundred-thousand red allowance are repriced under v8 without restoring the old base allowance',()=>{
+test('v7 exports with a hundred-thousand red allowance are repriced under the current policy without restoring the old base allowance',()=>{
   const team=five();
   for(const member of team.members) for(const gear of member.equipment) Object.assign(gear,{rarity:'SSR',seriesId:12,level:450,reinforcementLevel:450});
   const oldPolicy=structuredClone(policy);
@@ -110,7 +113,7 @@ test('v7 exports with a hundred-thousand red allowance are repriced under v8 wit
   assert.equal(old.costBreakdown.resources.reinforcementMedicine.diamonds,473150);
   const imported=parseImport(old,catalog,policy,freeLibrary);
   assert.deepEqual(imported.team,old.team);
-  assert.equal(imported.costBreakdown.policyVersion,8);
+  assert.equal(imported.costBreakdown.policyVersion,9);
   assert.equal(imported.costBreakdown.resources.reinforcementMedicine.freeAllowance,88888);
   assert.equal(imported.costBreakdown.resources.reinforcementMedicine.diamonds,584270);
   assert.equal(imported.costBreakdown.totalDiamonds-old.costBreakdown.totalDiamonds,111120);
@@ -118,7 +121,7 @@ test('v7 exports with a hundred-thousand red allowance are repriced under v8 wit
   assert.deepEqual(imported.costBreakdown.resources.exclusiveFragments,old.costBreakdown.resources.exclusiveFragments);
   assert.equal(imported.costBreakdown.characterDiamonds,old.costBreakdown.characterDiamonds);
   const current=createExport(imported.team,catalog,policy,freeLibrary);
-  assert.equal(current.policySnapshot.id,'owner-450-v8');
+  assert.equal(current.policySnapshot.id,'owner-450-v9');
   assert.equal(current.policySnapshot.allowances.reinforcementMedicine,0);
   assert.equal(current.policySnapshot.blessings.find(blessing=>blessing.id==='crimson-grace').amount,88888);
 });
@@ -324,7 +327,7 @@ test('legacy manual borrowed UR gift uses its physical owner and can serve as an
   assert.equal(validateTeam(team,catalog,policy,{freeLibrary}).errors.some(item=>item.code==='DUPLICATE_WEAPON_SOURCE'),true);
 });
 test('automatic policy discounts the third450 fabrication before applying diamond budgets, with actual levels450',()=>{
-  assert.equal(policy.version,8);
+  assert.equal(policy.version,9);
   assert.deepEqual(policy.weaponSync,{mode:'automatic',targetLevel:450,billedLevel:300,discountedOrdinals:[3,6]});
   const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
   for(const member of team.members)Object.assign(member.equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:450,reinforcementLevel:450});

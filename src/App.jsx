@@ -474,6 +474,9 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
   const costKey = item => `${item.sourceKind ?? 'team'}-${item.characterId}-${item.sourceIndex ?? item.position}-${item.slot ?? 'weapon'}`;
   const catalogCharacter = id => catalog.characters.find(character => character.id === id);
   const ordinaryCosts = cost?.equipmentCosts?.filter(item => item.weaponKind === 'normal') ?? [];
+  const lrCosts = cost?.equipmentCosts?.filter(item => item.sourceKind === 'team' && item.rarity === 'LR') ?? [];
+  const fabricationCost = item => (item.chargedResourceDiamonds?.[item.fragmentResource] ?? 0) + (item.chargedResourceDiamonds?.lifeTreeDew ?? 0);
+  const lrFabricationDiamonds = lrCosts.reduce((sum, item) => sum + fabricationCost(item), 0);
   const offTeamCosts = cost?.offTeamCharacterCosts?.filter(item => item.diamonds > 0) ?? [];
   const diamondResourceNames = DIAMOND_RESOURCE_NAMES;
   const diamondBudgetResources = Object.keys(diamondResourceNames).filter(key => policy.blessings?.some(blessing => blessing.effect === 'resourceDiamondAllowance' && blessing.resource === key));
@@ -517,6 +520,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       <div className="price-line"><span>超额材料</span><strong>{amount(cost?.resourceDiamonds)} 钻</strong></div>
     </div>
     {(cost?.characterCosts?.some(item => item.sourceKind === 'arcana') || arcanaState?.groups?.some(group => group.purchased)) && <p className="shared-ownership-note">配队与秘仪按角色最高持有稀有度合并，同一角色只计一次本体费用。</p>}
+    {lrCosts.length > 0 && <section className="ordinary-crafting-costs lr-crafting-costs" aria-label="LR装备造价"><div className="resource-section-title"><span>LR 装备造价</span><strong>{amount(lrFabricationDiamonds)} 钻</strong></div><p className="inventory-caption">制作碎片与叶子进化的实际投入，已计入总额。</p>{lrCosts.map(item => <div className="leaf-cost-row" key={costKey(item)} data-position={item.position} data-slot={item.slot}><span>{characterLabel(catalogCharacter(item.characterId))} · {item.weaponKind === 'exclusive' ? 'LR 专武' : `${SLOT_NAMES[item.slot]} LR`}<small>制作 {amount(item.chargedResourceDiamonds?.[item.fragmentResource] ?? 0)} · 叶子 {amount(item.chargedResourceDiamonds?.lifeTreeDew ?? 0)} 钻</small></span><strong>{amount(fabricationCost(item))} 钻</strong></div>)}</section>}
     {cost?.memberCosts?.length > 0 && <section className="member-investments" aria-label="队员实际投入"><div className="resource-section-title"><span>队员实际投入</span><span>已计入总额</span></div><p className="inventory-caption">共享免费额度按队伍顺序使用；以下投入已计入总额。</p>{cost.memberCosts.map(item => <div className="member-investment-row" key={item.characterId}><div><span title={characterLabel(catalogCharacter(item.characterId))}>{item.position}. {characterLabel(catalogCharacter(item.characterId)) || item.characterName}</span><strong>{amount(item.totalDiamonds)} 钻</strong></div><p>本体 {amount(item.characterDiamonds)} · 装备与养成 {amount(item.equipmentDiamonds)} 钻</p></div>)}</section>}
     {offTeamCosts.length > 0 && <section className="off-team-investments" aria-label="秘仪队外投入"><div className="resource-section-title"><span>秘仪队外投入</span><span>已计入总额</span></div>{offTeamCosts.map(item => <div className="member-investment-row" key={item.characterId}><div><span>{item.characterName}</span><strong>{amount(item.diamonds)} 钻</strong></div></div>)}</section>}
     {cost?.exclusiveWeaponCosts?.length > 0 && <section className="weapon-costs" aria-label="专武造价">
@@ -585,6 +589,9 @@ function BlessingCard({ blessing, policy }) {
 
 export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   const curseName = policy.baseline?.curse?.name ?? '诅咒·时之枷锁';
+  const characterCopyPrice = policy.unitPrices?.characterCopy;
+  const originalCharacterCopyPrice = policy.baseline?.curse?.characterCopyOriginalPrice;
+  const characterCopySaving = Number.isFinite(originalCharacterCopyPrice) && Number.isFinite(characterCopyPrice) ? Math.max(0, originalCharacterCopyPrice - characterCopyPrice) : 0;
   const [restoredDraft] = useState(() => restoreDraft(catalog, policy, freeLibrary));
   const [team, setTeam] = useState(restoredDraft.team);
   const [selectedIndex, setSelectedIndex] = useState(() => team.members.findIndex(Boolean));
@@ -746,7 +753,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       <div className="topbar-right"><span className="local-note"><span className="status-dot" />{draftStatus}</span><button className="button" onClick={() => importInput.current?.click()}><Icon name="upload" size={14} />导入方案</button><button className="button primary" disabled={!canExport} onClick={exportTeam}><Icon name="download" size={14} />导出方案</button></div>
       <input ref={importInput} type="file" accept="application/json,.json" aria-label="导入配队 JSON 文件" onChange={importTeam} />
     </header>
-    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成<span className="intro-heading-suffix">· 简易杯初筛</span></h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><div className="intro-mechanisms"><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><span>秘仪加成随角色实际持有汇总</span></aside>{(policy.blessings ?? []).map(blessing => <BlessingCard blessing={blessing} policy={policy} key={blessing.id} />)}</div></div>
+    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成<span className="intro-heading-suffix">· 简易杯初筛</span></h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><div className="intro-mechanisms"><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><p className="curse-character-price">每个角色本体 {characterCopySaving > 0 && <>{amount(originalCharacterCopyPrice)} → </>}{amount(characterCopyPrice)} 钻</p>{characterCopySaving > 0 && <span className="curse-character-saving">受诅咒影响，每个本体减少 {amount(characterCopySaving)} 钻</span>}<span>秘仪加成随角色实际持有汇总</span></aside>{(policy.blessings ?? []).map(blessing => <BlessingCard blessing={blessing} policy={policy} key={blessing.id} />)}</div></div>
     {notice && <div className={`notice ${notice.kind}`} role="status" style={{ marginBottom: 16 }}>{notice.text}</div>}
     <main className="workspace">
       <aside className="panel catalog-panel left-column" aria-label="选择角色">

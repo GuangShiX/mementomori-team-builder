@@ -1,7 +1,7 @@
 {
-  "id": "owner-450-v8",
-  "version": 8,
-  "ruleSetId": "mementomori-investment-equivalent-v8",
+  "id": "owner-450-v9",
+  "version": 9,
+  "ruleSetId": "mementomori-investment-equivalent-v9",
   "title": "诅咒·时之枷锁配队预算规则",
   "characterLevel": 450,
   "baseline": {
@@ -12,13 +12,14 @@
     "curse": {
       "id": "chains-of-time",
       "name": "诅咒·时之枷锁",
-      "fixedCharacterLevel": 450
+      "fixedCharacterLevel": 450,
+      "characterCopyOriginalPrice": 17000
     },
     "arcanaMode": "ownedRarity",
     "playerLevel": 560,
     "playerLevelMode": "fixed",
     "polishMode": "selectedAttributeMaximum",
-    "description": "诅咒·时之枷锁：所有角色等级固定为450级；玩家等级固定为560级，不计战斗技能增益。装备按所选属性满打磨，秘仪按持有角色稀有度自动解锁；实际战斗接入由构建方后续处理。"
+    "description": "诅咒·时之枷锁：所有角色等级固定为450级，每个角色本体单价由17000钻降为12000钻、减少5000钻；玩家等级固定为560级，不计战斗技能增益。装备按所选属性满打磨，秘仪按持有角色稀有度自动解锁；实际战斗接入由构建方后续处理。"
   },
   "allowanceScope": "wholeTeam",
   "allowances": {
@@ -142,7 +143,7 @@
   },
   "notes": [
     "诅咒·时之枷锁使所有角色等级固定为450级；秘仪按实际持有LR／LR5角色自动解锁，展示已解锁加成，实际战斗属性后续由5830接入。",
-    "每个角色本体单价为12000钻，按稀有度所需累计本体数扣除免费库后计价；装备费用不受本体单价调整影响。",
+    "受诅咒·时之枷锁影响，每个角色本体单价由17000钻降为12000钻、减少5000钻，按稀有度所需累计本体数扣除免费库后计价；装备费用不受本体单价调整影响。",
     "免费额度由管理员按450级基准设定，属于整支配队，不是每名角色。",
     "红水整队免费总额度为88888，由赐福·绯红恩泽提供，基础额度为0；仅超出该总额度的部分按每个10钻计费。",
     "赐福·锻造恩典免除普通SSR装备制作碎片的钻石费用；SSR专武保留原始制作价格，另按紫晶恩泽与免费专武库扣除制作权益，强化、符石与圣装继续使用各自整队免费额度。投入数量和参考单价保留，赐福抵扣另列；UR／LR制作及叶子不受锻造恩典影响。",
