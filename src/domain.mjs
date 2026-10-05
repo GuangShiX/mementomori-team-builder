@@ -25,6 +25,7 @@ const automaticWeaponPricing = policy => policy.weaponSync?.mode === 'automatic'
 const syncSettings = policy => automaticWeaponPricing(policy) ? legacySyncSettings() : policy.weaponSync ?? legacySyncSettings();
 const weaponOwnerId = (member, gear = member?.equipment?.[0]) => gear?.weaponOwnerCharacterId ?? member?.characterId;
 const highestRarity = (left, right) => RARITIES[Math.max(RARITIES.indexOf(left), RARITIES.indexOf(right))] ?? null;
+const blessingEffect = blessing => blessing.effect ?? 'resourceAllowance';
 
 function validateResourceAllowances(policy, errors) {
   for (const key of RESOURCE_KEYS) {
@@ -36,24 +37,45 @@ function validateResourceAllowances(policy, errors) {
     return;
   }
   const seen = new Set();
+  const craftingTargets = new Set();
   policy.blessings.forEach((blessing, index) => {
     const path = `policy.blessings[${index}]`;
     if (!isObject(blessing) || typeof blessing.id !== 'string' || blessing.id.length === 0 || seen.has(blessing.id)
-      || typeof blessing.name !== 'string' || blessing.name.length === 0 || !RESOURCE_KEYS.includes(blessing.resource) || !finiteNonnegative(blessing.amount)) {
-      error(errors, path, 'INVALID_BLESSING', '赐福必须包含唯一编号、名称、已知材料及非负额度。');
+      || typeof blessing.name !== 'string' || blessing.name.length === 0 || !RESOURCE_KEYS.includes(blessing.resource)) {
+      error(errors, path, 'INVALID_BLESSING', '赐福必须包含唯一编号、名称及已知材料。');
       return;
     }
     seen.add(blessing.id);
+    const effect = blessingEffect(blessing);
+    if (effect === 'resourceAllowance') {
+      if (!finiteNonnegative(blessing.amount)) error(errors, path, 'INVALID_BLESSING', '材料额度赐福必须包含非负额度。');
+    } else if (effect === 'resourceDiamondAllowance') {
+      if (!['lifeTreeDew', 'exclusiveFragments'].includes(blessing.resource) || !finiteNonnegative(blessing.amount)) {
+        error(errors, path, 'INVALID_DIAMOND_BLESSING', '钻石额度赐福仅支持叶子与专武碎片／紫水晶的独立非负钻石预算。');
+      }
+    } else if (effect === 'freeEquipmentCrafting') {
+      if (blessing.rarity !== 'SSR' || blessing.weaponKind !== 'normal' || blessing.resource !== 'ssrFragments' || blessing.amount !== undefined) {
+        error(errors, path, 'INVALID_CRAFTING_BLESSING', '制作赐福仅免普通 SSR 装备的 SSR 碎片，不包含专武、UR／LR或养成额度。');
+      }
+      const target = `${blessing.rarity}:${blessing.weaponKind}:${blessing.resource}`;
+      if (craftingTargets.has(target)) error(errors, path, 'DUPLICATE_CRAFTING_BLESSING', '同一装备制作权益不能重复配置赐福。');
+      craftingTargets.add(target);
+    } else error(errors, path, 'UNKNOWN_BLESSING_EFFECT', '赐福效果类型未知，无法估价。');
   });
   if (errors.length === 0) for (const key of RESOURCE_KEYS) {
     if (!finiteNonnegative(resourceAllowanceDetails(policy, key).freeAllowance)) error(errors, `policy.blessings`, 'INVALID_ALLOWANCE', '赐福与基础额度之和必须为有效非负数。');
+    if (!finiteNonnegative(resourceDiamondAllowance(policy, key))) error(errors, 'policy.blessings', 'INVALID_DIAMOND_BLESSING', '赐福钻石预算之和必须为有效非负数。');
   }
 }
 
 function resourceAllowanceDetails(policy, resource) {
   const baseAllowance = policy.allowances?.[resource] ?? 0;
-  const blessingAllowance = (policy.blessings ?? []).filter(blessing => blessing.resource === resource).reduce((sum, blessing) => sum + blessing.amount, 0);
+  const blessingAllowance = (policy.blessings ?? []).filter(blessing => blessingEffect(blessing) === 'resourceAllowance' && blessing.resource === resource).reduce((sum, blessing) => sum + blessing.amount, 0);
   return { baseAllowance, blessingAllowance, freeAllowance: baseAllowance + blessingAllowance };
+}
+
+function resourceDiamondAllowance(policy, resource) {
+  return (policy.blessings ?? []).filter(blessing => blessingEffect(blessing) === 'resourceDiamondAllowance' && blessing.resource === resource).reduce((sum, blessing) => sum + blessing.amount, 0);
 }
 
 export function getResourceAllowance(policy, resource) {
@@ -62,6 +84,14 @@ export function getResourceAllowance(policy, resource) {
   validateResourceAllowances(policy, errors);
   if (errors.length) throw new DomainValidationError(errors);
   return resourceAllowanceDetails(policy, resource).freeAllowance;
+}
+
+export function getResourceDiamondAllowance(policy, resource) {
+  const errors = [];
+  if (!RESOURCE_KEYS.includes(resource)) error(errors, 'resource', 'UNKNOWN_RESOURCE', '材料类型未知，无法取得钻石额度。');
+  validateResourceAllowances(policy, errors);
+  if (errors.length) throw new DomainValidationError(errors);
+  return resourceDiamondAllowance(policy, resource);
 }
 
 const arcanaGroups = catalog => Array.isArray(catalog?.arcana?.groups) ? catalog.arcana.groups : [];
@@ -647,6 +677,7 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
   const precision = policy.rounding?.precision ?? 2;
   const consumed = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
   const libraryCredits = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
+  const craftingBlessingCredits = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
   const arcanaState = getArcanaState(team, catalog, policy, freeLibrary);
   errors.push(...arcanaState.errors);
   const characterCosts = arcanaState.ledger.filter(entry => entry.requiredRarity !== null).map(entry => {
@@ -702,6 +733,7 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
       const pricingMetadata = { billedLevel, craftingLevel: billedLevel, discounted: automaticPrice?.discounted ?? false, automaticSyncDiscount: automaticPrice?.discounted ?? false, discountOrdinal: automaticPrice?.ordinal ?? null };
       const gearResources = {};
       const gearLibraryCredits = {};
+      const gearBlessingCredits = {};
       const addGearResource = (resource, amount, credit = 0) => {
         addResource(resource, amount, path);
         gearResources[resource] = (gearResources[resource] ?? 0) + amount;
@@ -725,6 +757,13 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
       const freeWeaponFragments = freeWeapon ? readCost(catalog.equipmentCosts?.fragments?.[`exclusive${freeWeapon.rarity}`], freeWeapon.level, errors, 'freeLibrary.exclusiveWeapons', '免费专武碎片') : 0;
       const freeFragments = Math.min(fragments, freeWeaponFragments);
       addGearResource(fragmentResource, fragments, freeFragments);
+      const craftingBlessing = (policy.blessings ?? []).find(blessing => blessingEffect(blessing) === 'freeEquipmentCrafting'
+        && blessing.rarity === gear.rarity && blessing.weaponKind === weaponKind && blessing.resource === fragmentResource);
+      if (craftingBlessing) {
+        const credited = Math.max(0, fragments - freeFragments);
+        gearBlessingCredits[fragmentResource] = credited;
+        craftingBlessingCredits[fragmentResource] += credited;
+      }
       let lifeTreeDew = 0;
       let freeLifeTreeDew = 0;
       if (['UR', 'LR'].includes(gear.rarity)) {
@@ -767,7 +806,7 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
         const amount = 2 ** (rune.level - offset);
         addGearResource(ticketBased ? 'runeTickets' : 'unidentifiedRune7', amount);
       });
-      equipmentCosts.push({ position, sourceKind, sourceIndex, characterId: character.id, characterName: character.name, slot: gear.slot, rarity: gear.rarity, seriesId, seriesName: series?.name ?? gear.rarity, weaponKind, ...ownership, ...pricingMetadata, level: gear.level, effectiveLevel, syncSlot, legendExperience: legend, matchlessExperience: matchless, resources: gearResources, freeLibraryCredits: gearLibraryCredits });
+      equipmentCosts.push({ position, sourceKind, sourceIndex, characterId: character.id, characterName: character.name, slot: gear.slot, rarity: gear.rarity, seriesId, seriesName: series?.name ?? gear.rarity, weaponKind, ...ownership, ...pricingMetadata, level: gear.level, effectiveLevel, syncSlot, legendExperience: legend, matchlessExperience: matchless, resources: gearResources, freeLibraryCredits: gearLibraryCredits, blessingCredits: gearBlessingCredits, craftingBlessingId: craftingBlessing?.id ?? null });
       if (exclusive) {
         const crystalsPerExchange = policy.conversions?.magicCrystalsPerExclusiveExchange ?? 3;
         const fragmentsPerExchange = policy.conversions?.exclusiveFragmentsPerExchange ?? 10;
@@ -795,40 +834,71 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
     if (!finiteNonnegative(allowance)) error(errors, `policy.allowances.${key}`, 'INVALID_ALLOWANCE', '免费材料额度必须为非负数。');
     if (amount > 0 && !finiteNonnegative(unitPrice)) error(errors, `policy.unitPrices.${key}`, 'UNKNOWN_RESOURCE_PRICE', `${key} 单价尚未确认，无法估价。`);
     const freeLibraryCredit = libraryCredits[key];
-    const charged = finiteNonnegative(allowance) ? Math.max(0, amount - freeLibraryCredit - allowance) : NaN;
-    resources[key] = { consumed: amount, freeLibraryCredit, ...allowanceDetails, charged, unitPrice: finiteNonnegative(unitPrice) ? unitPrice : null, diamonds: amount === 0 ? 0 : round(charged * unitPrice, precision) };
+    const craftingBlessingCredit = craftingBlessingCredits[key];
+    const chargedBeforeDiamondAllowance = finiteNonnegative(allowance) ? Math.max(0, amount - freeLibraryCredit - craftingBlessingCredit - allowance) : NaN;
+    const diamondAllowance = resourceDiamondAllowance(policy, key);
+    const chargeableDiamonds = chargedBeforeDiamondAllowance > 0 ? chargedBeforeDiamondAllowance * unitPrice : 0;
+    const diamondAllowanceCredit = Math.min(chargeableDiamonds, diamondAllowance);
+    const paidDiamonds = Math.max(0, chargeableDiamonds - diamondAllowanceCredit);
+    const charged = diamondAllowanceCredit > 0 && unitPrice > 0 ? paidDiamonds / unitPrice : chargedBeforeDiamondAllowance;
+    resources[key] = { consumed: amount, freeLibraryCredit, craftingBlessingCredit,
+      craftingBlessingDiamonds: craftingBlessingCredit > 0 ? round(craftingBlessingCredit * unitPrice, precision) : 0,
+      ...allowanceDetails, chargedBeforeDiamondAllowance, diamondAllowance, diamondAllowanceCredit,
+      remainingDiamondAllowance: Math.max(0, diamondAllowance - diamondAllowanceCredit),
+      charged, unitPrice: finiteNonnegative(unitPrice) ? unitPrice : null, diamonds: round(paidDiamonds, precision) };
     const hardLimit = policy.hardLimits?.[key];
     if (hardLimit != null && (!finiteNonnegative(hardLimit) || amount > hardLimit)) error(errors, `resources.${key}`, 'RESOURCE_LIMIT_EXCEEDED', `${key} 超出当前规则允许的材料额度。`);
   }
   // Allocate team allowances once, in team/slot order, so per-weapon fees agree with the total.
   const remainingAllowances = Object.fromEntries(RESOURCE_KEYS.map(key => [key, resources[key].freeAllowance]));
+  const remainingDiamondAllowances = Object.fromEntries(RESOURCE_KEYS.map(key => [key, resources[key].diamondAllowance]));
   for (const gear of equipmentCosts) {
     gear.chargedResources = {};
+    gear.chargedResourcesBeforeDiamondAllowance = {};
+    gear.chargedResourceDiamonds = {};
+    gear.diamondAllowanceCredits = {};
     gear.sharedAllowanceCredits = {};
     for (const [key, amount] of Object.entries(gear.resources)) {
-      const aboveLibrary = Math.max(0, amount - (gear.freeLibraryCredits[key] ?? 0));
+      const aboveLibrary = Math.max(0, amount - (gear.freeLibraryCredits[key] ?? 0) - (gear.blessingCredits[key] ?? 0));
       const sharedCredit = Math.min(aboveLibrary, remainingAllowances[key]);
       remainingAllowances[key] -= sharedCredit;
       gear.sharedAllowanceCredits[key] = sharedCredit;
-      gear.chargedResources[key] = aboveLibrary - sharedCredit;
+      const chargedQuantity = aboveLibrary - sharedCredit;
+      const chargeableDiamonds = chargedQuantity > 0 ? chargedQuantity * resources[key].unitPrice : 0;
+      const diamondCredit = Math.min(chargeableDiamonds, remainingDiamondAllowances[key]);
+      remainingDiamondAllowances[key] = Math.max(0, remainingDiamondAllowances[key] - diamondCredit);
+      const paidDiamonds = Math.max(0, chargeableDiamonds - diamondCredit);
+      gear.chargedResourcesBeforeDiamondAllowance[key] = chargedQuantity;
+      gear.diamondAllowanceCredits[key] = diamondCredit;
+      gear.chargedResourceDiamonds[key] = paidDiamonds;
+      gear.chargedResources[key] = diamondCredit > 0 && resources[key].unitPrice > 0 ? paidDiamonds / resources[key].unitPrice : chargedQuantity;
     }
     if (gear.weaponKind !== 'exclusive') continue;
     const weapon = exclusiveWeaponCosts.find(item => item.sourceKind === gear.sourceKind && item.position === gear.position && item.sourceIndex === gear.sourceIndex);
     weapon.chargedFragments = gear.chargedResources.exclusiveFragments;
     weapon.chargedLifeTreeDew = gear.chargedResources.lifeTreeDew ?? 0;
+    weapon.chargedFragmentsBeforeDiamondAllowance = gear.chargedResourcesBeforeDiamondAllowance.exclusiveFragments;
+    weapon.chargedLifeTreeDewBeforeDiamondAllowance = gear.chargedResourcesBeforeDiamondAllowance.lifeTreeDew ?? 0;
+    weapon.diamondAllowanceFragments = gear.diamondAllowanceCredits.exclusiveFragments;
+    weapon.diamondAllowanceLifeTreeDew = gear.diamondAllowanceCredits.lifeTreeDew ?? 0;
+    weapon.diamondAllowanceCredits = { exclusiveFragments: weapon.diamondAllowanceFragments, lifeTreeDew: weapon.diamondAllowanceLifeTreeDew };
+    weapon.chargedResourceDiamonds = { exclusiveFragments: gear.chargedResourceDiamonds.exclusiveFragments, lifeTreeDew: gear.chargedResourceDiamonds.lifeTreeDew ?? 0 };
     weapon.sharedAllowanceFragments = gear.sharedAllowanceCredits.exclusiveFragments;
     weapon.sharedAllowanceLifeTreeDew = gear.sharedAllowanceCredits.lifeTreeDew ?? 0;
     const crystalRatio = (policy.conversions?.magicCrystalsPerExclusiveExchange ?? 3) / (policy.conversions?.exclusiveFragmentsPerExchange ?? 10);
     weapon.chargedMagicCrystals = weapon.chargedFragments * crystalRatio;
-    const fragmentDiamonds = weapon.chargedFragments > 0 ? weapon.chargedFragments * resources.exclusiveFragments.unitPrice : 0;
-    const dewDiamonds = weapon.chargedLifeTreeDew > 0 ? weapon.chargedLifeTreeDew * resources.lifeTreeDew.unitPrice : 0;
+    weapon.chargedMagicCrystalsBeforeDiamondAllowance = weapon.chargedFragmentsBeforeDiamondAllowance * crystalRatio;
+    const fragmentDiamonds = weapon.chargedResourceDiamonds.exclusiveFragments;
+    const dewDiamonds = weapon.chargedResourceDiamonds.lifeTreeDew;
+    weapon.chargedFragmentDiamonds = round(fragmentDiamonds, precision);
+    weapon.chargedLifeTreeDewDiamonds = round(dewDiamonds, precision);
     weapon.diamonds = round(fragmentDiamonds + dewDiamonds, precision);
   }
   const weaponSourceCosts = (automatic ? [] : team.weaponSources ?? []).map((source, sourceIndex) => {
     const character = characterCosts.find(item => item.sourceKind === 'reserve' && item.sourceIndex === sourceIndex);
     const weapon = exclusiveWeaponCosts.find(item => item.sourceKind === 'reserve' && item.sourceIndex === sourceIndex);
     const characterDiamonds = character?.diamonds ?? 0;
-    return { sourceIndex, characterId: source.characterId, characterName: weapon.characterName, characterRarity: source.characterRarity, rarity: source.rarity, level: source.level, characterDiamonds, weaponDiamonds: weapon.diamonds, diamonds: round((character ? character.chargedCopies * character.unitPrice : 0) + weapon.chargedFragments * resources.exclusiveFragments.unitPrice + weapon.chargedLifeTreeDew * resources.lifeTreeDew.unitPrice, precision) };
+    return { sourceIndex, characterId: source.characterId, characterName: weapon.characterName, characterRarity: source.characterRarity, rarity: source.rarity, level: source.level, characterDiamonds, weaponDiamonds: weapon.diamonds, diamonds: round((character ? character.chargedCopies * character.unitPrice : 0) + weapon.chargedResourceDiamonds.exclusiveFragments + weapon.chargedResourceDiamonds.lifeTreeDew, precision) };
   });
   return { characterCosts, equipmentCosts, exclusiveWeaponCosts, weaponSourceCosts, reserveSourceCosts: weaponSourceCosts, weaponSync, weaponPricing, arcanaState, resources, legendExperience, matchlessExperience, fixedRuneInventory, freeLibraryVersion: freeLibrary?.version ?? null };
 }
@@ -845,7 +915,7 @@ export function calculateTeam(team, catalog, policy, freeLibrary) {
   const result = collectCosts(team, catalog, policy, errors, freeLibrary);
   if (errors.length > 0) throw new DomainValidationError(errors);
   const rawCharacterDiamonds = result.characterCosts.reduce((sum, item) => sum + item.chargedCopies * item.unitPrice, 0);
-  const rawResourceDiamonds = Object.values(result.resources).reduce((sum, item) => sum + (item.consumed > 0 ? item.charged * item.unitPrice : 0), 0);
+  const rawResourceDiamonds = Object.values(result.resources).reduce((sum, item) => sum + (item.consumed > 0 ? Math.max(0, item.chargedBeforeDiamondAllowance * item.unitPrice - item.diamondAllowanceCredit) : 0), 0);
   const precision = policy.rounding?.precision ?? 2;
   const characterDiamonds = round(rawCharacterDiamonds, precision);
   const grossCharacterDiamonds = round(result.characterCosts.reduce((sum, item) => sum + item.copies * item.unitPrice, 0), precision);

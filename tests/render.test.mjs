@@ -5,7 +5,7 @@ import {createServer} from 'vite';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createTeam,createMember} from '../src/domain.mjs';
-const catalog={...JSON.parse(await readFile(new URL('../public/data/catalog.json',import.meta.url))),arcana:JSON.parse(await readFile(new URL('../public/data/arcana-catalog.json',import.meta.url)))};
+const catalog={...JSON.parse(await readFile(new URL('../public/data/catalog.json',import.meta.url))),arcana:JSON.parse(await readFile(new URL('../public/data/arcana-catalog.json',import.meta.url))),equipmentBonuses:JSON.parse(await readFile(new URL('../public/data/equipment-bonuses.json',import.meta.url)))};
 const policy=JSON.parse(await readFile(new URL('../public/data/pricing-policy.json',import.meta.url)));
 const fiveMemberCost=new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2}).format(policy.unitPrices.characterCopy*5);
 

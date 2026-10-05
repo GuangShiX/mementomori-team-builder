@@ -7,7 +7,8 @@ const catalog = JSON.parse(await readFile(new URL('../public/data/catalog.json',
 const policy = JSON.parse(await readFile(new URL('../public/data/pricing-policy.json',import.meta.url)));
 const lock = JSON.parse(await readFile(new URL('../public/data/asset-lock.json',import.meta.url)));
 const freeLibrary = JSON.parse(await readFile(new URL('../public/data/free-library.json',import.meta.url)));
-const manualPolicy = () => ({...policy,weaponSync:{minimumLevel:300,maximumSourceCount:3,slots:[{slot:1,requiredAnchors:2},{slot:2,requiredAnchors:3}]}});
+const materialOnlyPolicy = () => ({...policy,blessings:policy.blessings.filter(blessing=>blessing.effect!=='resourceDiamondAllowance')});
+const manualPolicy = () => ({...materialOnlyPolicy(),weaponSync:{minimumLevel:300,maximumSourceCount:3,slots:[{slot:1,requiredAnchors:2},{slot:2,requiredAnchors:3}]}});
 const five = () => {const team=createTeam();team.members=catalog.characters.slice(0,5).map(createMember);return team;};
 
 test('all shipped portraits match the canonical public asset manifest',async()=>{
@@ -67,6 +68,29 @@ test('actual gear data computes full reinforcement investment and team-wide free
   const next=structuredClone(policy);next.allowances.reinforcementMedicine=147315;
   assert.equal(calculateTeam(team,catalog,next).resources.reinforcementMedicine.diamonds,0);
 });
+test('forge grace applies only to ordinary SSR and an SSR exclusive consumes the shared crystal budget at its original price',()=>{
+  const team=createTeam();team.members[0]=createMember(6);
+  const member=team.members[0];
+  Object.assign(member.equipment[0],{rarity:'SSR',seriesId:12,weaponKind:'exclusive',level:180});
+  for(const gear of member.equipment.slice(1)) Object.assign(gear,{rarity:'SSR',seriesId:12,level:450});
+  const cost=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(cost.resources.ssrFragments.consumed,3275);
+  assert.equal(cost.resources.ssrFragments.craftingBlessingCredit,3275);
+  assert.equal(cost.resources.ssrFragments.unitPrice,policy.unitPrices.ssrFragments);
+  assert.equal(cost.resources.ssrFragments.diamonds,0);
+  assert.equal(cost.resources.exclusiveFragments.craftingBlessingCredit,0);
+  assert.equal(cost.resources.exclusiveFragments.chargedBeforeDiamondAllowance,80);
+  assert.equal(Math.round(cost.resources.exclusiveFragments.diamondAllowanceCredit*100)/100,3685.41);
+  assert.equal(cost.resources.exclusiveFragments.charged,0);
+  assert.equal(cost.totalDiamonds,0);
+  const withoutForge=structuredClone(policy);
+  withoutForge.blessings=withoutForge.blessings.filter(blessing=>blessing.id!=='forge-grace');
+  assert.ok(calculateTeam(team,catalog,withoutForge,freeLibrary).resources.ssrFragments.diamonds>0);
+  Object.assign(member.equipment[1],{rarity:'UR',seriesId:13});
+  const upgraded=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(upgraded.resources.urLrFragments.charged,650);
+  assert.equal(upgraded.resources.urLrFragments.craftingBlessingCredit,0);
+});
 test('actual catalog rejects SSR exclusive450 and permits exclusive240',()=>{
   const team=five(); const gear=team.members[0].equipment[0];
   Object.assign(gear,{rarity:'SSR',seriesId:12,weaponKind:'exclusive',level:450});
@@ -81,7 +105,9 @@ test('published LR normal and exclusive costs include the distinct leaf evolutio
   Object.assign(member.equipment[1],{rarity:'LR',seriesId:14,level:450});
   const result=calculateTeam(team,catalog,policy);
   assert.equal(result.resources.lifeTreeDew.consumed,115);
-  assert.equal(result.resources.lifeTreeDew.diamonds,46000);
+  assert.equal(result.resources.lifeTreeDew.chargedBeforeDiamondAllowance,115);
+  assert.equal(result.resources.lifeTreeDew.diamondAllowanceCredit,46000);
+  assert.equal(result.resources.lifeTreeDew.diamonds,0);
 });
 test('sacred experience is cumulative and overage charges rather than blocking export',()=>{
   const team=five();
@@ -120,7 +146,7 @@ test('published free library applies permanent LR5 and LR caps with named limite
   exported.freeLibrarySnapshot.characters=catalog.characters.map(character=>({characterId:character.id,rarity:'LR5'}));
   assert.equal(parseImport(exported,catalog,policy,freeLibrary).costBreakdown.characterDiamonds,38*12000);
 });
-test('published free weapons cover SSR240 and SSR180 crafting and retain exact crystal equivalents above the entitlement',()=>{
+test('published free weapons retain exact crystal equivalents above the entitlement before applying the diamond budget',()=>{
   const team=createTeam();
   team.members=[124,96,86,85,100].map(createMember);
   for(const member of team.members){
@@ -132,7 +158,7 @@ test('published free weapons cover SSR240 and SSR180 crafting and retain exact c
   assert.deepEqual(result.exclusiveWeaponCosts.map(item=>item.freeMagicCrystals),[82.5,82.5,82.5,24,24]);
   assert.ok(result.exclusiveWeaponCosts.every(item=>item.diamonds===0));
   team.members[3].equipment[0].level=240;
-  const upgraded=calculateTeam(team,catalog,policy,freeLibrary);
+  const upgraded=calculateTeam(team,catalog,materialOnlyPolicy(),freeLibrary);
   assert.equal(upgraded.resources.exclusiveFragments.charged,195);
   assert.equal(upgraded.exclusiveWeaponCosts[3].chargedMagicCrystals,58.5);
   assert.equal(upgraded.totalDiamonds,8983.2);
@@ -162,8 +188,10 @@ test('free UR weapon baselines include their fifteen leaves and LR upgrades char
   assert.equal(free.resources.lifeTreeDew.freeLibraryCredit,45);
   team.members[0].rarity='LR5';Object.assign(team.members[0].equipment[0],{rarity:'LR',seriesId:14,level:300});
   const evolved=calculateTeam(team,catalog,policy,freeLibrary);
-  assert.equal(evolved.resources.lifeTreeDew.charged,50);
-  assert.equal(evolved.exclusiveWeaponCosts[0].chargedLifeTreeDew,50);
+  assert.equal(evolved.resources.lifeTreeDew.chargedBeforeDiamondAllowance,50);
+  assert.equal(evolved.resources.lifeTreeDew.diamondAllowanceCredit,20000);
+  assert.equal(evolved.resources.lifeTreeDew.charged,0);
+  assert.equal(evolved.exclusiveWeaponCosts[0].chargedLifeTreeDew,0);
 });
 test('legacy manual policy can price real free UR300 anchors and paid outside upgrades',()=>{
   const policy=manualPolicy();
@@ -215,12 +243,12 @@ test('legacy manual borrowed UR gift uses its physical owner and can serve as an
   team.weaponSources.push({characterId:27,characterRarity:'SR',rarity:'UR',level:450});
   assert.equal(validateTeam(team,catalog,policy,{freeLibrary}).errors.some(item=>item.code==='DUPLICATE_WEAPON_SOURCE'),true);
 });
-test('actual automatic policy discounts the third450 weapon only, with crafting300 and all actual levels450',()=>{
-  assert.equal(policy.version,6);
+test('automatic policy discounts the third450 fabrication before applying diamond budgets, with actual levels450',()=>{
+  assert.equal(policy.version,7);
   assert.deepEqual(policy.weaponSync,{mode:'automatic',targetLevel:450,billedLevel:300,discountedOrdinals:[3,6]});
   const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
   for(const member of team.members)Object.assign(member.equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:450,reinforcementLevel:450});
-  const auto=calculateTeam(team,catalog,policy,freeLibrary);
+  const auto=calculateTeam(team,catalog,materialOnlyPolicy(),freeLibrary);
   const full=calculateTeam(team,catalog,manualPolicy(),freeLibrary);
   assert.deepEqual(auto.exclusiveWeaponCosts.map(item=>item.level),[450,450,450,450,450]);
   assert.deepEqual(auto.exclusiveWeaponCosts.map(item=>item.billedLevel),[450,450,300,450,450]);

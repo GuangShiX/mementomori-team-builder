@@ -5,7 +5,7 @@ import {
   createExport, parseImport, cloneTeam, DomainValidationError,
   deriveWeaponSync,
   getBorrowableWeapons, isWeaponOwnerClaimed,
-  deriveWeaponPricing, migrateLegacyWeaponConfiguration,
+  deriveWeaponPricing, migrateLegacyWeaponConfiguration, getResourceAllowance,
 } from '../src/domain.mjs';
 
 const catalog = {
@@ -871,4 +871,120 @@ test('unsafe legacy synchronization is rejected while source-only migration remo
   assert.deepEqual(migrated.team.weaponSources, []);
   assert.equal(calculateTeam(migrated.team, syncCatalog(), autoPolicy(), syncLibrary()).resources.exclusiveFragments.consumed, 0);
   assert.match(migrated.warnings[0], /不再收取隐藏库存费用/);
+});
+
+const forgeBlessing = { id: 'forge-grace', name: '赐福·锻造恩典', effect: 'freeEquipmentCrafting', rarity: 'SSR', weaponKind: 'normal', resource: 'ssrFragments' };
+const forgingPolicy = () => ({ ...copy(policy), blessings: [copy(forgeBlessing)] });
+
+test('ordinary SSR crafting blessing preserves material investment and unit prices while charging no crafting diamonds', () => {
+  const team = fullTeam();
+  for (const slot of [1, 2, 3, 4, 5, 6]) equip(team.members[0], slot);
+  const configured = forgingPolicy();
+  configured.allowances.ssrFragments = 100;
+  const cost = calculateTeam(team, catalog, configured);
+  const resource = cost.resources.ssrFragments;
+  assert.equal(resource.consumed, 300);
+  assert.equal(resource.unitPrice, policy.unitPrices.ssrFragments);
+  assert.equal(resource.freeLibraryCredit, 0);
+  assert.equal(resource.craftingBlessingCredit, 300);
+  assert.equal(resource.craftingBlessingDiamonds, 13274.12);
+  assert.equal(resource.freeAllowance, 100);
+  assert.equal(resource.blessingAllowance, 0);
+  assert.equal(resource.charged, 0);
+  assert.equal(resource.diamonds, 0);
+  assert.equal(cost.resourceDiamonds, 0);
+  for (const gear of cost.equipmentCosts) {
+    assert.equal(gear.resources.ssrFragments, 50);
+    assert.equal(gear.blessingCredits.ssrFragments, 50);
+    assert.equal(gear.craftingBlessingId, 'forge-grace');
+    assert.equal(gear.sharedAllowanceCredits.ssrFragments, 0);
+    assert.equal(gear.chargedResources.ssrFragments, 0);
+  }
+  assert.equal(getResourceAllowance(configured, 'ssrFragments'), 100);
+  assert.equal(getResourceAllowance(configured, 'reinforcementMedicine'), 100000);
+});
+
+test('SSR crafting blessing does not exempt reinforcement, runes, sacred treasure or magic armor investment', () => {
+  const team = createTeam();
+  team.members[0] = createMember(1);
+  const gear = equip(team.members[0], 1, { reinforcementLevel: 1, legendSacredTreasureLevel: 1, matchlessSacredTreasureLevel: 40 });
+  gear.runes[0] = { categoryId: 5, level: 1 };
+  const configured = forgingPolicy();
+  configured.allowances = { runeTickets: 0, reinforcementMedicine: 0, holySteel: 0 };
+  const cost = calculateTeam(team, catalog, configured);
+  assert.equal(cost.resourceDiamonds, 10120);
+  assert.equal(cost.resources.reinforcementMedicine.diamonds, 10000);
+  assert.equal(cost.resources.runeTickets.diamonds, 20);
+  assert.equal(cost.resources.holySteel.diamonds, 100);
+  assert.equal(cost.matchlessExperience, catalog.equipmentCosts.sacredExperience[40]);
+  for (const key of ['reinforcementMedicine', 'runeTickets', 'holySteel']) assert.equal(cost.resources[key].craftingBlessingCredit, 0);
+});
+
+test('SSR exclusive and UR LR crafting remain priced with only their original free weapon baseline credit', () => {
+  for (const rarity of ['SSR', 'UR', 'LR']) {
+    const team = createTeam();
+    team.members[0] = createMember(2);
+    if (rarity === 'LR') team.members[0].rarity = 'LR5';
+    equip(team.members[0], 1, { rarity, seriesId: { SSR: 12, UR: 13, LR: 14 }[rarity], weaponKind: 'exclusive', level: rarity === 'SSR' ? 240 : 450 });
+    const original = calculateTeam(team, catalog, policy, freeLibrary);
+    const blessed = calculateTeam(team, catalog, forgingPolicy(), freeLibrary);
+    assert.equal(blessed.totalDiamonds, original.totalDiamonds);
+    assert.equal(blessed.resources.exclusiveFragments.freeLibraryCredit, 240);
+    assert.equal(blessed.resources.exclusiveFragments.craftingBlessingCredit, 0);
+    assert.equal(blessed.exclusiveWeaponCosts[0].chargedFragments, rarity === 'SSR' ? 120 : 360);
+    assert.equal(blessed.exclusiveWeaponCosts[0].chargedLifeTreeDew, { SSR: 0, UR: 15, LR: 65 }[rarity]);
+    assert.equal(blessed.equipmentCosts[0].craftingBlessingId, null);
+  }
+  for (const rarity of ['UR', 'LR']) {
+    const team = createTeam();
+    team.members[0] = createMember(1);
+    if (rarity === 'LR') team.members[0].rarity = 'LR5';
+    equip(team.members[0], 2, { rarity, seriesId: rarity === 'UR' ? 13 : 14 });
+    const blessed = calculateTeam(team, catalog, forgingPolicy());
+    assert.equal(blessed.resources.urLrFragments.craftingBlessingCredit, 0);
+    assert.equal(blessed.resources.urLrFragments.charged, 200);
+    assert.equal(blessed.totalDiamonds, calculateTeam(team, catalog, policy).totalDiamonds);
+  }
+});
+
+test('exports distinguish crafting blessing credits and imports reprice with current crafting rules only', () => {
+  const team = fullTeam();
+  equip(team.members[0], 2);
+  const paid = createExport(team, catalog, policy);
+  paid.costBreakdown.totalDiamonds = 999999;
+  const current = parseImport(paid, catalog, forgingPolicy());
+  assert.equal(current.costBreakdown.resources.ssrFragments.charged, 0);
+  assert.equal(current.costBreakdown.resources.ssrFragments.craftingBlessingCredit, 50);
+  assert.equal(current.team.members[0].equipment[1].rarity, 'SSR');
+  const free = createExport(team, catalog, forgingPolicy());
+  assert.equal(free.policySnapshot.blessings[0].effect, 'freeEquipmentCrafting');
+  assert.equal(free.costBreakdown.equipmentCosts[0].blessingCredits.ssrFragments, 50);
+  free.policySnapshot.unitPrices.ssrFragments = 0;
+  free.costBreakdown.resources.ssrFragments.diamonds = 0;
+  const olderRules = parseImport(free, catalog, policy);
+  assert.equal(olderRules.costBreakdown.resources.ssrFragments.craftingBlessingCredit, 0);
+  assert.equal(olderRules.costBreakdown.resources.ssrFragments.charged, 50);
+  assert.equal(olderRules.costBreakdown.resources.ssrFragments.diamonds, 2212.35);
+});
+
+test('crafting blessing scope and effect are validated while old and explicit resource allowance blessings remain compatible', () => {
+  const invalid = [
+    { ...forgeBlessing, effect: 'freeEverything' }, { ...forgeBlessing, rarity: 'UR' },
+    { ...forgeBlessing, weaponKind: 'exclusive' }, { ...forgeBlessing, resource: 'exclusiveFragments' },
+    { ...forgeBlessing, amount: 0 },
+  ];
+  for (const blessing of invalid) {
+    const configured = { ...copy(policy), blessings: [blessing] };
+    assert.equal(validateTeam(createTeam(), catalog, configured).valid, false);
+    assert.throws(() => getResourceAllowance(configured, 'ssrFragments'), DomainValidationError);
+  }
+  const duplicate = forgingPolicy();
+  duplicate.blessings.push({ ...forgeBlessing, id: 'second-forge' });
+  assert.equal(validateTeam(createTeam(), catalog, duplicate).valid, false);
+  const explicit = forgingPolicy();
+  explicit.allowances.reinforcementMedicine = 60000;
+  explicit.blessings.push({ id: 'red-grace', name: '红水赐福', effect: 'resourceAllowance', resource: 'reinforcementMedicine', amount: 40000 });
+  assert.equal(getResourceAllowance(explicit, 'reinforcementMedicine'), 100000);
+  delete explicit.blessings[1].effect;
+  assert.equal(getResourceAllowance(explicit, 'reinforcementMedicine'), 100000);
 });

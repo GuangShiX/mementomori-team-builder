@@ -1,7 +1,7 @@
 {
-  "id": "owner-450-v6",
-  "version": 6,
-  "ruleSetId": "mementomori-investment-equivalent-v6",
+  "id": "owner-450-v7",
+  "version": 7,
+  "ruleSetId": "mementomori-investment-equivalent-v7",
   "title": "诅咒·时之枷锁配队预算规则",
   "characterLevel": 450,
   "baseline": {
@@ -34,6 +34,28 @@
       "name": "赐福·绯红恩泽",
       "resource": "reinforcementMedicine",
       "amount": 40000
+    },
+    {
+      "id": "forge-grace",
+      "name": "赐福·锻造恩典",
+      "effect": "freeEquipmentCrafting",
+      "rarity": "SSR",
+      "weaponKind": "normal",
+      "resource": "ssrFragments"
+    },
+    {
+      "id": "dew-diamond-grace",
+      "name": "赐福·生命恩泽",
+      "effect": "resourceDiamondAllowance",
+      "resource": "lifeTreeDew",
+      "amount": 60000
+    },
+    {
+      "id": "crystal-diamond-grace",
+      "name": "赐福·紫晶恩泽",
+      "effect": "resourceDiamondAllowance",
+      "resource": "exclusiveFragments",
+      "amount": 80000
     }
   ],
   "arcana": {
@@ -120,6 +142,8 @@
     "每个角色本体单价为12000钻，按稀有度所需累计本体数扣除免费库后计价；装备费用不受本体单价调整影响。",
     "免费额度由管理员按450级基准设定，属于整支配队，不是每名角色。",
     "红水免费额度由基础60000与赐福·绯红恩泽40000组成，合计100000；仅超出合计免费额度的部分按每个10钻计费。",
+    "赐福·锻造恩典免除普通SSR装备制作碎片的钻石费用；SSR专武仍按原规则计价，强化、符石与圣装继续使用各自整队免费额度。投入数量和参考单价保留，赐福抵扣另列；UR／LR制作及叶子不受此赐福影响。",
+    "生命恩泽提供整队60000钻叶子制作预算，紫晶恩泽提供整队80000钻紫水晶等价预算（专武碎片与紫水晶为同一成本，只抵扣一次）；先计算真实制作优惠与免费库权益，再抵扣预算，未使用额度不转入其它资源池。",
     "秘仪仅开放补齐LR角色的购买，多个秘仪和配队共用同一角色，只按最高所需稀有度收费一次；常驻免费角色及R角色免费LR自然计入解锁条件，含0号占位的未开放秘仪不可购买。",
     "圣装钢以一级圣装经验等价计量：3500份免费，超额每份100钻；此为构筑预算规则，不是历史实际花费。",
     "魔装仅记录累计经验，不计费；金币、普通强化水、精炼钢和打磨资源不纳入首版预算。",

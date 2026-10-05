@@ -84,12 +84,16 @@ test('replacement keeps the equipped exclusive weapon but recalculates the new c
   Object.assign(weapon, { rarity: 'SSR', seriesId: 12, weaponKind: 'exclusive', level: 240 });
   const before = calculateTeam(team, catalog, policy, freeLibrary);
   assert.equal(before.exclusiveWeaponCosts[0].diamonds, 0);
+  assert.ok(before.exclusiveWeaponCosts[0].freeFragments > 0);
   const candidate = catalog.characters.find(character => !freeLibrary.characters.some(entry => entry.characterId === character.id));
   const replaced = placeRosterCharacter(team, candidate, 0);
   const after = calculateTeam(replaced.team, catalog, policy, freeLibrary);
   assert.equal(replaced.team.members[0].equipment[0], weapon);
   assert.equal(after.exclusiveWeaponCosts[0].characterId, candidate.id);
-  assert.ok(after.exclusiveWeaponCosts[0].diamonds > 0);
+  assert.equal(after.exclusiveWeaponCosts[0].freeFragments, 0);
+  assert.ok(after.exclusiveWeaponCosts[0].chargedFragmentsBeforeDiamondAllowance > 0);
+  assert.ok(after.exclusiveWeaponCosts[0].diamondAllowanceFragments > 0);
+  assert.equal(after.exclusiveWeaponCosts[0].diamonds, 0, 'the replacement loses its gift credit but may use the shared crystal blessing');
   assert.ok(after.totalDiamonds > before.totalDiamonds);
 });
 

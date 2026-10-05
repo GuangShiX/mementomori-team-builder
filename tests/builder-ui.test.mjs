@@ -6,9 +6,10 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createTeam, createMember, cloneTeam, calculateTeam, migrateLegacyWeaponConfiguration, selectEquipmentRarity, getArcanaState, setArcanaPurchased, getResourceAllowance } from '../src/domain.mjs';
 import { placeRosterCharacter } from '../src/team-interactions.mjs';
+import { getEquipmentPresetOptions, applyEquipmentPreset, changeMemberRarity } from '../src/equipment-presets.mjs';
 
-const [baseCatalog, policy, freeLibrary, nameAliases, arcana] = await Promise.all(['catalog', 'pricing-policy', 'free-library', 'name-aliases', 'arcana-catalog'].map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
-const catalog = { ...baseCatalog, arcana };
+const [baseCatalog, policy, freeLibrary, nameAliases, arcana, equipmentBonuses] = await Promise.all(['catalog', 'pricing-policy', 'free-library', 'name-aliases', 'arcana-catalog', 'equipment-bonuses'].map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
+const catalog = { ...baseCatalog, arcana, equipmentBonuses };
 const amount = value => new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 }).format(value);
 
 async function renderDraft(team, displayedCatalog = catalog, displayedPolicy = policy) {
@@ -132,8 +133,9 @@ test('automatic third-weapon fabrication discount leaves all actual levels and r
   assert.match(markup, /aria-label="武器装备等级"[\s\S]*?<option value="450" selected="">Lv\. 450<\/option>/);
   assert.match(markup, /aria-label="武器强化等级"[^>]*max="450"[^>]*value="420"/);
   assert.match(markup, /aria-label="叶子造价"/);
-  assert.match(markup, /铠甲 LR/);
-  assert.match(markup, /20,000 钻/);
+  assert.match(markup, /衣服 LR/);
+  const armor = cost.equipmentCosts.find(item => item.position === 1 && item.slot === 5);
+  assert.ok(markup.includes(`<strong>${amount(armor.chargedResources.lifeTreeDew * policy.unitPrices.lifeTreeDew)} 钻</strong>`));
   assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`));
   assertAutomaticControls(markup);
 });
@@ -151,9 +153,9 @@ test('a new dragged member displays default magic level 40 and preserves zero or
   const previous = JSON.stringify(team);
   const mixed = await renderDraft(cloneTeam(team));
   assert.match(mixed, /class="member-matchless"[^>]*>魔装 0–40<\/span>/);
-  assert.match(mixed, /aria-label="饰品 SSR 魔装0"/);
+  assert.match(mixed, /aria-label="项链 SSR 魔装0"/);
   assert.match(mixed, /aria-label="头盔 SSR 魔装17"/);
-  assert.match(mixed, /aria-label="饰品魔装等级"[^>]*value="0"/);
+  assert.match(mixed, /aria-label="项链魔装等级"[^>]*value="0"/);
   assert.match(mixed, /aria-label="头盔魔装等级"[^>]*value="17"/);
   assert.equal(JSON.stringify(team), previous, 'existing zero and mixed magic values are never overwritten on rendering');
   assertAutomaticControls(mixed);
@@ -324,11 +326,179 @@ test('the blessing header and resource budget consume dynamic base plus blessing
   assert.match(markup, /额外免费 40,000 红水/);
   assert.match(markup, /基础免费 60,000 · 合计免费 100,000/);
   assert.match(markup, /class="resource-blessing-breakdown">基础 60,000 ＋ 赐福 40,000 ＝ 100,000/);
-  const configuredPolicy = { ...policy, allowances: { ...policy.allowances, reinforcementMedicine: 62000 }, blessings: policy.blessings.map(blessing => ({ ...blessing, name: '赐福·自定义额度', amount: 41000 })) };
+  const configuredPolicy = { ...policy, allowances: { ...policy.allowances, reinforcementMedicine: 62000 }, blessings: policy.blessings.map(blessing => blessing.resource === 'reinforcementMedicine' ? { ...blessing, name: '赐福·自定义额度', amount: 41000 } : blessing) };
   const configured = await renderDraft(cloneTeam(createTeam()), catalog, configuredPolicy);
   assert.equal(getResourceAllowance(configuredPolicy, 'reinforcementMedicine'), 103000);
   assert.match(configured, /赐福·自定义额度/);
   assert.match(configured, /额外免费 41,000 红水/);
   assert.match(configured, /基础免费 62,000 · 合计免费 103,000/);
   assert.match(configured, /class="resource-blessing-breakdown">基础 62,000 ＋ 赐福 41,000 ＝ 103,000/);
+});
+
+test('SSR crafting blessing shows free ordinary fabrication while exclusive SSR weapons and old policies keep their own pricing', async () => {
+  const team = createTeam();
+  team.members[0] = createMember(54);
+  team.members[0].equipment = team.members[0].equipment.map(gear => ({ ...selectEquipmentRarity(gear, 'SSR'), weaponKind: gear.slot === 1 ? 'exclusive' : 'normal', level: gear.slot === 1 ? 240 : 450, weaponOwnerCharacterId: gear.slot === 1 ? 54 : null }));
+  const craftOnlyPolicy = { ...policy, blessings: policy.blessings.filter(item => item.effect !== 'resourceDiamondAllowance') };
+  const cost = calculateTeam(team, catalog, craftOnlyPolicy, freeLibrary);
+  assert.ok(cost.exclusiveWeaponCosts[0].diamonds > 0, 'the crafting blessing does not waive an exclusive weapon, independently of diamond allowances');
+  const markup = await renderDraft(cloneTeam(team), catalog, craftOnlyPolicy);
+  const blessing = policy.blessings.find(item => item.effect === 'freeEquipmentCrafting');
+  assert.ok(markup.includes(blessing.name));
+  assert.match(markup, /普通 SSR 装备制作免费/);
+  assert.match(markup, /SSR 专武按原规则计价/);
+  const credit = cost.resources.ssrFragments;
+  assert.ok(credit.craftingBlessingCredit > 0);
+  assert.ok(markup.includes(`普通 SSR 制作抵扣 ${amount(credit.craftingBlessingCredit)} 碎片 · ${amount(credit.craftingBlessingDiamonds)} 钻`));
+  assert.ok(markup.includes(`<strong>${amount(cost.exclusiveWeaponCosts[0].diamonds)} 钻</strong>`));
+  assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`));
+  const oldPolicy = { ...craftOnlyPolicy, blessings: craftOnlyPolicy.blessings.filter(item => item.effect !== 'freeEquipmentCrafting') };
+  const oldCost = calculateTeam(team, catalog, oldPolicy, freeLibrary);
+  const old = await renderDraft(cloneTeam(team), catalog, oldPolicy);
+  assert.doesNotMatch(old, /普通 SSR 装备制作免费|crafting-blessing-summary|普通 SSR 制作赐福抵扣/);
+  assert.ok(old.includes(`<strong>${amount(oldCost.totalDiamonds)}</strong>`));
+  assert.ok(oldCost.totalDiamonds > cost.totalDiamonds);
+  assert.match(old, /基础免费 60,000 · 合计免费 100,000/);
+});
+
+test('the treasure level labels show exact published per-slot bonuses and never clamp invalid values', async () => {
+  const team = createTeam();
+  team.members[0] = createMember(54);
+  team.members[0].equipment = team.members[0].equipment.map(gear => ({ ...selectEquipmentRarity(gear, 'SSR'), weaponKind: gear.slot === 1 ? 'exclusive' : 'normal', level: gear.slot === 1 ? 240 : 450, weaponOwnerCharacterId: gear.slot === 1 ? 54 : null, legendSacredTreasureLevel: 40, matchlessSacredTreasureLevel: 40 }));
+  const before = JSON.stringify(team);
+  const markup = await renderDraft(cloneTeam(team));
+  assert.equal((markup.match(/class="sacred-bonus"/g) ?? []).length, 12);
+  for (const kind of ['legend', 'matchless']) for (const bonus of Object.values(equipmentBonuses.kinds[kind].slots)) {
+    assert.ok(markup.includes(`${bonus.label} +${amount(bonus.values[40])}${bonus.unit === 'percent' ? '%' : ''}`));
+  }
+  assert.match(markup, /攻击力 · 比例加成；仅显示此装备的附加属性/);
+  assert.match(markup, /加算百分点；仅显示此装备的附加属性/);
+  assert.match(markup, /固定数值；仅显示此装备的附加属性/);
+  assert.equal(JSON.stringify(team), before);
+  for (const gear of team.members[0].equipment) Object.assign(gear, { legendSacredTreasureLevel: 0, matchlessSacredTreasureLevel: 0 });
+  const zero = await renderDraft(cloneTeam(team));
+  assert.equal((zero.match(/class="sacred-bonus"[^>]*>未附加/g) ?? []).length, 12);
+  team.members[0].equipment[0].legendSacredTreasureLevel = 41;
+  team.members[0].equipment[0].matchlessSacredTreasureLevel = '';
+  team.members[0].equipment[5] = selectEquipmentRarity(team.members[0].equipment[5], 'NONE');
+  const invalid = await renderDraft(cloneTeam(team));
+  assert.equal((invalid.match(/class="sacred-bonus"[^>]*>—/g) ?? []).length, 2);
+  assert.equal((invalid.match(/class="sacred-bonus"/g) ?? []).length, 10, 'an unequipped slot does not fabricate treasure effects');
+  assert.doesNotMatch(invalid, /攻击力 \+60%|攻击力 \+105,000|NaN|undefined/);
+});
+
+test('four equipment shortcuts display their real compositions, preserve treasure and runes, and expose legal reinforcement values', async () => {
+  const member = createMember(124);
+  member.rarity = 'LR5';
+  Object.assign(member.equipment[0], { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 240, legendSacredTreasureLevel: 1, matchlessSacredTreasureLevel: 17 });
+  member.equipment[0].runes[0] = { categoryId: 5, level: 11 };
+  const previous = JSON.stringify(member);
+  for (const preset of getEquipmentPresetOptions(member)) {
+    const team = createTeam();
+    team.members[0] = applyEquipmentPreset(member, preset.id, catalog, policy);
+    const markup = await renderDraft(cloneTeam(team));
+    const controls = markup.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
+    for (const choice of getEquipmentPresetOptions(member)) assert.ok(controls.includes(`title="${choice.composition}">${choice.label}</button>`));
+    assert.doesNotMatch(controls, /disabled=""/);
+    for (const [index, slotName] of ['武器', '项链', '手套', '头盔', '衣服', '脚'].entries()) {
+      const gear = team.members[0].equipment[index];
+      assert.match(markup, new RegExp(`aria-label="${slotName}强化等级"[^>]*max="${gear.level}"[^>]*value="${gear.reinforcementLevel}"`));
+      assert.match(markup, new RegExp(`aria-label="${slotName}稀有度"[\\s\\S]*?<option value="${gear.rarity}" selected=""`));
+    }
+    assert.match(markup, /aria-label="项链强化等级"[^>]*value="60"/);
+    assert.match(markup, /aria-label="武器魔装等级"[^>]*value="17"/);
+    assert.match(markup, /aria-label="项链魔装等级"[^>]*value="40"/);
+    assert.match(markup, /魔装 17–40/);
+    assert.match(markup, /aria-label="武器第1孔符石等级"[^>]*value="11"/);
+    assertAutomaticControls(markup);
+  }
+  assert.equal(JSON.stringify(member), previous, 'preset previews leave the original equipment intact');
+  const lowerTeam = createTeam();
+  lowerTeam.members[0] = createMember(124);
+  const lower = await renderDraft(cloneTeam(lowerTeam));
+  const lowerControls = lower.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
+  assert.equal((lowerControls.match(/disabled=""/g) ?? []).length, 2);
+  assert.match(lowerControls, /disabled="" title="2LR \+ 4SSR · 需要 LR5 角色">2LR/);
+  assert.match(lowerControls, /disabled="" title="6LR · 需要 LR5 角色">6LR/);
+});
+
+test('equipment DOM keeps slot order 1..6 while the desktop grid fills the left column before the right', async () => {
+  const team = createTeam();
+  team.members[0] = applyEquipmentPreset(createMember(124), 'adaptive4', catalog, policy);
+  const markup = await renderDraft(cloneTeam(team));
+  const titles = [...markup.matchAll(/<section class="equipment-card[^"]*" aria-label="([^"]+)"/g)].map(match => match[1]);
+  assert.deepEqual(titles, ['武器', '项链', '手套', '头盔', '衣服', '脚']);
+  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(css, /\.equip-grid\{grid-template-rows:repeat\(3,auto\);grid-auto-flow:column\}/);
+  assert.match(css, /@media\(max-width:430px\)\{\.equip-grid\{grid-template-rows:none;grid-auto-flow:row\}\}/);
+  const controls = markup.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
+  assert.match(controls, /title="4UR \+ 2SSR">4UR<\/button>/);
+  assert.doesNotMatch(controls, />4LR<\/button>/);
+});
+
+test('LR5 to LR changes LR gear to UR and switches the adaptive shortcut without losing existing upgrades or ownership', async () => {
+  const member = { ...createMember(124), rarity: 'LR5' };
+  const high = applyEquipmentPreset(member, 'lr6', catalog, policy);
+  high.equipment[0].matchlessSacredTreasureLevel = 17;
+  high.equipment[0].legendSacredTreasureLevel = 7;
+  high.equipment[0].runes[0] = { categoryId: 5, level: 11 };
+  const previous = JSON.stringify(high);
+  const lowered = changeMemberRarity(high, 'LR', catalog);
+  const team = createTeam();
+  team.members[0] = lowered;
+  const markup = await renderDraft(cloneTeam(team));
+  const controls = markup.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
+  assert.match(controls, /title="4UR \+ 2SSR">4UR<\/button>/);
+  assert.doesNotMatch(controls, />4LR<\/button>/);
+  assert.match(markup, /aria-label="角色稀有度"[\s\S]*?<option value="LR" selected="">LR<\/option>/);
+  for (const slotName of ['武器', '项链', '手套', '头盔', '衣服', '脚']) assert.match(markup, new RegExp(`aria-label="${slotName}稀有度"[\\s\\S]*?<option value="UR" selected=""`));
+  assert.match(markup, /aria-label="武器魔装等级"[^>]*value="17"/);
+  assert.match(markup, /aria-label="武器圣装等级"[^>]*value="7"/);
+  assert.match(markup, /aria-label="武器第1孔符石等级"[^>]*value="11"/);
+  assert.doesNotMatch(markup, /请修正配置后查看准确费用|已恢复可识别的草稿配置/);
+  for (let index = 0; index < 6; index++) {
+    const before = high.equipment[index];
+    const after = lowered.equipment[index];
+    for (const key of ['level', 'reinforcementLevel', 'legendSacredTreasureLevel', 'matchlessSacredTreasureLevel', 'weaponOwnerCharacterId']) assert.equal(after[key], before[key]);
+    assert.deepEqual(after.runes, before.runes);
+  }
+  assert.equal(JSON.stringify(high), previous);
+  const higherTeam = createTeam(); higherTeam.members[0] = high;
+  const higher = await renderDraft(cloneTeam(higherTeam));
+  const higherControls = higher.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
+  assert.match(higherControls, /title="4LR \+ 2SSR">4LR<\/button>/);
+  assert.doesNotMatch(higherControls, />4UR<\/button>/);
+});
+
+test('leaf and crystal diamond blessings show independent remaining budgets and the domain allocated net prices', async () => {
+  const team = createTeam();
+  team.members = [54, 85, 124, 96, 100].map(characterId => applyEquipmentPreset({ ...createMember(characterId), rarity: 'LR5' }, 'lr6', catalog, policy));
+  const cost = calculateTeam(team, catalog, policy, freeLibrary);
+  const markup = await renderDraft(cloneTeam(team));
+  assert.match(markup, /叶子免费 60,000 钻/);
+  assert.match(markup, /紫水晶免费 80,000 钻/);
+  assert.match(markup, /aria-label="材料免费钻石预算"/);
+  for (const key of ['lifeTreeDew', 'exclusiveFragments']) {
+    const resource = cost.resources[key];
+    assert.ok(markup.includes(`${amount(resource.diamondAllowance)} 钻免费`));
+    assert.ok(markup.includes(`已抵扣 ${amount(resource.diamondAllowanceCredit)} 钻`));
+    assert.ok(markup.includes(`剩余 ${amount(resource.remainingDiamondAllowance)} 钻`));
+  }
+  const exclusive = cost.exclusiveWeaponCosts.find(item => item.diamondAllowanceCredits.exclusiveFragments > 0);
+  assert.ok(exclusive);
+  assert.ok(markup.includes(`紫水晶赐福抵扣 ${amount(exclusive.diamondAllowanceCredits.exclusiveFragments)} 钻`));
+  assert.ok(markup.includes(`紫水晶等价 ${amount(exclusive.magicCrystals)} 个 · 应付 ${amount(exclusive.chargedMagicCrystals * exclusive.magicCrystalUnitPrice)} 钻`));
+  const withLeafCredit = cost.exclusiveWeaponCosts.find(item => item.diamondAllowanceCredits.lifeTreeDew > 0);
+  assert.ok(markup.includes(`叶子赐福抵扣 ${amount(withLeafCredit.diamondAllowanceCredits.lifeTreeDew)} 钻`));
+  assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`));
+  assert.doesNotMatch(markup, /额外免费 60,000 叶子|额外免费 80,000 专属武器碎片|NaN|undefined/);
+  const configuredPolicy = { ...policy, blessings: policy.blessings.map(blessing => blessing.effect === 'resourceDiamondAllowance' ? { ...blessing, amount: blessing.resource === 'lifeTreeDew' ? 1234 : 5678 } : blessing) };
+  const configuredCost = calculateTeam(team, catalog, configuredPolicy, freeLibrary);
+  const configured = await renderDraft(cloneTeam(team), catalog, configuredPolicy);
+  assert.match(configured, /叶子免费 1,234 钻/);
+  assert.match(configured, /紫水晶免费 5,678 钻/);
+  assert.ok(configured.includes(`<strong>${amount(configuredCost.totalDiamonds)}</strong>`));
+  const oldPolicy = { ...policy, blessings: policy.blessings.filter(blessing => blessing.effect !== 'resourceDiamondAllowance') };
+  const old = await renderDraft(cloneTeam(team), catalog, oldPolicy);
+  assert.doesNotMatch(old, /aria-label="材料免费钻石预算"|紫水晶赐福抵扣|叶子赐福抵扣/);
 });
