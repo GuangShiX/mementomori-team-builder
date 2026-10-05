@@ -52,6 +52,17 @@ function assertAutomaticControls(markup) {
   assert.doesNotMatch(markup, /NaN|undefined/);
 }
 
+function divMarkup(markup, openingMarker) {
+  const start = markup.indexOf(openingMarker);
+  assert.ok(start >= 0, `missing ${openingMarker}`);
+  let depth = 0;
+  for (const token of markup.slice(start).matchAll(/<\/?div\b[^>]*>/g)) {
+    depth += token[0].startsWith('</') ? -1 : 1;
+    if (depth === 0) return markup.slice(start, start + token.index + token[0].length);
+  }
+  assert.fail(`unclosed ${openingMarker}`);
+}
+
 test('builder displays a nameless framed team to the right of the selected character in the central header', async () => {
   const displayedCatalog = {
     ...catalog,
@@ -69,7 +80,28 @@ test('builder displays a nameless framed team to the right of the selected chara
   const markup = await renderDraft(cloneTeam(team), displayedCatalog);
   const selection = markup.match(/<aside class="panel catalog-panel left-column" aria-label="选择角色">([\s\S]*?)<\/aside>/)?.[1];
   const lineup = markup.match(/<section class="team-panel" aria-label="当前五人配队">([\s\S]*?)<\/section>/)?.[1];
+  const sticky = divMarkup(markup, '<div class="workbench-sticky"');
+  const overview = divMarkup(markup, '<div id="team-equipment-overview"');
+  const heading = divMarkup(markup, '<div class="workbench-heading"');
   assert.ok(selection && lineup);
+  const stickyStart = markup.indexOf(sticky);
+  const stickyEnd = stickyStart + sticky.length;
+  assert.match(overview, /^<div[^>]*class="team-equipment-overview"[^>]*hidden=""/);
+  assert.match(sticky, /<button(?=[^>]*aria-expanded="false")(?=[^>]*aria-controls="team-equipment-overview")[^>]*>展开概览<\/button>/);
+  assert.match(sticky, /class="character-overview-controls"/);
+  assert.match(sticky, /class="selected-character-header"/);
+  assert.ok(sticky.includes(lineup));
+  assert.doesNotMatch(sticky, /member-equipment-summary|member-matchless|member-equipment-item|workbench-heading|gear-panel-heading|team-header-controls|新建方案|我的配队|team-note|workspace-tabs/);
+  assert.match(heading, /角色与装备/);
+  assert.match(heading, /我的配队/);
+  assert.match(heading, /新建方案/);
+  assert.ok(markup.indexOf(heading) + heading.length <= stickyStart);
+  assert.ok(markup.indexOf(overview) >= stickyEnd, 'the hidden equipment overview stays outside the sticky identity and lineup');
+  assert.ok(markup.indexOf('class="workspace-tabs"') >= stickyEnd, 'tabs scroll with their page content');
+  assert.match(markup, /新建方案/);
+  assert.equal((overview.match(/class="team-equipment-position"/g) ?? []).length, 5);
+  assert.equal((overview.match(/class="member-equipment-summary"/g) ?? []).length, 2);
+  for (const position of [1, 2]) assert.ok(overview.includes(`aria-label="位置${position}装备与魔装"`));
   assert.doesNotMatch(selection, /team-panel|我的配队/);
   assert.ok(markup.indexOf('aria-label="当前角色装备配置"') < markup.indexOf('aria-label="当前五人配队"'));
   assert.ok(markup.indexOf('class="selected-character-header"') < markup.indexOf('aria-label="当前五人配队"'));
@@ -85,9 +117,12 @@ test('builder displays a nameless framed team to the right of the selected chara
     const speed = calculateCharacterStats(member, displayedCatalog, policy, owned).rows.find(row => row.key === 'Speed').displayValue;
     assert.ok(lineup.includes(`>速度 ${speed}</span>`));
   }
-  assert.equal((lineup.match(/class="member-equipment-item/g) ?? []).length, 12);
-  assert.match(lineup, /class="member-matchless"[^>]*>魔装 0<\/span>/);
-  assert.match(lineup, /class="member-matchless"[^>]*>未装备<\/span>/);
+  assert.equal((overview.match(/class="member-equipment-item/g) ?? []).length, 12);
+  assert.match(overview, /class="member-matchless"[^>]*>魔装 0<\/span>/);
+  assert.match(overview, /class="member-matchless"[^>]*>未装备<\/span>/);
+  assert.doesNotMatch(lineup, /member-equipment-summary|member-matchless|member-equipment-item/);
+  assert.equal((lineup.match(/<div class="team-slot[^\"]*"[^>]*draggable="true"/g) ?? []).length, 2);
+  assert.equal((lineup.match(/<div class="team-slot[^\"]*"[^>]*draggable="false"/g) ?? []).length, 3);
   assert.doesNotMatch(lineup, /class="member-name"|class="member-subtitle"/);
   assert.doesNotMatch(lineup.replace(/<[^>]*>/g, ''), /【SP】特殊标识角色|固定一行副标题/);
   assert.match(lineup, /aria-label="配置【SP】特殊标识角色 · 固定一行副标题，位置1" aria-pressed="true"/);

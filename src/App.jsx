@@ -591,6 +591,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   const [search, setSearch] = useState('');
   const [element, setElement] = useState('all');
   const [activePage, setActivePage] = useState('team');
+  const [headerCollapsed, setHeaderCollapsed] = useState(true);
   const [notice, setNotice] = useState(restoredDraft.notice);
   const [draftStatus, setDraftStatus] = useState('已保存在此浏览器');
   const [dropTarget, setDropTarget] = useState(null);
@@ -767,14 +768,21 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       </aside>
       <div className="center-column">
         <section className="panel details-panel" ref={editorRef} aria-label="当前角色装备配置">
+          <div className="workbench-heading">
+            <div className="panel-heading gear-panel-heading"><span className="section-index">02</span><h2>角色与装备</h2></div>
+            <div className="panel-header"><div className="panel-heading"><h3>我的配队 <span className="count">{memberCount} / 5</span></h3></div><div className="team-header-controls"><button className="quiet-button reset-button" onClick={() => { changeTeam({ ...createTeam(), level: policy.characterLevel }); setSelectedIndex(-1); }}>新建方案</button></div></div>
+          </div>
           <div className="workbench-sticky">
-          <div className="panel-heading gear-panel-heading"><span className="section-index">02</span><h2>角色与装备</h2></div>
           <div className="character-workbench-header">
-            <div className="character-overview">{selectedMember && selectedCharacter ? (
-            <div className="selected-character-header"><div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={selectedMember.rarity} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div><label className="rarity-control"><span className="field-label">角色稀有度</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => chooseMemberRarity(event.target.value)}><option value="SR" disabled={arcanaRequiresLR}>SR</option><option value="LR">LR</option><option value="LR5">LR5</option></select>{arcanaRequiresLR && <span className="arcana-rarity-note">已购秘仪至少需 LR</span>}</label></div>
-            ) : <div className="character-overview-empty"><Icon name="gear" size={20} /><p>将角色拖入右侧队伍位置<br />即可编辑装备</p></div>}</div>
+            <div className="character-overview"><div className="selected-character-header">{selectedMember && selectedCharacter ? (
+              <div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={selectedMember.rarity} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div>
+            ) : <div className="character-overview-empty"><Icon name="gear" size={20} /><p>将角色拖入队伍位置<br />即可编辑装备</p></div>}
+              <div className="character-overview-controls">
+                {selectedMember && selectedCharacter && <label className="rarity-control"><span className="field-label">角色稀有度</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => chooseMemberRarity(event.target.value)}><option value="SR" disabled={arcanaRequiresLR}>SR</option><option value="LR">LR</option><option value="LR5">LR5</option></select>{arcanaRequiresLR && <span className="arcana-rarity-note">已购秘仪至少需 LR</span>}</label>}
+                <button type="button" className="quiet-button workbench-toggle" aria-expanded={!headerCollapsed} aria-controls="team-equipment-overview" onClick={() => setHeaderCollapsed(value => !value)}>{headerCollapsed ? '展开概览' : '折叠概览'}</button>
+              </div>
+            </div></div>
         <section className="team-panel" aria-label="当前五人配队">
-          <div className="panel-header"><div className="panel-heading"><h3>我的配队 <span className="count">{memberCount} / 5</span></h3></div><div className="team-header-controls"><button className="quiet-button reset-button" onClick={() => { changeTeam({ ...createTeam(), level: policy.characterLevel }); setSelectedIndex(-1); }}>新建方案</button></div></div>
           <div className="team-lineup" style={catalog.teamFrame ? { '--team-frame-image': `url("${catalog.teamFrame}")` } : undefined}><div className="team-slots">{team.members.map((member, index) => {
             const character = member ? characters.get(member.characterId) : null;
             return <div className="team-position" key={index}><div className={`team-slot${member ? '' : ' empty'}${member && index === selectedIndex ? ' selected' : ''}${dropTarget === index ? ' drop-target' : ''}`} style={{ backgroundImage: `url("${teamSeat}")` }} draggable={Boolean(member)}
@@ -783,13 +791,17 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
               onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(current => current === index ? null : current); }} onDrop={event => dropMember(event, index)}>
               <span className="slot-position">0{index + 1}</span>
               {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={member.rarity} /><span className="member-speed" title="当前构筑速度，不含战斗技能增益">速度 {teamStats[index]?.valid ? teamStats[index].rows.find(row => row.key === 'Speed')?.displayValue ?? '—' : '—'}</span></button> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div></div>}
-            </div>{member && <MemberEquipmentSummary member={member} position={index + 1} catalog={catalog} />}</div>;
+            </div></div>;
           })}</div></div>
-          <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
         </section>
           </div>
-          <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>配队与装备</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button><button id="stats-tab" role="tab" aria-selected={activePage === 'stats'} aria-controls="stats-page" onClick={() => setActivePage('stats')}>角色属性</button></nav>
           </div>
+          <div id="team-equipment-overview" className="team-equipment-overview" hidden={headerCollapsed}>
+            <span className="team-equipment-caption">装备与魔装概览</span>
+            <div className="team-equipment-grid">{team.members.map((member, index) => <div className="team-equipment-position" key={index}>{member && <MemberEquipmentSummary member={member} position={index + 1} catalog={catalog} />}</div>)}</div>
+          </div>
+          <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
+          <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>配队与装备</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button><button id="stats-tab" role="tab" aria-selected={activePage === 'stats'} aria-controls="stats-page" onClick={() => setActivePage('stats')}>角色属性</button></nav>
           {activePage === 'arcana' ? <ArcanaEditor state={arcanaState} catalog={catalog} onPurchase={purchaseArcana} /> : activePage === 'stats' ? <CharacterStatsPanel result={characterStats} policy={policy} /> : <div id="team-page" role="tabpanel" aria-labelledby="team-tab">
           {selectedMember && selectedCharacter ? <>
             {valuation.errors.length > 0 && <div className="notice error validation-notice" role="alert"><strong>当前配置需要修正</strong><ul>{valuation.errors.slice(0, 6).map((issue, i) => <li key={`${issue.path}-${i}`}>{issue.message}</li>)}</ul>{valuation.errors.length > 6 && <p>另有 {valuation.errors.length - 6} 项，请逐项检查。</p>}</div>}
