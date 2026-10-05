@@ -418,7 +418,7 @@ export default function App({ catalog, policy }) {
       <div className="topbar-right"><span className="local-note"><span className="status-dot" />{draftStatus}</span><button className="button" onClick={() => importInput.current?.click()}><Icon name="upload" size={14} />导入方案</button><button className="button primary" disabled={!canExport} onClick={exportTeam}><Icon name="download" size={14} />导出方案</button></div>
       <input ref={importInput} type="file" accept="application/json,.json" aria-label="导入配队 JSON 文件" onChange={importTeam} />
     </header>
-    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>让每一份构想，成为配队。</h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><div className="intro-note"><strong>{policy.characterLevel}</strong><span>级统一链接模拟基准<br />SR、LR 与 LR5 共用此等级</span></div></div>
+    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成</h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><div className="intro-note"><strong>{policy.characterLevel}</strong><span>级统一链接模拟基准<br />SR、LR 与 LR5 共用此等级</span></div></div>
     {notice && <div className={`notice ${notice.kind}`} role="status" style={{ marginBottom: 16 }}>{notice.text}</div>}
     <main className="workspace">
       <aside className="panel catalog-panel" aria-label="角色目录">

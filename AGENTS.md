@@ -10,5 +10,6 @@
 - 导出是 `mementomori-team-plan` v1 构筑计划，附完整策略快照。导入只接受已知字段并按当前策略重新算费，忽略文件自带费用与策略。不要声称此格式已经被5830接入。
 - 角色与装备合法性、材料累计、费用与导出校验集中在纯模块 `src/domain.mjs`。React界面直接消费结果，不重写第二套算法。
 - 头像通过 `tools/sync-public-catalog.mjs` 在显式维护任务里从已公开素材清单同步并核对SHA-256。禁止原始游戏文件或私有缓存成为公开素材来源。
+- 禁止有效引用 `MS Gothic` / `ＭＳ ゴシック`。数字使用Georgia时保留明确的中文回退Noto Sans SC、Microsoft YaHei，不让中文依赖裸serif字体链；检查源码与发布CSS的字体声明。
 - 运行 `npm test`、`npm run build` 和 `git diff --check`。外观由用户验收，未经请求不启动浏览器或截图；发布后用HTTP验证主页、数据和静态资源。
 - 本仓库改动不要求操作其它开发服务。源码、计价、导出变化记录到 `CHANGELOG.md`。
