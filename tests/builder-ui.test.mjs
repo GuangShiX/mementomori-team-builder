@@ -6,23 +6,39 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createTeam, createMember, cloneTeam } from '../src/domain.mjs';
 
-test('builder renders standings above roster, tier selectors and the free exclusive weapon detail without a browser', async () => {
+test('builder groups aligned draggable standings and roster in the 01 panel without member action buttons', async () => {
   const [catalog, policy, freeLibrary, nameAliases] = await Promise.all(['catalog', 'pricing-policy', 'free-library', 'name-aliases'].map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
   const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
   const original = globalThis.localStorage;
   try {
     const { default: App } = await server.ssrLoadModule('/src/App.jsx');
+    const displayedCatalog = { ...catalog, characters: catalog.characters.map(character => character.id === 124 ? { ...character, name: '【SP】特殊标识角色', subtitle: '固定一行副标题' } : character.id === 85 ? { ...character, subtitle: '' } : character) };
     const team = createTeam();
     team.members[0] = createMember(124);
+    team.members[1] = createMember(85);
     const weapon = team.members[0].equipment[0];
     Object.assign(weapon, { rarity: 'SSR', seriesId: 12, weaponKind: 'exclusive', level: 240 });
     weapon.runes[0] = { categoryId: 1, level: 11 };
     globalThis.localStorage = { getItem: () => JSON.stringify({ schemaVersion: 1, catalogVersion: catalog.version, team: cloneTeam(team) }) };
-    const markup = renderToStaticMarkup(React.createElement(App, { catalog, policy, freeLibrary, nameAliases }));
+    const markup = renderToStaticMarkup(React.createElement(App, { catalog: displayedCatalog, policy, freeLibrary, nameAliases }));
+    const selection = markup.match(/<aside class="panel catalog-panel left-column" aria-label="选择角色与配队">([\s\S]*?)<\/aside>/)?.[1];
+    assert.ok(selection);
+    assert.ok(selection.indexOf('<h2>选择角色</h2>') < selection.indexOf('aria-label="当前五人配队"'));
+    assert.ok(selection.indexOf('aria-label="当前五人配队"') < selection.indexOf('aria-label="角色目录"'));
+    assert.doesNotMatch(selection, /class="panel team-panel"|class="member-actions"|title="前移"|title="后移"|title="移除角色"/);
+    assert.match(selection, /将队员拖回此目录可移出配队/);
+    assert.doesNotMatch(selection, /双击|单击加入/);
+    assert.equal((selection.match(/class="member-subtitle"/g) ?? []).length, 2);
+    assert.match(selection, /class="member-name">【SP】特殊标识角色<\/span><span class="member-subtitle" aria-hidden="false">固定一行副标题<\/span>/);
+    assert.match(selection, /class="member-subtitle" aria-hidden="true">\u00a0<\/span>/);
+    assert.equal((selection.match(/class="tile-subtitle"/g) ?? []).length, catalog.characters.length);
+    assert.equal((selection.match(/class="tile-free-cap"/g) ?? []).length, catalog.characters.length);
+    const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+    assert.match(css, /\.tile-name,\.member-name\{height:14px;line-height:14px\}/);
+    assert.match(css, /\.tile-subtitle,\.member-subtitle\{height:11px;line-height:11px\}/);
     assert.ok(markup.indexOf('aria-label="当前五人配队"') < markup.indexOf('aria-label="角色目录"'));
     assert.ok(markup.indexOf('aria-label="角色目录"') < markup.indexOf('aria-label="当前角色装备配置"'));
     assert.match(markup, /draggable="true"/);
-    assert.match(markup, /双击替换选中角色/);
     assert.match(markup, /<option value="11" selected="">Lv\.11<\/option>/);
     assert.match(markup, /<option value="10">Lv\.10<\/option>/);
     assert.match(markup, /Lv\.11 × 3、Lv\.10 × 3/);

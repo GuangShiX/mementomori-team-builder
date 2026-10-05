@@ -18,11 +18,40 @@ test('all shipped portraits match the canonical public asset manifest',async()=>
 });
 test('actual policy handles complete all-SR teams and untrusted fee import',()=>{
   const team=five();
-  assert.equal(calculateTeam(team,catalog,policy).totalDiamonds,85000);
+  assert.equal(calculateTeam(team,catalog,policy).totalDiamonds,60000);
   const exported=createExport(team,catalog,policy);
   exported.costBreakdown.totalDiamonds=0;
   exported.policySnapshot.unitPrices.characterCopy=0;
-  assert.equal(parseImport(JSON.stringify(exported),catalog,policy).costBreakdown.totalDiamonds,85000);
+  assert.equal(parseImport(JSON.stringify(exported),catalog,policy).costBreakdown.totalDiamonds,60000);
+});
+test('current curse policy prices every required copy at twelve thousand while keeping rarity counts',()=>{
+  const normal=catalog.characters.find(character=>!['light','dark'].includes(character.element));
+  const lightDark=catalog.characters.find(character=>['light','dark'].includes(character.element));
+  const team=createTeam();team.members[0]=createMember(normal.id);team.members[1]=createMember(lightDark.id);
+  for(const [rarity,expectedCopies] of [['SR',[1,1]],['LR',[8,14]],['LR5',[20,26]]]){
+    team.members[0].rarity=rarity;team.members[1].rarity=rarity;
+    const cost=calculateTeam(team,catalog,policy);
+    assert.deepEqual(cost.characterCosts.map(item=>item.copies),expectedCopies);
+    assert.equal(cost.characterDiamonds,expectedCopies.reduce((sum,count)=>sum+count*12000,0));
+  }
+  assert.equal(policy.baseline.curse.name,'诅咒·时之枷锁');
+  assert.equal(policy.baseline.curse.fixedCharacterLevel,450);
+  assert.equal(policy.baseline.arcanaMode,'pendingAutomatic');
+});
+test('older seventeen-thousand-copy exports import under the current price without losing equipment or free entitlements',()=>{
+  const team=five();
+  const freeIds=new Set(freeLibrary.characters.map(item=>item.characterId));
+  team.members=[createMember(5),...catalog.characters.filter(character=>!freeIds.has(character.id)).slice(0,4).map(character=>createMember(character.id))];
+  const olderPolicy=structuredClone(policy);olderPolicy.id='owner-450-v3';olderPolicy.version=3;olderPolicy.unitPrices.characterCopy=17000;
+  Object.assign(team.members[0].equipment[1],{rarity:'SSR',seriesId:12,level:450});
+  const oldExport=createExport(team,catalog,olderPolicy,freeLibrary);
+  const current=parseImport(oldExport,catalog,policy,freeLibrary);
+  assert.deepEqual(current.team,oldExport.team);
+  assert.equal(current.costBreakdown.resourceDiamonds,oldExport.costBreakdown.resourceDiamonds);
+  assert.equal(current.costBreakdown.characterCosts[0].chargedCopies,0);
+  assert.equal(current.costBreakdown.characterDiamonds,current.costBreakdown.characterCosts.reduce((sum,item)=>sum+item.chargedCopies*12000,0));
+  assert.equal(oldExport.costBreakdown.characterDiamonds-current.costBreakdown.characterDiamonds,current.costBreakdown.characterCosts.reduce((sum,item)=>sum+item.chargedCopies*5000,0));
+  assert.equal(createExport(current.team,catalog,policy,freeLibrary).policySnapshot.baseline.curse.name,'诅咒·时之枷锁');
 });
 test('actual gear data computes full reinforcement investment and team-wide free allowance',()=>{
   const team=five();
@@ -81,11 +110,11 @@ test('published free library applies permanent LR5 and LR caps with named limite
   ['LR5','LR5','LR','LR5','SR'].forEach((rarity,index)=>{team.members[index].rarity=rarity;});
   const result=calculateTeam(team,catalog,policy,freeLibrary);
   assert.deepEqual(result.characterCosts.map(item=>item.chargedCopies),[0,12,7,19,0]);
-  assert.equal(result.characterDiamonds,38*17000);
+  assert.equal(result.characterDiamonds,38*12000);
   assert.equal(result.freeLibraryVersion,2);
   const exported=createExport(team,catalog,policy,freeLibrary);
   exported.freeLibrarySnapshot.characters=catalog.characters.map(character=>({characterId:character.id,rarity:'LR5'}));
-  assert.equal(parseImport(exported,catalog,policy,freeLibrary).costBreakdown.characterDiamonds,38*17000);
+  assert.equal(parseImport(exported,catalog,policy,freeLibrary).costBreakdown.characterDiamonds,38*12000);
 });
 test('published free weapons cover SSR240 and SSR180 crafting and retain exact crystal equivalents above the entitlement',()=>{
   const team=createTeam();

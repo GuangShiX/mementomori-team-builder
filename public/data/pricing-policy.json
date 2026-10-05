@@ -1,17 +1,22 @@
 {
-  "id": "owner-450-v3",
-  "version": 3,
-  "ruleSetId": "mementomori-investment-equivalent-v3",
-  "title": "450级配队预算规则",
+  "id": "owner-450-v4",
+  "version": 4,
+  "ruleSetId": "mementomori-investment-equivalent-v4",
+  "title": "诅咒·时之枷锁配队预算规则",
   "characterLevel": 450,
   "baseline": {
     "levelLink": {
       "level": 450,
       "subLevel": 0
     },
-    "arcanaMode": "ownerConfigured",
+    "curse": {
+      "id": "chains-of-time",
+      "name": "诅咒·时之枷锁",
+      "fixedCharacterLevel": 450
+    },
+    "arcanaMode": "pendingAutomatic",
     "playerLevelMode": "ownerConfigured",
-    "description": "角色共同链接等级450；秘仪与玩家等级加成由构建方采用统一基准。"
+    "description": "诅咒·时之枷锁：所有角色等级固定为450级；秘仪加成将在后续自动计算，玩家等级加成由构建方采用统一基准。"
   },
   "allowanceScope": "wholeTeam",
   "allowances": {
@@ -24,7 +29,7 @@
     "lifeTreeDew": 0
   },
   "unitPrices": {
-    "characterCopy": 17000,
+    "characterCopy": 12000,
     "runeTickets": 10,
     "reinforcementMedicine": 10,
     "holySteel": 100,
@@ -99,6 +104,8 @@
     "sacredTreasureLevel": 40
   },
   "notes": [
+    "诅咒·时之枷锁使所有角色等级固定为450级；秘仪加成将在后续自动计算。",
+    "每个角色本体单价为12000钻，按稀有度所需累计本体数扣除免费库后计价；装备费用不受本体单价调整影响。",
     "免费额度由管理员按450级基准设定，属于整支配队，不是每名角色。",
     "圣装钢以一级圣装经验等价计量：3500份免费，超额每份100钻；此为构筑预算规则，不是历史实际花费。",
     "魔装仅记录累计经验，不计费；金币、普通强化水、精炼钢和打磨资源不纳入首版预算。",

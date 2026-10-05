@@ -3,7 +3,7 @@ import {
   createTeam, createMember, createEquipment, calculateTeam, validateTeam,
   createExport, parseImport, cloneTeam, deriveWeaponSync, getBorrowableWeapons, isWeaponOwnerClaimed, EQUIPMENT_SLOTS, RESOURCE_KEYS,
 } from './domain.mjs';
-import { addRosterCharacter, equipReserveWeapon, placeRosterCharacter, rosterDoubleClick, swapTeamPositions } from './team-interactions.mjs';
+import { equipReserveWeapon, placeRosterCharacter, swapTeamPositions } from './team-interactions.mjs';
 
 const DRAFT_KEY = 'mementomori-team-builder:draft:v1';
 const ELEMENTS = {
@@ -461,6 +461,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
           return <React.Fragment key={key}><dt>{RESOURCE_NAMES[key] ?? key} · {amount(resource.consumed)}</dt><dd>{amount(resource.diamonds)} 钻</dd></React.Fragment>;
         })}
       </dl>
+      <p>角色本体：{amount(policy.unitPrices?.characterCopy)} 钻 / 个。</p>
       <p>符石兑换券超额单价 {amount(policy.unitPrices?.runeTickets)} 钻 / 张；强化秘药 {amount(policy.unitPrices?.reinforcementMedicine)} 钻 / 个；圣装经验 {amount((policy.unitPrices?.holySteel ?? 0) * steelRatio)} 钻 / 点。</p>
       <p>魔装累计经验 {amount(cost?.matchlessExperience)}。各类碎片独立计价；材料表示当前配置的累计投入，降级会减少预算。</p>
       <p>导出包含完整计价规则与费用细目。接收方会按当前规则重新计算。</p>
@@ -472,6 +473,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
 }
 
 export default function App({ catalog, policy, freeLibrary, nameAliases }) {
+  const curseName = policy.baseline?.curse?.name ?? '诅咒·时之枷锁';
   const [restoredDraft] = useState(() => restoreDraft(catalog, policy));
   const [team, setTeam] = useState(restoredDraft.team);
   const [selectedIndex, setSelectedIndex] = useState(() => team.members.findIndex(Boolean));
@@ -480,10 +482,10 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   const [notice, setNotice] = useState(restoredDraft.notice);
   const [draftStatus, setDraftStatus] = useState('已保存在此浏览器');
   const [dropTarget, setDropTarget] = useState(null);
+  const [rosterDropActive, setRosterDropActive] = useState(false);
   const importInput = useRef(null);
   const editorRef = useRef(null);
   const draftBackupDone = useRef(!restoredDraft.needsBackup);
-  const rosterClick = useRef(null);
   const dragPayload = useRef(null);
   const characters = useMemo(() => new Map(catalog.characters.map(character => [character.id, character])), [catalog]);
   const aliases = useMemo(() => new Map((nameAliases?.characters ?? []).map(item => [item.characterId, item.aliases.join(' ')])), [nameAliases]);
@@ -513,7 +515,6 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     (character.baseRarity == null || character.baseRarity === 8)
     && (element === 'all' || character.element === element)
     && `${character.name} ${character.subtitle ?? ''} ${character.variant ?? ''} ${character.aliases?.join?.(' ') ?? ''} ${aliases.get(character.id) ?? ''} ${character.id}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
-  useEffect(() => () => clearTimeout(rosterClick.current?.timer), []);
   useEffect(() => {
     try {
       if (!draftBackupDone.current && restoredDraft.originalRaw) {
@@ -527,62 +528,45 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       setDraftStatus(draftBackupDone.current ? '浏览器无法保存草稿，请及时导出' : '原草稿无法备份，已暂停自动保存');
     }
   }, [team, catalog.version, restoredDraft]);
-  function changeTeam(update, { preserveRosterClick = false } = {}) {
-    clearTimeout(rosterClick.current?.timer);
-    if (!preserveRosterClick) rosterClick.current = null;
+  function changeTeam(update) {
     setNotice(null);
     setTeam(current => typeof update === 'function' ? update(current) : update);
   }
-  function applyPlacement(result, options) {
-    if (result.full) { setNotice({ kind: 'info', text: '配队已满。双击左侧角色可替换当前选中角色，也可以拖到目标位置。' }); return; }
+  function applyPlacement(result) {
     const synchronized = { ...result.team, weaponSources: (result.team.weaponSources ?? []).map(source => {
       const actor = result.team.members.find(member => member?.characterId === source.characterId);
       return actor && source.characterRarity !== actor.rarity ? { ...source, characterRarity: actor.rarity } : source;
     }) };
-    changeTeam(synchronized, options);
+    changeTeam(synchronized);
     setSelectedIndex(result.selectedIndex);
   }
-  function addCharacter(character) {
-    applyPlacement(addRosterCharacter(team, character, { catalog, freeLibrary }));
-  }
   function selectMember(index) {
-    clearTimeout(rosterClick.current?.timer);
-    rosterClick.current = null;
     setSelectedIndex(index);
   }
-  function clickRoster(character, event) {
-    if (event.detail > 1) return;
-    clearTimeout(rosterClick.current?.timer);
-    if (event.detail === 0) { rosterClick.current = null; addCharacter(character); return; }
-    const snapshot = { team, selectedIndex, characterId: character.id };
-    snapshot.timer = setTimeout(() => {
-      if (rosterClick.current === snapshot) applyPlacement(addRosterCharacter(snapshot.team, character, { catalog, freeLibrary }), { preserveRosterClick: true });
-    }, 240);
-    rosterClick.current = snapshot;
-  }
-  function doubleClickRoster(character) {
-    const snapshot = rosterClick.current;
-    clearTimeout(snapshot?.timer);
-    rosterClick.current = null;
-    const before = snapshot?.characterId === character.id ? snapshot : { team, selectedIndex };
-    applyPlacement(rosterDoubleClick(before.team, character, before.selectedIndex, { catalog, freeLibrary }));
-  }
   function startDrag(event, payload) {
-    clearTimeout(rosterClick.current?.timer);
-    rosterClick.current = null;
     dragPayload.current = payload;
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData(TEAM_DRAG_TYPE, JSON.stringify(payload));
     event.dataTransfer.setData('text/plain', '配队角色');
   }
-  function endDrag() { dragPayload.current = null; setDropTarget(null); }
+  function endDrag() { dragPayload.current = null; setDropTarget(null); setRosterDropActive(false); }
   function dropMember(event, index) {
     event.preventDefault();
+    event.stopPropagation();
     let payload;
     try { payload = JSON.parse(event.dataTransfer.getData(TEAM_DRAG_TYPE)); } catch { payload = dragPayload.current; }
     endDrag();
     if (payload?.kind === 'member' && team.members[payload.index]?.characterId === payload.characterId) applyPlacement(swapTeamPositions(team, payload.index, index, selectedIndex));
     else if (payload?.kind === 'character' && characters.has(payload.characterId)) applyPlacement(placeRosterCharacter(team, characters.get(payload.characterId), index, { catalog, freeLibrary }));
+  }
+  function dropToRoster(event) {
+    if (dragPayload.current?.kind !== 'member') return;
+    event.preventDefault();
+    event.stopPropagation();
+    let payload;
+    try { payload = JSON.parse(event.dataTransfer.getData(TEAM_DRAG_TYPE)); } catch { payload = dragPayload.current; }
+    endDrag();
+    if (payload?.kind === 'member' && team.members[payload.index]?.characterId === payload.characterId) removeMember(payload.index);
   }
   function updateMember(update) {
     changeTeam(current => ({ ...current,
@@ -600,9 +584,6 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     changeTeam(current => ({ ...current, members: current.members.map((member, i) => i === index ? null : member) }));
     if (selectedIndex === index) setSelectedIndex(team.members.findIndex((member, i) => member && i !== index));
   }
-  function moveMember(index, offset) {
-    applyPlacement(swapTeamPositions(team, index, index + offset, selectedIndex));
-  }
   function exportTeam() {
     try {
       const exported = createExport(team, catalog, policy, freeLibrary);
@@ -619,8 +600,6 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    clearTimeout(rosterClick.current?.timer);
-    rosterClick.current = null;
     try {
       if (file.size > 1024 * 1024) throw new Error('配队文件超过 1 MB，请选择本站导出的 JSON 文件。');
       const imported = parseImport(await file.text(), catalog, policy, freeLibrary);
@@ -634,12 +613,13 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       <div className="topbar-right"><span className="local-note"><span className="status-dot" />{draftStatus}</span><button className="button" onClick={() => importInput.current?.click()}><Icon name="upload" size={14} />导入方案</button><button className="button primary" disabled={!canExport} onClick={exportTeam}><Icon name="download" size={14} />导出方案</button></div>
       <input ref={importInput} type="file" accept="application/json,.json" aria-label="导入配队 JSON 文件" onChange={importTeam} />
     </header>
-    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成</h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><div className="intro-note"><strong>{policy.characterLevel}</strong><span>级统一链接模拟基准<br />SR、LR 与 LR5 共用此等级</span></div></div>
+    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成</h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><span>秘仪加成将在后续自动计算</span></aside></div>
     {notice && <div className={`notice ${notice.kind}`} role="status" style={{ marginBottom: 16 }}>{notice.text}</div>}
     <main className="workspace">
-      <div className="left-column">
-        <section className="panel team-panel" aria-label="当前五人配队">
-          <div className="panel-header"><div className="panel-heading"><h2>我的配队 <span className="count">{memberCount} / 5</span></h2></div><div className="team-header-controls"><button className="quiet-button reset-button" onClick={() => { changeTeam({ ...createTeam(), level: policy.characterLevel }); setSelectedIndex(-1); }}>新建方案</button></div></div>
+      <aside className="panel catalog-panel left-column" aria-label="选择角色与配队">
+        <div className="panel-header"><div className="panel-heading"><span className="section-index">01</span><h2>选择角色</h2></div><span className="count">{filtered.length} 位</span></div>
+        <section className="team-panel" aria-label="当前五人配队">
+          <div className="panel-header"><div className="panel-heading"><h3>我的配队 <span className="count">{memberCount} / 5</span></h3></div><div className="team-header-controls"><button className="quiet-button reset-button" onClick={() => { changeTeam({ ...createTeam(), level: policy.characterLevel }); setSelectedIndex(-1); }}>新建方案</button></div></div>
           <div className="team-slots">{team.members.map((member, index) => {
             const character = member ? characters.get(member.characterId) : null;
             return <div key={index} className={`team-slot${member ? '' : ' empty'}${member && index === selectedIndex ? ' selected' : ''}${dropTarget === index ? ' drop-target' : ''}`} draggable={Boolean(member)}
@@ -647,25 +627,26 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
               onDragOver={event => { if (!event.dataTransfer.types.includes(TEAM_DRAG_TYPE)) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setDropTarget(index); }}
               onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(current => current === index ? null : current); }} onDrop={event => dropMember(event, index)}>
               <span className="slot-position">0{index + 1}</span>
-              {member ? <><button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} /><span className="member-name">{character?.name}</span>{character?.subtitle && <span className="member-subtitle">{character.subtitle}</span>}<span className="rarity-pill">{member.rarity} · Lv.{team.level}</span></button><div className="member-actions"><button className="icon-button" aria-label={`${characterLabel(character)}前移`} title="前移" disabled={index === 0} onClick={() => moveMember(index, -1)}><Icon name="left" size={12} /></button><button className="icon-button" aria-label={`${characterLabel(character)}后移`} title="后移" disabled={index === 4} onClick={() => moveMember(index, 1)}><Icon name="right" size={12} /></button><button className="icon-button danger" aria-label={`移除${characterLabel(character)}`} title="移除角色" onClick={() => removeMember(index)}><Icon name="close" size={12} /></button></div></> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div><span>待选择</span></div>}
+              {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} /><span className="member-name">{character?.name}</span><span className="member-subtitle" aria-hidden={!character?.subtitle}>{character?.subtitle || '\u00a0'}</span><span className="rarity-pill">{member.rarity} · Lv.{team.level}</span></button> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div><span>待选择</span></div>}
             </div>;
           })}</div>
-          <p className="team-note">拖动调整站位或从下方拖入角色。替换保留该位置的稀有度、装备与符石。</p>
+          <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
         </section>
-      <aside className="panel catalog-panel" aria-label="角色目录">
-        <div className="panel-header"><div className="panel-heading"><span className="section-index">01</span><h2>选择角色</h2></div><span className="count">{filtered.length} 位</span></div>
+      <div className={`catalog-roster${rosterDropActive ? ' remove-drop-target' : ''}`} role="region" aria-label="角色目录"
+        onDragOver={event => { if (dragPayload.current?.kind !== 'member') return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setRosterDropActive(true); }}
+        onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setRosterDropActive(false); }} onDrop={dropToRoster}>
         <div className="search"><Icon name="search" size={14} /><input aria-label="搜索角色" placeholder="搜索角色名称" value={search} onChange={event => setSearch(event.target.value)} /></div>
         <div className="filter-row" role="group" aria-label="元素筛选"><button className={`filter-button${element === 'all' ? ' active' : ''}`} aria-pressed={element === 'all'} onClick={() => setElement('all')}>全部</button>{Object.entries(ELEMENTS).map(([key, item]) => <button key={key} className={`filter-button${element === key ? ' active' : ''}`} aria-pressed={element === key} onClick={() => setElement(key)}>{item.name}</button>)}</div>
-        <div className="catalog-grid">{filtered.map(character => {
+        <div className="catalog-grid" role="list" aria-label="可拖入配队的角色">{filtered.map(character => {
           const inTeam = team.members.some(member => member?.characterId === character.id);
           const entitlement = freeCharacters.get(character.id);
-          return <button className={`character-tile${inTeam ? ' in-team' : ''}`} key={character.id} title={`${characterLabel(character)} · 单击${inTeam ? '查看当前配置' : '加入配队'}，双击替换选中角色${entitlement ? ` · 免费库 ${entitlement.rarity}` : ''}`} aria-label={`${inTeam ? '选择' : '添加'}${characterLabel(character)}`} onClick={event => clickRoster(character, event)} onDoubleClick={() => doubleClickRoster(character)} draggable onDragStart={event => startDrag(event, { kind: 'character', characterId: character.id })} onDragEnd={endDrag}>
-            <div style={{ position: 'relative' }}><Portrait character={character} />{inTeam && <span className="selected-check"><Icon name="check" size={10} /></span>}</div><span className="tile-name">{character.name}</span>{character.subtitle && <span className="tile-subtitle">{character.subtitle}</span>}{entitlement && <span className="tile-free-cap">{entitlement.rarity} 免费</span>}
-          </button>;
+          return <div className={`character-tile${inTeam ? ' in-team' : ''}`} role="listitem" key={character.id} title={`${characterLabel(character)} · 拖到站位${inTeam ? '调整位置' : '加入或替换'}${entitlement ? ` · 免费库 ${entitlement.rarity}` : ''}`} aria-label={`拖入${characterLabel(character)}`} draggable onDragStart={event => startDrag(event, { kind: 'character', characterId: character.id })} onDragEnd={endDrag}>
+            <div style={{ position: 'relative' }}><Portrait character={character} />{inTeam && <span className="selected-check"><Icon name="check" size={10} /></span>}</div><span className="tile-name">{character.name}</span><span className="tile-subtitle" aria-hidden={!character.subtitle}>{character.subtitle || '\u00a0'}</span><span className="tile-free-cap" aria-hidden={!entitlement}>{entitlement ? `${entitlement.rarity} 免费` : '\u00a0'}</span>
+          </div>;
         })}{filtered.length === 0 && <p className="no-results">没有找到符合条件的角色</p>}</div>
-        <p className="catalog-help">单击加入或选择 · 双击替换选中角色<br />也可拖动到上方的指定站位。</p>
-      </aside>
+        <p className="catalog-help">拖动目录角色到站位加入或替换。<br />将队员拖回此目录可移出配队。</p>
       </div>
+      </aside>
       <div className="center-column">
         <section className="panel details-panel" ref={editorRef} aria-label="当前角色装备配置">
           <div className="panel-heading gear-panel-heading"><span className="section-index">02</span><h2>角色与装备</h2></div>
@@ -676,7 +657,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
             {(freeCharacters.has(selectedCharacter.id) || freeLibrary?.exclusiveWeapons?.some(item => item.characterId === selectedCharacter.id)) && <p className="free-library-note">免费库：{freeCharacters.has(selectedCharacter.id) ? `角色本体免费至 ${freeCharacters.get(selectedCharacter.id).rarity}` : ''}{freeLibrary?.exclusiveWeapons?.filter(item => item.characterId === selectedCharacter.id).map(item => `${freeCharacters.has(selectedCharacter.id) ? '；' : ''}${item.level} 级 ${item.rarity} 专武基准免费`).join('')}。更高配置按差额计价。</p>}
             {policy.runes?.fixedStock && <p className="fixed-stock-note">普通符石：每类 {fixedRuneCaption(policy)}，整队共享。穿透与速度可自由调整等级。</p>}
             <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} weaponSync={weaponSync} syncOptions={syncOptions} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} />)}</div>
-          </> : <div className="empty-detail"><div className="empty-detail-mark"><Icon name="gear" size={23} /></div><h2>从一名角色开始</h2><p>在角色目录中选择头像，设定稀有度与六部位装备。<br />全队使用 Lv.{policy.characterLevel} 统一链接基准。</p></div>}
+          </> : <div className="empty-detail"><div className="empty-detail-mark"><Icon name="gear" size={23} /></div><h2>从一名角色开始</h2><p>将角色头像拖入队伍位置，设定稀有度与六部位装备。<br />受「{curseName}」影响，全队等级固定为{policy.characterLevel}级。</p></div>}
         </section>
         <WeaponSyncEditor team={team} catalog={catalog} policy={policy} freeLibrary={freeLibrary} sync={weaponSync} errors={valuation.errors} onChange={weaponSources => changeTeam(current => ({ ...current, weaponSources }))} onEquipSource={equipSource} />
         <section className="panel plan-panel" aria-label="方案信息"><div className="panel-header"><h2>为方案留下一些说明</h2><span className="count">自动保存草稿</span></div><div className="plan-fields"><Field label="配队名称" path="name" errors={valuation.errors}><input aria-label="配队名称" maxLength={120} value={team.name} onChange={event => changeTeam(current => ({ ...current, name: event.target.value }))} /></Field><Field label="作者 / 昵称（可选）" path="author" errors={valuation.errors}><input aria-label="作者昵称" maxLength={120} placeholder="你的昵称" value={team.author} onChange={event => changeTeam(current => ({ ...current, author: event.target.value }))} /></Field><Field label="备注（可选）" path="notes" errors={valuation.errors} full><textarea aria-label="方案备注" rows={3} maxLength={4000} placeholder="例如：配队思路、主力角色或希望测试的对手……" value={team.notes} onChange={event => changeTeam(current => ({ ...current, notes: event.target.value }))} /></Field></div></section>
