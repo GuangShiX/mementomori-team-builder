@@ -643,11 +643,9 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   function applyPlacement(result) {
     changeTeam(result.team);
     setSelectedIndex(result.selectedIndex);
-    setActivePage('team');
   }
   function selectMember(index) {
     setSelectedIndex(index);
-    setActivePage('team');
   }
   function purchaseArcana(id, purchased) {
     try {

@@ -625,3 +625,33 @@ test('team actual investments and off-team arcana characters remain separate and
   assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`));
   assert.doesNotMatch(markup, /抵扣|NaN|undefined/);
 });
+
+test('member clicks and drag placement select the new member without leaving the stats or arcana tab', async () => {
+  const source = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
+  const selectBody = source.match(/  function selectMember\(index\) \{([\s\S]*?)\n  \}/)?.[1];
+  const placementBody = source.match(/  function applyPlacement\(result\) \{([\s\S]*?)\n  \}/)?.[1];
+  assert.ok(selectBody && placementBody, 'exercise the production event handlers without introducing a DOM test runtime');
+  for (const page of ['stats', 'arcana']) {
+    const team = createTeam();
+    team.members[0] = createMember(54);
+    team.members[1] = createMember(124);
+    const state = { activePage: page, selectedIndex: 0, team };
+    const pageChanges = [];
+    const setters = {
+      setSelectedIndex(index) { state.selectedIndex = index; },
+      setActivePage(next) { pageChanges.push(next); state.activePage = next; },
+      changeTeam(next) { state.team = next; },
+    };
+    const selectMember = new Function('setSelectedIndex', 'setActivePage', `return function(index) {${selectBody}\n};`)(setters.setSelectedIndex, setters.setActivePage);
+    selectMember(1);
+    assert.equal(state.activePage, page);
+    assert.equal(state.team.members[state.selectedIndex].characterId, 124);
+    const applyPlacement = new Function('changeTeam', 'setSelectedIndex', 'setActivePage', `return function(result) {${placementBody}\n};`)(setters.changeTeam, setters.setSelectedIndex, setters.setActivePage);
+    const placement = placeRosterCharacter(team, catalog.characters.find(character => character.id === 85), 2, { catalog, freeLibrary });
+    applyPlacement(placement);
+    assert.equal(state.team, placement.team);
+    assert.equal(state.team.members[state.selectedIndex].characterId, 85);
+    assert.equal(state.activePage, page);
+    assert.deepEqual(pageChanges, [], 'only an explicit tab click should change pages');
+  }
+});
