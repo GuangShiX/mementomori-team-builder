@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5840 --strictPort",
-    "build": "vite build",
+    "build": "node tools/check-font-policy.mjs && vite build && node tools/check-font-policy.mjs --dist",
+    "check:fonts": "node tools/check-font-policy.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 5840 --strictPort",
     "test": "node --test tests/*.test.mjs"
   },
