@@ -5,6 +5,7 @@ import {
   createExport, parseImport, cloneTeam, DomainValidationError,
   deriveWeaponSync,
   getBorrowableWeapons, isWeaponOwnerClaimed,
+  deriveWeaponPricing, migrateLegacyWeaponConfiguration,
 } from '../src/domain.mjs';
 
 const catalog = {
@@ -719,4 +720,106 @@ test('a selected actor may supply a separate own reserve weapon when wearing bor
   team.weaponSources[0].characterRarity = 'LR5';
   team.weaponSources[0].rarity = 'LR';
   assert.equal(validateTeam(team, syncCatalog(), policy, { freeLibrary: syncLibrary() }).errors.some(item => item.code === 'SOURCE_CHARACTER_RARITY_MISMATCH'), true);
+});
+
+const autoPolicy = () => ({ ...copy(policy), weaponSync: { mode: 'automatic', targetLevel: 450, billedLevel: 300, discountedOrdinals: [3, 6] } });
+
+test('automatic weapon pricing bills only the third 450 weapon at300 and keeps all actual levels and reinforcement at450', () => {
+  const team = fullTeam();
+  for (const member of team.members) equip(member, 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450, reinforcementLevel: 450 });
+  const result = calculateTeam(team, syncCatalog(), autoPolicy(), syncLibrary());
+  assert.equal(result.weaponPricing.qualifyingCount, 5);
+  assert.equal(result.weaponPricing.discountCount, 1);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(item => item.level), [450, 450, 450, 450, 450]);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(item => item.billedLevel), [450, 450, 300, 450, 450]);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(item => item.fragments), [600, 600, 400, 600, 600]);
+  assert.equal(result.exclusiveWeaponCosts[2].automaticSyncDiscount, true);
+  assert.equal(result.exclusiveWeaponCosts[2].levelDiscountFragments, 200);
+  assert.equal(result.equipmentCosts[2].resources.reinforcementMedicine, 450000);
+  assert.equal(result.resources.lifeTreeDew.consumed, 75);
+  assert.equal(result.weaponSync, null);
+  assert.deepEqual(result.weaponSourceCosts, []);
+  assert.doesNotThrow(() => createExport(team, syncCatalog(), autoPolicy(), syncLibrary()));
+});
+
+test('automatic weapon ordinals count unique equipped450UR/LR exclusives only and keep the sixth ordinal for future use', () => {
+  const team = fullTeam();
+  equip(team.members[0], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450 });
+  equip(team.members[1], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300 });
+  equip(team.members[2], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450 });
+  equip(team.members[3], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450 });
+  equip(team.members[4], 1, { rarity: 'SSR', seriesId: 12, level: 450 });
+  const result = calculateTeam(team, syncCatalog(), autoPolicy(), syncLibrary());
+  assert.deepEqual(result.exclusiveWeaponCosts.map(item => item.discountOrdinal), [1, null, 2, 3]);
+  assert.equal(result.exclusiveWeaponCosts[3].billedLevel, 300);
+  const noHighTeam = createTeam();
+  assert.equal(deriveWeaponPricing(noHighTeam, syncCatalog(), autoPolicy(), syncLibrary()).qualifyingCount, 0, 'free outside UR300 gifts cannot masquerade as450 weapons');
+  const future = { ...team, members: catalog.characters.map(createMember) };
+  for (const member of future.members) equip(member, 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450 });
+  assert.deepEqual(deriveWeaponPricing(future, syncCatalog(), autoPolicy()).weapons.filter(item => item.discounted).map(item => item.ordinal), [3, 6]);
+  assert.equal(validateTeam(future, syncCatalog(), autoPolicy()).errors.some(item => item.code === 'INVALID_TEAM_SIZE'), true, 'six-person public teams remain unsupported');
+});
+
+test('automatic LR weapon discount never exempts its rarity evolution leaves or activates borrowed own effects', () => {
+  const team = fullTeam();
+  for (const member of team.members.slice(0, 2)) equip(member, 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450 });
+  team.members[2].rarity = 'LR5';
+  equip(team.members[2], 1, { rarity: 'LR', seriesId: 14, weaponKind: 'exclusive', level: 450, weaponOwnerCharacterId: 6 });
+  const result = calculateTeam(team, syncCatalog(), autoPolicy(), syncLibrary());
+  const third = result.exclusiveWeaponCosts[2];
+  assert.equal(third.level, 450);
+  assert.equal(third.billedLevel, 300);
+  assert.equal(third.lifeTreeDew, 65);
+  assert.equal(third.freeLifeTreeDew, 15);
+  assert.equal(third.chargedLifeTreeDew, 50);
+  assert.equal(third.ownExclusiveSkillActive, false);
+  assert.equal(third.freeFragments, 400);
+});
+
+test('automatic mode rejects hidden legacy sources or sync settings rather than charging invisible configuration', () => {
+  const team = fullTeam();
+  team.weaponSources = [{ characterId: 6, characterRarity: 'SR', rarity: 'UR', level: 450 }];
+  assert.throws(() => calculateTeam(team, syncCatalog(), autoPolicy(), syncLibrary()), err => err.errors.some(item => item.code === 'LEGACY_WEAPON_CONFIG_REQUIRES_MIGRATION'));
+  team.weaponSources = [];
+  equip(team.members[0], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300, syncSlot: 1 });
+  assert.throws(() => createExport(team, syncCatalog(), autoPolicy(), syncLibrary()), err => err.errors.some(item => item.code === 'LEGACY_WEAPON_CONFIG_REQUIRES_MIGRATION'));
+});
+
+test('legacy migration preserves verified actual450 and removes outside fees without trusting forged snapshot or quote levels', () => {
+  const team = syncedTeam();
+  equip(team.members[4], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450 });
+  team.weaponSources = [{ characterId: 6, characterRarity: 'SR', rarity: 'UR', level: 450 }];
+  team.members[0].equipment[0].reinforcementLevel = 450;
+  const exported = createExport(team, syncCatalog(), policy, syncLibrary());
+  exported.costBreakdown.weaponSync.effectiveLevels[0] = 999;
+  exported.policySnapshot.unitPrices.characterCopy = 0;
+  const imported = parseImport(exported, syncCatalog(), autoPolicy(), syncLibrary());
+  assert.equal(imported.team.members[0].equipment[0].level, 450);
+  assert.equal(imported.team.members[0].equipment[0].reinforcementLevel, 450);
+  assert.equal(imported.team.members[0].equipment[0].syncSlot, 0);
+  assert.deepEqual(imported.team.weaponSources, []);
+  assert.deepEqual(imported.costBreakdown.weaponSourceCosts, []);
+  assert.equal(imported.costBreakdown.weaponPricing.qualifyingCount, 2);
+  assert.equal(imported.warnings.some(message => /旧同步.*实际等级|旧同步武器/.test(message)), true);
+  assert.equal(exported.team.members[0].equipment[0].level, 300, 'migration never mutates the original saved plan');
+  const lower = syncedTeam();
+  const forged = createExport(lower, syncCatalog(), policy, syncLibrary());
+  forged.costBreakdown.weaponSync.effectiveLevels[0] = 450;
+  assert.equal(parseImport(forged, syncCatalog(), autoPolicy(), syncLibrary()).team.members[0].equipment[0].level, 300);
+});
+
+test('unsafe legacy synchronization is rejected while source-only migration removes invisible inventory with a warning', () => {
+  const team = syncedTeam();
+  equip(team.members[4], 1, { weaponKind: 'exclusive', level: 240 });
+  const before = JSON.stringify(team);
+  assert.throws(() => migrateLegacyWeaponConfiguration(team, syncCatalog(), autoPolicy(), syncLibrary()), err => err.errors.some(item => item.code === 'INSUFFICIENT_SYNC_ANCHORS' && /保留备份/.test(item.message)));
+  assert.equal(JSON.stringify(team), before);
+  team.members[0].equipment[0] = createEquipment(1);
+  team.members[4].equipment[0] = createEquipment(1);
+  team.weaponSources = [{ characterId: 6, characterRarity: 'SR', rarity: 'UR', level: 450 }];
+  const migrated = migrateLegacyWeaponConfiguration(team, syncCatalog(), autoPolicy(), syncLibrary());
+  assert.equal(migrated.changed, true);
+  assert.deepEqual(migrated.team.weaponSources, []);
+  assert.equal(calculateTeam(migrated.team, syncCatalog(), autoPolicy(), syncLibrary()).resources.exclusiveFragments.consumed, 0);
+  assert.match(migrated.warnings[0], /不再收取隐藏库存费用/);
 });

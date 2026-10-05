@@ -716,5 +716,64 @@
       "sha256": "b12ed8670e07916dc79618973cad5a003ce62552e4a11b80061e2156496c0ac2",
       "sourcePath": "assets/characters/CHR_000154_00_s.png"
     }
+  ],
+  "elementIcons": [
+    {
+      "element": "blue",
+      "elementId": 1,
+      "path": "assets/ui/icon_element_1.png",
+      "sha256": "03543ffa12dcb7123e823468682b7cde4755dab9662c2648960b1e05fdc97b9b",
+      "sourcePath": "assets/ui/icon_element_1.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:-4517893915447332713"
+    },
+    {
+      "element": "red",
+      "elementId": 2,
+      "path": "assets/ui/icon_element_2.png",
+      "sha256": "7d9a7d3f46fbeab36965b67ef8a4bf37e87aeea3458b03653c13b0534237f284",
+      "sourcePath": "assets/ui/icon_element_2.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:6494587104568983653"
+    },
+    {
+      "element": "green",
+      "elementId": 3,
+      "path": "assets/ui/icon_element_3.png",
+      "sha256": "f40bd80aa97ca8ffd65c66d841da51a2d7804334ca2b143e50e1ad509a512036",
+      "sourcePath": "assets/ui/icon_element_3.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:3406289425470341478"
+    },
+    {
+      "element": "yellow",
+      "elementId": 4,
+      "path": "assets/ui/icon_element_4.png",
+      "sha256": "2da496ebaa4b96952d52a42e8033beff006433ae16c2c84cfffed98fbcb8fd68",
+      "sourcePath": "assets/ui/icon_element_4.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:7770442703109352895"
+    },
+    {
+      "element": "light",
+      "elementId": 5,
+      "path": "assets/ui/icon_element_5.png",
+      "sha256": "11e974051b6df7ab9edc37f7586f115c1bdcc5418283c60ec6017b8716c619b2",
+      "sourcePath": "assets/ui/icon_element_5.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:319880964092140592"
+    },
+    {
+      "element": "dark",
+      "elementId": 6,
+      "path": "assets/ui/icon_element_6.png",
+      "sha256": "e09e3cbee9dc605439442cc278663c26583f1dc56a0610ce01142654ebe524d2",
+      "sourcePath": "assets/ui/icon_element_6.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:5956740667894236500"
+    }
+  ],
+  "uiAssets": [
+    {
+      "id": "teamFrame",
+      "path": "assets/ui/toggle_04_off.png",
+      "sha256": "98f4e731fe9880de6c962f217c51ee09eede11b18fa3354a2c82e9f7b47ff41d",
+      "sourcePath": "assets/ui/toggle_04_off.png",
+      "sourceResourceKey": "assets/aa/Android/29121095407936fd11fb775fb8b7cfef.bundle#Sprite:366755172800441101"
+    }
   ]
 }

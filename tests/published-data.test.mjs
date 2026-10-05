@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {createTeam,createMember,calculateTeam,createExport,parseImport,validateTeam,deriveWeaponSync} from '../src/domain.mjs';
+import {createTeam,createMember,calculateTeam,createExport,parseImport,validateTeam,deriveWeaponSync,deriveWeaponPricing} from '../src/domain.mjs';
 const catalog = JSON.parse(await readFile(new URL('../public/data/catalog.json',import.meta.url)));
 const policy = JSON.parse(await readFile(new URL('../public/data/pricing-policy.json',import.meta.url)));
 const lock = JSON.parse(await readFile(new URL('../public/data/asset-lock.json',import.meta.url)));
 const freeLibrary = JSON.parse(await readFile(new URL('../public/data/free-library.json',import.meta.url)));
+const manualPolicy = () => ({...policy,weaponSync:{minimumLevel:300,maximumSourceCount:3,slots:[{slot:1,requiredAnchors:2},{slot:2,requiredAnchors:3}]}});
 const five = () => {const team=createTeam();team.members=catalog.characters.slice(0,5).map(createMember);return team;};
 
 test('all shipped portraits match the canonical public asset manifest',async()=>{
@@ -161,7 +162,8 @@ test('free UR weapon baselines include their fifteen leaves and LR upgrades char
   assert.equal(evolved.resources.lifeTreeDew.charged,50);
   assert.equal(evolved.exclusiveWeaponCosts[0].chargedLifeTreeDew,50);
 });
-test('real free UR300 anchors can be upgraded outside the team while sync keeps target crafting at paid300',()=>{
+test('legacy manual policy can price real free UR300 anchors and paid outside upgrades',()=>{
+  const policy=manualPolicy();
   const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
   Object.assign(team.members[0].equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:300,syncSlot:1});
   const base=calculateTeam(team,catalog,policy,freeLibrary);
@@ -187,7 +189,8 @@ test('real free UR300 anchors can be upgraded outside the team while sync keeps 
   exported.costBreakdown.weaponSync.effectiveLevels[1]=450;
   assert.equal(parseImport(exported,catalog,policy,freeLibrary).costBreakdown.weaponSync.effectiveLevels[1],400);
 });
-test('real borrowed UR gift uses its physical owner for pricing and can serve as an equipped sync anchor',()=>{
+test('legacy manual borrowed UR gift uses its physical owner and can serve as an equipped sync anchor',()=>{
+  const policy=manualPolicy();
   const team=createTeam();team.members=[153,96,86,85,100].map(createMember);
   Object.assign(team.members[0].equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',weaponOwnerCharacterId:27,level:300});
   const borrowed=calculateTeam(team,catalog,policy,freeLibrary);
@@ -208,4 +211,39 @@ test('real borrowed UR gift uses its physical owner for pricing and can serve as
   assert.equal(parseImport(exported,catalog,policy,freeLibrary).costBreakdown.exclusiveWeaponCosts[0].ownExclusiveSkillActive,false);
   team.weaponSources.push({characterId:27,characterRarity:'SR',rarity:'UR',level:450});
   assert.equal(validateTeam(team,catalog,policy,{freeLibrary}).errors.some(item=>item.code==='DUPLICATE_WEAPON_SOURCE'),true);
+});
+test('actual automatic policy discounts the third450 weapon only, with crafting300 and all actual levels450',()=>{
+  assert.equal(policy.version,5);
+  assert.deepEqual(policy.weaponSync,{mode:'automatic',targetLevel:450,billedLevel:300,discountedOrdinals:[3,6]});
+  const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
+  for(const member of team.members)Object.assign(member.equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:450,reinforcementLevel:450});
+  const auto=calculateTeam(team,catalog,policy,freeLibrary);
+  const full=calculateTeam(team,catalog,manualPolicy(),freeLibrary);
+  assert.deepEqual(auto.exclusiveWeaponCosts.map(item=>item.level),[450,450,450,450,450]);
+  assert.deepEqual(auto.exclusiveWeaponCosts.map(item=>item.billedLevel),[450,450,300,450,450]);
+  assert.deepEqual(auto.exclusiveWeaponCosts.map(item=>item.fragments),[950,950,380,950,950]);
+  assert.equal(auto.exclusiveWeaponCosts[2].levelDiscountFragments,570);
+  assert.equal(auto.exclusiveWeaponCosts[2].levelDiscountDiamonds,26258.58);
+  assert.equal(Math.round((full.totalDiamonds-auto.totalDiamonds)*100)/100,26258.58);
+  assert.deepEqual(auto.resources.lifeTreeDew,full.resources.lifeTreeDew);
+  assert.deepEqual(auto.resources.reinforcementMedicine,full.resources.reinforcementMedicine);
+  assert.equal(deriveWeaponPricing(createTeam(),catalog,policy,freeLibrary).qualifyingCount,0);
+  assert.equal(auto.weaponPricing.discountCount,1);
+});
+test('real v4 synchronized import migrates its verified levels and removes sources before v5 automatic pricing',()=>{
+  const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
+  Object.assign(team.members[0].equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:300,syncSlot:1,reinforcementLevel:450});
+  team.weaponSources=[8,27].map(characterId=>({characterId,characterRarity:'SR',rarity:'UR',level:450}));
+  const old=createExport(team,catalog,manualPolicy(),freeLibrary);
+  old.costBreakdown.weaponSync.effectiveLevels[0]=999;
+  old.costBreakdown.totalDiamonds=0;
+  const imported=parseImport(old,catalog,policy,freeLibrary);
+  assert.equal(imported.team.members[0].equipment[0].level,450);
+  assert.equal(imported.team.members[0].equipment[0].reinforcementLevel,450);
+  assert.equal(imported.team.members[0].equipment[0].syncSlot,0);
+  assert.deepEqual(imported.team.weaponSources,[]);
+  assert.deepEqual(imported.costBreakdown.weaponSourceCosts,[]);
+  assert.equal(imported.costBreakdown.weaponPricing.qualifyingCount,1);
+  assert.equal(imported.costBreakdown.exclusiveWeaponCosts[0].billedLevel,450);
+  assert.equal(imported.warnings.some(message=>/旧同步武器/.test(message)),true);
 });

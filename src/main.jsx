@@ -5,7 +5,7 @@ import './style.css';
 
 const base = import.meta.env.BASE_URL;
 Promise.all([
-  fetch(`${base}data/catalog.json`).then(r => { if (!r.ok) throw Error('角色与装备目录加载失败'); return r.json(); }),
+  fetch(`${base}data/catalog.json`, {cache:'no-cache'}).then(r => { if (!r.ok) throw Error('角色与装备目录加载失败'); return r.json(); }),
   fetch(`${base}data/pricing-policy.json`).then(r => { if (!r.ok) throw Error('计价规则加载失败'); return r.json(); }),
   fetch(`${base}data/free-library.json`).then(r => { if (!r.ok) throw Error('免费库加载失败'); return r.json(); }),
   fetch(`${base}data/name-aliases.json`).then(r => { if (!r.ok) throw Error('名称简写库加载失败'); return r.json(); }),

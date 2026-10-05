@@ -2422,5 +2422,14 @@
         450
       ]
     }
-  }
+  },
+  "elementIcons": {
+    "blue": "./assets/ui/icon_element_1.png",
+    "red": "./assets/ui/icon_element_2.png",
+    "green": "./assets/ui/icon_element_3.png",
+    "yellow": "./assets/ui/icon_element_4.png",
+    "light": "./assets/ui/icon_element_5.png",
+    "dark": "./assets/ui/icon_element_6.png"
+  },
+  "teamFrame": "./assets/ui/toggle_04_off.png"
 }
