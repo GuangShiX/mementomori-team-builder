@@ -34,7 +34,7 @@ function validateResourceAllowances(policy, errors) {
   }
   if (policy.blessings === undefined) return;
   if (!Array.isArray(policy.blessings)) {
-    error(errors, 'policy.blessings', 'INVALID_BLESSINGS', '赐福必须为有效的额度列表。');
+    error(errors, 'policy.blessings', 'INVALID_BLESSINGS', '恩泽必须为有效的额度列表。');
     return;
   }
   const seen = new Set();
@@ -44,36 +44,36 @@ function validateResourceAllowances(policy, errors) {
     const path = `policy.blessings[${index}]`;
     if (!isObject(blessing) || typeof blessing.id !== 'string' || blessing.id.length === 0 || seen.has(blessing.id)
       || typeof blessing.name !== 'string' || blessing.name.length === 0 || !RESOURCE_KEYS.includes(blessing.resource)) {
-      error(errors, path, 'INVALID_BLESSING', '赐福必须包含唯一编号、名称及已知材料。');
+      error(errors, path, 'INVALID_BLESSING', '恩泽必须包含唯一编号、名称及已知材料。');
       return;
     }
     seen.add(blessing.id);
     const effect = blessingEffect(blessing);
     if (effect === 'resourceAllowance') {
-      if (!finiteNonnegative(blessing.amount)) error(errors, path, 'INVALID_BLESSING', '材料额度赐福必须包含非负额度。');
+      if (!finiteNonnegative(blessing.amount)) error(errors, path, 'INVALID_BLESSING', '材料额度恩泽必须包含非负额度。');
     } else if (effect === 'resourceDiamondAllowance') {
       if (!['lifeTreeDew', 'exclusiveFragments'].includes(blessing.resource) || !finiteNonnegative(blessing.amount)) {
-        error(errors, path, 'INVALID_DIAMOND_BLESSING', '钻石额度赐福仅支持叶子与专武碎片／紫水晶的独立非负钻石预算。');
+        error(errors, path, 'INVALID_DIAMOND_BLESSING', '钻石额度恩泽仅支持叶子与专武碎片／紫水晶的独立非负钻石预算。');
       }
     } else if (effect === 'freeExclusiveFragmentBaseline') {
       if (blessing.resource !== 'exclusiveFragments' || blessing.rarity !== 'UR'
         || !integerIn(blessing.level, 1, policy.characterLevel) || blessing.amount !== undefined) {
-        error(errors, path, 'INVALID_EXCLUSIVE_BASELINE_BLESSING', '专武制作基线赐福必须指定有效 UR 等级与专武碎片，不包含叶子或钻石额度。');
+        error(errors, path, 'INVALID_EXCLUSIVE_BASELINE_BLESSING', '专武制作基线恩泽必须指定有效 UR 等级与专武碎片，不包含叶子或钻石额度。');
       }
-      if (fragmentBaselineResources.has(blessing.resource)) error(errors, path, 'DUPLICATE_EXCLUSIVE_BASELINE_BLESSING', '每把专武的制作基线赐福不能重复配置。');
+      if (fragmentBaselineResources.has(blessing.resource)) error(errors, path, 'DUPLICATE_EXCLUSIVE_BASELINE_BLESSING', '每把专武的制作基线恩泽不能重复配置。');
       fragmentBaselineResources.add(blessing.resource);
     } else if (effect === 'freeEquipmentCrafting') {
       if (blessing.rarity !== 'SSR' || blessing.weaponKind !== 'normal' || blessing.resource !== 'ssrFragments' || blessing.amount !== undefined) {
-        error(errors, path, 'INVALID_CRAFTING_BLESSING', '制作赐福仅免普通 SSR 装备的 SSR 碎片，不包含专武、UR／LR或养成额度。');
+        error(errors, path, 'INVALID_CRAFTING_BLESSING', '制作恩泽仅免普通 SSR 装备的 SSR 碎片，不包含专武、UR／LR或养成额度。');
       }
       const target = `${blessing.rarity}:${blessing.weaponKind}:${blessing.resource}`;
-      if (craftingTargets.has(target)) error(errors, path, 'DUPLICATE_CRAFTING_BLESSING', '同一装备制作权益不能重复配置赐福。');
+      if (craftingTargets.has(target)) error(errors, path, 'DUPLICATE_CRAFTING_BLESSING', '同一装备制作权益不能重复配置恩泽。');
       craftingTargets.add(target);
-    } else error(errors, path, 'UNKNOWN_BLESSING_EFFECT', '赐福效果类型未知，无法估价。');
+    } else error(errors, path, 'UNKNOWN_BLESSING_EFFECT', '恩泽效果类型未知，无法估价。');
   });
   if (errors.length === 0) for (const key of RESOURCE_KEYS) {
-    if (!finiteNonnegative(resourceAllowanceDetails(policy, key).freeAllowance)) error(errors, `policy.blessings`, 'INVALID_ALLOWANCE', '赐福与基础额度之和必须为有效非负数。');
-    if (!finiteNonnegative(resourceDiamondAllowance(policy, key))) error(errors, 'policy.blessings', 'INVALID_DIAMOND_BLESSING', '赐福钻石预算之和必须为有效非负数。');
+    if (!finiteNonnegative(resourceAllowanceDetails(policy, key).freeAllowance)) error(errors, `policy.blessings`, 'INVALID_ALLOWANCE', '恩泽与基础额度之和必须为有效非负数。');
+    if (!finiteNonnegative(resourceDiamondAllowance(policy, key))) error(errors, 'policy.blessings', 'INVALID_DIAMOND_BLESSING', '恩泽钻石预算之和必须为有效非负数。');
   }
 }
 
@@ -95,7 +95,7 @@ function validateExclusiveFragmentBaselines(policy, catalog, errors) {
     const amount = catalog.equipmentCosts?.fragments?.[key]?.[blessing.level];
     const allowed = catalog.equipmentCosts?.allowedLevels?.[key];
     if (!finiteNonnegative(amount) || (Array.isArray(allowed) && !allowed.includes(blessing.level))) {
-      error(errors, `policy.blessings[${index}].level`, 'UNAVAILABLE_EXCLUSIVE_BASELINE', '专武赐福基线必须在当前公开累计制作表中可用。');
+      error(errors, `policy.blessings[${index}].level`, 'UNAVAILABLE_EXCLUSIVE_BASELINE', '专武恩泽基线必须在当前公开累计制作表中可用。');
     }
   }
 }

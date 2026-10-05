@@ -26,7 +26,7 @@ const policy = {
   version: 6, characterLevel: 450, unitPrices: { characterCopy: 12000, ssrFragments: 2, exclusiveFragments: 3, reinforcementMedicine: 10 },
   copies: { SR: { normal: 1, lightDark: 1 }, LR: { normal: 8, lightDark: 14 }, LR5: { normal: 20, lightDark: 26 } },
   allowances: { reinforcementMedicine: 60000, holySteel: 3500 }, holySteelPerExperience: 1,
-  blessings: [{ id: 'crimson-grace', name: '赐福·绯红恩泽', resource: 'reinforcementMedicine', amount: 40000 }],
+  blessings: [{ id: 'crimson-grace', name: '恩泽·绯红', resource: 'reinforcementMedicine', amount: 40000 }],
 };
 const freeLibrary = { format: 'mementomori-free-library', schemaVersion: 1, version: 1,
   characters: [{ characterId: 1, rarity: 'LR5' }, { characterId: 2, rarity: 'LR' }, { characterId: 3, rarity: 'SR' }, { characterId: 8, rarity: 'SR' }], exclusiveWeapons: [] };

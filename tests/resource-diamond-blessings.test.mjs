@@ -19,10 +19,10 @@ const policy = {
   copies: { SR: { normal: 1, lightDark: 1 }, LR: { normal: 8, lightDark: 14 }, LR5: { normal: 20, lightDark: 26 } },
   equipment: { urLifeTreeDew: 0, lrLifeTreeDew: 50, exclusiveUrLifeTreeDew: 15, exclusiveLrLifeTreeDew: 65 }, holySteelPerExperience: 1,
   allowances: { reinforcementMedicine: 0 }, blessings: [
-    { id: 'red', name: '红水赐福', resource: 'reinforcementMedicine', amount: 88888 },
-    { id: 'forge', name: '制作赐福', effect: 'freeEquipmentCrafting', rarity: 'SSR', weaponKind: 'normal', resource: 'ssrFragments' },
-    { id: 'dew', name: '叶子赐福', effect: 'resourceDiamondAllowance', resource: 'lifeTreeDew', amount: 60000 },
-    { id: 'crystal', name: '紫晶赐福', effect: 'resourceDiamondAllowance', resource: 'exclusiveFragments', amount: 80000 },
+    { id: 'red', name: '红水恩泽', resource: 'reinforcementMedicine', amount: 88888 },
+    { id: 'forge', name: '制作恩泽', effect: 'freeEquipmentCrafting', rarity: 'SSR', weaponKind: 'normal', resource: 'ssrFragments' },
+    { id: 'dew', name: '叶子恩泽', effect: 'resourceDiamondAllowance', resource: 'lifeTreeDew', amount: 60000 },
+    { id: 'crystal', name: '紫晶恩泽', effect: 'resourceDiamondAllowance', resource: 'exclusiveFragments', amount: 80000 },
   ],
 };
 const library = { format: 'mementomori-free-library', schemaVersion: 1, version: 1, characters: [], exclusiveWeapons: [] };
@@ -38,7 +38,7 @@ const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-8
 const baselinePolicy = () => {
   const configured = copy(policy);
   configured.blessings = configured.blessings.map(row => row.id === 'crystal'
-    ? { id: 'crystal', name: '紫晶基线赐福', effect: 'freeExclusiveFragmentBaseline', resource: 'exclusiveFragments', rarity: 'UR', level: 240 } : row);
+    ? { id: 'crystal', name: '紫晶基线恩泽', effect: 'freeExclusiveFragmentBaseline', resource: 'exclusiveFragments', rarity: 'UR', level: 240 } : row);
   return configured;
 };
 const baselineCatalog = () => {

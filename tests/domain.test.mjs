@@ -934,7 +934,7 @@ test('unsafe legacy synchronization is rejected while source-only migration remo
   assert.match(migrated.warnings[0], /不再收取隐藏库存费用/);
 });
 
-const forgeBlessing = { id: 'forge-grace', name: '赐福·锻造恩典', effect: 'freeEquipmentCrafting', rarity: 'SSR', weaponKind: 'normal', resource: 'ssrFragments' };
+const forgeBlessing = { id: 'forge-grace', name: '恩泽·锻造', effect: 'freeEquipmentCrafting', rarity: 'SSR', weaponKind: 'normal', resource: 'ssrFragments' };
 const forgingPolicy = () => ({ ...copy(policy), blessings: [copy(forgeBlessing)] });
 
 test('ordinary SSR crafting blessing preserves material investment and unit prices while charging no crafting diamonds', () => {
@@ -1044,7 +1044,7 @@ test('crafting blessing scope and effect are validated while old and explicit re
   assert.equal(validateTeam(createTeam(), catalog, duplicate).valid, false);
   const explicit = forgingPolicy();
   explicit.allowances.reinforcementMedicine = 60000;
-  explicit.blessings.push({ id: 'red-grace', name: '红水赐福', effect: 'resourceAllowance', resource: 'reinforcementMedicine', amount: 40000 });
+  explicit.blessings.push({ id: 'red-grace', name: '红水恩泽', effect: 'resourceAllowance', resource: 'reinforcementMedicine', amount: 40000 });
   assert.equal(getResourceAllowance(explicit, 'reinforcementMedicine'), 100000);
   delete explicit.blessings[1].effect;
   assert.equal(getResourceAllowance(explicit, 'reinforcementMedicine'), 100000);

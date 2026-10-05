@@ -473,10 +473,10 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
   const leafCosts = cost?.equipmentCosts?.filter(item => (item.resources?.lifeTreeDew ?? 0) > 0) ?? [];
   const costKey = item => `${item.sourceKind ?? 'team'}-${item.characterId}-${item.sourceIndex ?? item.position}-${item.slot ?? 'weapon'}`;
   const catalogCharacter = id => catalog.characters.find(character => character.id === id);
-  const ordinaryCosts = cost?.equipmentCosts?.filter(item => item.weaponKind === 'normal') ?? [];
-  const lrCosts = cost?.equipmentCosts?.filter(item => item.sourceKind === 'team' && item.rarity === 'LR') ?? [];
-  const fabricationCost = item => (item.chargedResourceDiamonds?.[item.fragmentResource] ?? 0) + (item.chargedResourceDiamonds?.lifeTreeDew ?? 0);
-  const lrFabricationDiamonds = lrCosts.reduce((sum, item) => sum + fabricationCost(item), 0);
+  const ordinaryCosts = cost?.equipmentCosts?.filter(item => item.weaponKind === 'normal' && item.rarity !== 'LR') ?? [];
+  const lrFragmentCosts = cost?.equipmentCosts?.filter(item => item.sourceKind === 'team' && item.rarity === 'LR' && item.fragmentResource === 'urLrFragments') ?? [];
+  const lrFragments = lrFragmentCosts.reduce((sum, item) => sum + item.fragments, 0);
+  const lrFragmentDiamonds = lrFragmentCosts.reduce((sum, item) => sum + (item.chargedResourceDiamonds?.urLrFragments ?? 0), 0);
   const offTeamCosts = cost?.offTeamCharacterCosts?.filter(item => item.diamonds > 0) ?? [];
   const diamondResourceNames = DIAMOND_RESOURCE_NAMES;
   const diamondBudgetResources = Object.keys(diamondResourceNames).filter(key => policy.blessings?.some(blessing => blessing.effect === 'resourceDiamondAllowance' && blessing.resource === key));
@@ -498,7 +498,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       return <div className="resource-item" key={key}>
         <div className="resource-item-top"><span>{resourceLabel(key)}</span><strong>{amount(consumed)}</strong></div>
         <div className="resource-caption"><span>{captionByResource[key]}</span><span>{amount(free)} 免费</span></div>
-        {(resource?.blessingAllowance ?? 0) > 0 && <p className="resource-blessing-breakdown">{resource.baseAllowance > 0 ? <>基础 {amount(scaled(key, resource.baseAllowance))} ＋ 赐福 {amount(scaled(key, resource.blessingAllowance))} ＝ {amount(free)}</> : <>整队免费总额度 {amount(free)} {resourceLabel(key).split(' · ')[0]}</>}</p>}
+        {(resource?.blessingAllowance ?? 0) > 0 && <p className="resource-blessing-breakdown">{resource.baseAllowance > 0 ? <>基础 {amount(scaled(key, resource.baseAllowance))} ＋ 恩泽 {amount(scaled(key, resource.blessingAllowance))} ＝ {amount(free)}</> : <>整队免费总额度 {amount(free)} {resourceLabel(key).split(' · ')[0]}</>}</p>}
         <div className={`resource-bar${charged > 0 ? ' exceeded' : ''}`}><span style={{ width: `${ratio * 100}%` }} /></div>
         {charged > 0 && <p className="resource-extra">超出 {amount(charged)} · +{amount(resource.diamonds)} 钻</p>}
       </div>;
@@ -520,7 +520,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       <div className="price-line"><span>超额材料</span><strong>{amount(cost?.resourceDiamonds)} 钻</strong></div>
     </div>
     {(cost?.characterCosts?.some(item => item.sourceKind === 'arcana') || arcanaState?.groups?.some(group => group.purchased)) && <p className="shared-ownership-note">配队与秘仪按角色最高持有稀有度合并，同一角色只计一次本体费用。</p>}
-    {lrCosts.length > 0 && <section className="ordinary-crafting-costs lr-crafting-costs" aria-label="LR装备造价"><div className="resource-section-title"><span>LR 装备造价</span><strong>{amount(lrFabricationDiamonds)} 钻</strong></div><p className="inventory-caption">制作碎片与叶子进化的实际投入，已计入总额。</p>{lrCosts.map(item => <div className="leaf-cost-row" key={costKey(item)} data-position={item.position} data-slot={item.slot}><span>{characterLabel(catalogCharacter(item.characterId))} · {item.weaponKind === 'exclusive' ? 'LR 专武' : `${SLOT_NAMES[item.slot]} LR`}<small>制作 {amount(item.chargedResourceDiamonds?.[item.fragmentResource] ?? 0)} · 叶子 {amount(item.chargedResourceDiamonds?.lifeTreeDew ?? 0)} 钻</small></span><strong>{amount(fabricationCost(item))} 钻</strong></div>)}</section>}
+    {lrFragmentCosts.length > 0 && <section className="ordinary-crafting-costs lr-crafting-costs" aria-label="LR装备碎片成本"><div className="resource-section-title"><span>LR 装备碎片成本</span><strong>{amount(lrFragmentDiamonds)} 钻</strong></div><p className="inventory-caption">圣遗物碎片（LR装备碎片）合计 {amount(lrFragments)} 片</p><p className="inventory-caption">实际投入 · 已计入总额</p></section>}
     {cost?.memberCosts?.length > 0 && <section className="member-investments" aria-label="队员实际投入"><div className="resource-section-title"><span>队员实际投入</span><span>已计入总额</span></div><p className="inventory-caption">共享免费额度按队伍顺序使用；以下投入已计入总额。</p>{cost.memberCosts.map(item => <div className="member-investment-row" key={item.characterId}><div><span title={characterLabel(catalogCharacter(item.characterId))}>{item.position}. {characterLabel(catalogCharacter(item.characterId)) || item.characterName}</span><strong>{amount(item.totalDiamonds)} 钻</strong></div><p>本体 {amount(item.characterDiamonds)} · 装备与养成 {amount(item.equipmentDiamonds)} 钻</p></div>)}</section>}
     {offTeamCosts.length > 0 && <section className="off-team-investments" aria-label="秘仪队外投入"><div className="resource-section-title"><span>秘仪队外投入</span><span>已计入总额</span></div>{offTeamCosts.map(item => <div className="member-investment-row" key={item.characterId}><div><span>{item.characterName}</span><strong>{amount(item.diamonds)} 钻</strong></div></div>)}</section>}
     {cost?.exclusiveWeaponCosts?.length > 0 && <section className="weapon-costs" aria-label="专武造价">
@@ -584,7 +584,7 @@ export function CharacterStatsPanel({ result, policy }) {
 function BlessingCard({ blessing, policy }) {
   const resourceName = RESOURCE_NAMES[blessing.resource]?.split(' · ')[0] ?? '';
   const baseAllowance = policy.allowances?.[blessing.resource] ?? 0;
-  return <aside className="intro-note blessing-note" aria-label="赐福机制"><strong>{blessing.name}</strong>{blessing.effect === 'freeEquipmentCrafting' ? <><p>普通 {blessing.rarity} 装备制作免费</p><span>{blessing.rarity} 专武按原规则计价；强化与养成按实际配置计算</span></> : blessing.effect === 'freeExclusiveFragmentBaseline' ? <><p>每把专武紫水晶制作免费至 {blessing.rarity} Lv.{blessing.level}</p><span>更高等级只收基础以上差额</span></> : blessing.effect === 'resourceDiamondAllowance' ? <><p>{DIAMOND_RESOURCE_NAMES[blessing.resource]}免费 {amount(blessing.amount)} 钻</p><span>独立材料预算 · 整队共享</span></> : baseAllowance > 0 ? <><p>额外免费 {amount(blessing.amount)} {resourceName}</p><span>基础免费 {amount(baseAllowance)} · 合计免费 {amount(getResourceAllowance(policy, blessing.resource))}</span></> : <><p>整队免费总额度 {amount(getResourceAllowance(policy, blessing.resource))} {resourceName}</p><span>超过总额度后按超额计价</span></>}</aside>;
+  return <aside className="intro-note blessing-note" aria-label="恩泽机制"><strong>{blessing.name}</strong>{blessing.effect === 'freeEquipmentCrafting' ? <><p>普通 {blessing.rarity} 装备制作免费</p><span>{blessing.rarity} 专武按原规则计价；强化与养成按实际配置计算</span></> : blessing.effect === 'freeExclusiveFragmentBaseline' ? <><p>每把专武紫水晶制作免费至 {blessing.rarity} Lv.{blessing.level}</p><span>更高等级只收基础以上差额</span></> : blessing.effect === 'resourceDiamondAllowance' ? <><p>{DIAMOND_RESOURCE_NAMES[blessing.resource]}免费 {amount(blessing.amount)} 钻</p><span>独立材料预算 · 整队共享</span></> : baseAllowance > 0 ? <><p>额外免费 {amount(blessing.amount)} {resourceName}</p><span>基础免费 {amount(baseAllowance)} · 合计免费 {amount(getResourceAllowance(policy, blessing.resource))}</span></> : <><p>整队免费总额度 {amount(getResourceAllowance(policy, blessing.resource))} {resourceName}</p><span>超过总额度后按超额计价</span></>}</aside>;
 }
 
 export default function App({ catalog, policy, freeLibrary, nameAliases }) {
