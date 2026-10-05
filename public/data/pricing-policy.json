@@ -1,0 +1,73 @@
+{
+  "id": "owner-450-v1",
+  "version": 1,
+  "ruleSetId": "mementomori-investment-equivalent-v1",
+  "title": "450级配队预算规则",
+  "characterLevel": 450,
+  "baseline": {
+    "levelLink": {"level": 450, "subLevel": 0},
+    "arcanaMode": "ownerConfigured",
+    "playerLevelMode": "ownerConfigured",
+    "description": "角色共同链接等级450；秘仪与玩家等级加成由构建方采用统一基准。"
+  },
+  "allowanceScope": "wholeTeam",
+  "allowances": {
+    "runeTickets": 100000,
+    "reinforcementMedicine": 100000,
+    "holySteel": 3500,
+    "ssrFragments": 0,
+    "urLrFragments": 0,
+    "exclusiveFragments": 0,
+    "lifeTreeDew": 0
+  },
+  "unitPrices": {
+    "characterCopy": 17000,
+    "runeTickets": 10,
+    "reinforcementMedicine": 10,
+    "holySteel": 100,
+    "ssrFragments": 44.2470588235294,
+    "urLrFragments": 211.4210142276423,
+    "exclusiveFragments": 46.0676829268293,
+    "lifeTreeDew": 400
+  },
+  "copies": {
+    "SR": {"normal": 1, "lightDark": 1},
+    "LR": {"normal": 8, "lightDark": 14},
+    "LR5": {"normal": 20, "lightDark": 26}
+  },
+  "holySteelPerExperience": 1,
+  "holySteelUnit": "level1SacredExperienceEquivalent",
+  "rawHolySteelPerExperience": 1000,
+  "runes": {
+    "ticketCategoryIds": [5, 9],
+    "ticketExponentOffset": 0,
+    "unidentifiedRuneBaseLevel": 7,
+    "fixedStock": {"level": 11, "perCategory": 3, "excludedCategoryIds": [5, 9]}
+  },
+  "equipment": {
+    "urLifeTreeDew": 0,
+    "lrLifeTreeDew": 50,
+    "exclusiveUrLifeTreeDew": 15,
+    "exclusiveLrLifeTreeDew": 65
+  },
+  "conversions": {
+    "relicMaterialPrice": 5285.525355691057,
+    "relicMaterialsPerExchange": 2,
+    "urLrFragmentsPerExchange": 50,
+    "magicCrystalPrice": 153.5589430894309,
+    "magicCrystalsPerExclusiveExchange": 3,
+    "exclusiveFragmentsPerExchange": 10,
+    "forbiddenProductPrice": 663.705882352941,
+    "ssrFragmentsPerProduct": 15
+  },
+  "rounding": {"precision": 2, "mode": "roundFinalTotal"},
+  "limits": {"runeLevel": 15, "sacredTreasureLevel": 40},
+  "notes": [
+    "免费额度由管理员按450级基准设定，属于整支配队，不是每名角色。",
+    "圣装钢以一级圣装经验等价计量：3500份免费，超额每份100钻；此为构筑预算规则，不是历史实际花费。",
+    "魔装仅记录累计经验，不计费；金币、普通强化水、精炼钢和打磨资源不纳入首版预算。",
+    "穿透、速度符石折算饼干。其它类别不开放购买，仅整队每类免费提供3颗11级符石；不可超库存或改变等级。",
+    "玩家导出报价用于预览，构建方应按当前认可的规则重新计算。"
+  ],
+  "reference": "https://hitazuki.github.io/mementomori-calculator/#packCompare"
+}
