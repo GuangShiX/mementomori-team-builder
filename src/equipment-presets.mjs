@@ -2,10 +2,9 @@ import { DomainValidationError, selectEquipmentRarity } from './domain.mjs';
 
 // Slot identities follow the game's six equipment positions.
 export const EQUIPMENT_PRESETS = Object.freeze([
-  Object.freeze({ id: 'adaptive4', label: '4UR / 4LR', composition: '4UR / 4LR + 2SSR', rarity: 'UR', highSlots: Object.freeze([1, 2, 4, 5]), requiresLR5: false, adaptive: true }),
-  Object.freeze({ id: 'ur2-ssr4', label: '2UR', composition: '2UR + 4SSR', rarity: 'UR', highSlots: Object.freeze([1, 2]), requiresLR5: false }),
-  Object.freeze({ id: 'lr2-ssr4', label: '2LR', composition: '2LR + 4SSR', rarity: 'LR', highSlots: Object.freeze([1, 2]), requiresLR5: true }),
-  Object.freeze({ id: 'lr6', label: '6LR', composition: '6LR', rarity: 'LR', highSlots: Object.freeze([1, 2, 3, 4, 5, 6]), requiresLR5: true }),
+  Object.freeze({ id: 'ur2-ssr4', label: '2UR / 2LR + 4SSR', composition: '2UR / 2LR + 4SSR', rarity: 'UR', highSlots: Object.freeze([1, 2]), requiresLR5: false, adaptive: true }),
+  Object.freeze({ id: 'adaptive4', label: '4UR / 4LR + 2SSR', composition: '4UR / 4LR + 2SSR', rarity: 'UR', highSlots: Object.freeze([1, 2, 4, 5]), requiresLR5: false, adaptive: true }),
+  Object.freeze({ id: 'lr6', label: '6UR / 6LR', composition: '6UR / 6LR', rarity: 'UR', highSlots: Object.freeze([1, 2, 3, 4, 5, 6]), requiresLR5: false, adaptive: true }),
 ]);
 
 const issue = (path, code, message) => new DomainValidationError([{ path, code, message }]);
@@ -14,7 +13,9 @@ export function getEquipmentPresetOptions(member) {
   return EQUIPMENT_PRESETS.map(preset => {
     if (!preset.adaptive) return preset;
     const rarity = member?.rarity === 'LR5' ? 'LR' : 'UR';
-    return { ...preset, rarity, label: `4${rarity}`, composition: `4${rarity} + 2SSR`, requiresLR5: rarity === 'LR' };
+    const count = preset.highSlots.length;
+    const composition = `${count}${rarity}${count < 6 ? ` + ${6 - count}SSR` : ''}`;
+    return { ...preset, rarity, label: composition, composition, requiresLR5: rarity === 'LR' };
   });
 }
 

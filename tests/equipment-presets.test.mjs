@@ -6,11 +6,12 @@ import { EQUIPMENT_PRESETS, applyEquipmentPreset, getEquipmentPresetOptions, cha
 
 const [catalog, policy, freeLibrary] = await Promise.all(['catalog', 'pricing-policy', 'free-library'].map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
 
-test('quick sets use the established weapon and accessory pair then head and armor, leaving SSR hand and feet', () => {
+test('quick sets keep the established high-tier slot groups and reinforcement values', () => {
   const member = createMember(8);
   const cases = [
     ['ur2-ssr4', ['UR', 'UR', 'SSR', 'SSR', 'SSR', 'SSR']],
     ['adaptive4', ['UR', 'UR', 'SSR', 'UR', 'UR', 'SSR']],
+    ['lr6', ['UR', 'UR', 'UR', 'UR', 'UR', 'UR']],
   ];
   for (const [id, rarities] of cases) {
     const result = applyEquipmentPreset(member, id, catalog, policy);
@@ -23,14 +24,17 @@ test('quick sets use the established weapon and accessory pair then head and arm
     assert.equal(validateTeam(team, catalog, policy, { freeLibrary }).valid, true);
   }
   assert.ok(member.equipment.every(gear => gear.rarity === 'NONE'));
-  assert.equal(EQUIPMENT_PRESETS.length, 4);
+  assert.equal(EQUIPMENT_PRESETS.length, 3);
+  assert.deepEqual(EQUIPMENT_PRESETS.map(preset => preset.id), ['ur2-ssr4', 'adaptive4', 'lr6']);
 });
 
-test('LR sets require LR5 without silently upgrading the character and always keep game-legal levels', () => {
+test('adaptive sets equip LR only for LR5 without silently upgrading the character and always keep game-legal levels', () => {
   const member = createMember(8);
-  for (const id of ['lr2-ssr4', 'lr6']) assert.throws(() => applyEquipmentPreset(member, id, catalog, policy), DomainValidationError);
+  const lower = applyEquipmentPreset(member, 'lr6', catalog, policy);
+  assert.ok(lower.equipment.every(gear => gear.rarity === 'UR'));
+  assert.equal(lower.rarity, 'SR');
   member.rarity = 'LR5';
-  const partial = applyEquipmentPreset(member, 'lr2-ssr4', catalog, policy);
+  const partial = applyEquipmentPreset(member, 'ur2-ssr4', catalog, policy);
   assert.deepEqual(partial.equipment.map(gear => gear.rarity), ['LR', 'LR', 'SSR', 'SSR', 'SSR', 'SSR']);
   const all = applyEquipmentPreset(member, 'lr6', catalog, policy);
   assert.deepEqual(all.equipment.map(gear => gear.level), [450, 240, 450, 240, 240, 450]);
@@ -58,20 +62,27 @@ test('presets preserve installed holy, magic, runes and borrowed weapon identity
 test('unsupported presets and unavailable legal tiers fail without producing a partial equipment change', () => {
   const member = createMember(8);
   assert.throws(() => applyEquipmentPreset(member, 'ur6', catalog, policy), DomainValidationError);
+  assert.throws(() => applyEquipmentPreset(member, 'lr2-ssr4', catalog, policy), DomainValidationError);
   const unsupported = structuredClone(catalog);
   delete unsupported.equipmentCosts.fragments.UR;
   assert.throws(() => applyEquipmentPreset(member, 'adaptive4', unsupported, policy), DomainValidationError);
   assert.ok(member.equipment.every(gear => gear.rarity === 'NONE'));
 });
 
-test('the combined four-piece preset chooses UR at SR or LR and LR at LR5 with unchanged SSR hands and feet', () => {
+test('all three adaptive compositions resolve complete button labels and choose UR at SR or LR and LR at LR5', () => {
   for (const [rarity, gearRarity] of [['SR', 'UR'], ['LR', 'UR'], ['LR5', 'LR']]) {
     const member = createMember(8); member.rarity = rarity;
-    const option = getEquipmentPresetOptions(member).find(item => item.id === 'adaptive4');
-    assert.equal(option.label, `4${gearRarity}`);
-    const result = applyEquipmentPreset(member, option.id, catalog, policy);
-    assert.deepEqual(result.equipment.map(gear => gear.rarity), [gearRarity, gearRarity, 'SSR', gearRarity, gearRarity, 'SSR']);
-    assert.equal(result.rarity, rarity);
+    const options = getEquipmentPresetOptions(member);
+    assert.deepEqual(options.map(option => option.label), [`2${gearRarity} + 4SSR`, `4${gearRarity} + 2SSR`, `6${gearRarity}`]);
+    for (const option of options) {
+      assert.equal(option.label, option.composition);
+      const result = applyEquipmentPreset(member, option.id, catalog, policy);
+      assert.deepEqual(result.equipment.map(gear => gear.rarity), [1, 2, 3, 4, 5, 6].map(slot => option.highSlots.includes(slot) ? gearRarity : 'SSR'));
+      assert.equal(result.rarity, rarity);
+      assert.deepEqual(result.equipment.map(gear => gear.reinforcementLevel), [450, 60, 450, 240, 240, 450]);
+      const team = createTeam(); team.members[0] = result;
+      assert.equal(validateTeam(team, catalog, policy, { freeLibrary }).valid, true);
+    }
   }
 });
 

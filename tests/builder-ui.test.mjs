@@ -78,8 +78,13 @@ test('builder displays a nameless framed team to the right of the selected chara
   assert.match(selection, /将队员拖回此目录可移出配队/);
   assert.doesNotMatch(selection, /双击|单击加入/);
   assert.equal((lineup.match(/class="team-slot(?: |")/g) ?? []).length, 5);
-  assert.equal((lineup.match(/class="member-rarity"/g) ?? []).length, 2);
-  assert.equal((lineup.match(/class="member-level">Lv\.450/g) ?? []).length, 2);
+  assert.doesNotMatch(lineup, /class="member-rarity"|class="member-level"/);
+  assert.equal((lineup.match(/class="member-speed"/g) ?? []).length, 2);
+  const owned = getArcanaState(team, displayedCatalog, policy, freeLibrary);
+  for (const member of team.members.filter(Boolean)) {
+    const speed = calculateCharacterStats(member, displayedCatalog, policy, owned).rows.find(row => row.key === 'Speed').displayValue;
+    assert.ok(lineup.includes(`>速度 ${speed}</span>`));
+  }
   assert.equal((lineup.match(/class="member-equipment-item/g) ?? []).length, 12);
   assert.match(lineup, /class="member-matchless"[^>]*>魔装 0<\/span>/);
   assert.match(lineup, /class="member-matchless"[^>]*>未装备<\/span>/);
@@ -401,7 +406,7 @@ test('the treasure level labels show exact published per-slot bonuses and never 
   assert.doesNotMatch(invalid, /攻击力 \+60%|攻击力 \+105,000|NaN|undefined/);
 });
 
-test('four equipment shortcuts display their real compositions, preserve treasure and runes, and expose legal reinforcement values', async () => {
+test('three adaptive equipment shortcuts display their real compositions, preserve treasure and runes, and expose legal reinforcement values', async () => {
   const member = createMember(124);
   member.rarity = 'LR5';
   Object.assign(member.equipment[0], { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 240, legendSacredTreasureLevel: 1, matchlessSacredTreasureLevel: 17 });
@@ -431,9 +436,9 @@ test('four equipment shortcuts display their real compositions, preserve treasur
   lowerTeam.members[0] = createMember(124);
   const lower = await renderDraft(cloneTeam(lowerTeam));
   const lowerControls = lower.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
-  assert.equal((lowerControls.match(/disabled=""/g) ?? []).length, 2);
-  assert.match(lowerControls, /disabled="" title="2LR \+ 4SSR · 需要 LR5 角色">2LR/);
-  assert.match(lowerControls, /disabled="" title="6LR · 需要 LR5 角色">6LR/);
+  assert.equal((lowerControls.match(/<button /g) ?? []).length, 3);
+  assert.doesNotMatch(lowerControls, /disabled=""/);
+  for (const label of ['2UR + 4SSR', '4UR + 2SSR', '6UR']) assert.ok(lowerControls.includes(`>${label}</button>`));
 });
 
 test('equipment DOM keeps slot order 1..6 while the desktop grid fills the left column before the right', async () => {
@@ -446,8 +451,8 @@ test('equipment DOM keeps slot order 1..6 while the desktop grid fills the left 
   assert.match(css, /\.equip-grid\{grid-template-rows:repeat\(3,auto\);grid-auto-flow:column\}/);
   assert.match(css, /@media\(max-width:430px\)\{\.equip-grid\{grid-template-rows:none;grid-auto-flow:row\}\}/);
   const controls = markup.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
-  assert.match(controls, /title="4UR \+ 2SSR">4UR<\/button>/);
-  assert.doesNotMatch(controls, />4LR<\/button>/);
+  assert.match(controls, /title="4UR \+ 2SSR">4UR \+ 2SSR<\/button>/);
+  assert.doesNotMatch(controls, />4LR \+ 2SSR<\/button>/);
 });
 
 test('LR5 to LR changes LR gear to UR and switches the adaptive shortcut without losing existing upgrades or ownership', async () => {
@@ -462,8 +467,8 @@ test('LR5 to LR changes LR gear to UR and switches the adaptive shortcut without
   team.members[0] = lowered;
   const markup = await renderDraft(cloneTeam(team));
   const controls = markup.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
-  assert.match(controls, /title="4UR \+ 2SSR">4UR<\/button>/);
-  assert.doesNotMatch(controls, />4LR<\/button>/);
+  assert.match(controls, /title="4UR \+ 2SSR">4UR \+ 2SSR<\/button>/);
+  assert.doesNotMatch(controls, />4LR \+ 2SSR<\/button>/);
   assert.match(markup, /aria-label="角色稀有度"[\s\S]*?<option value="LR" selected="">LR<\/option>/);
   for (const slotName of ['武器', '项链', '手套', '头盔', '衣服', '脚']) assert.match(markup, new RegExp(`aria-label="${slotName}稀有度"[\\s\\S]*?<option value="UR" selected=""`));
   assert.match(markup, /aria-label="武器魔装等级"[^>]*value="17"/);
@@ -480,8 +485,8 @@ test('LR5 to LR changes LR gear to UR and switches the adaptive shortcut without
   const higherTeam = createTeam(); higherTeam.members[0] = high;
   const higher = await renderDraft(cloneTeam(higherTeam));
   const higherControls = higher.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
-  assert.match(higherControls, /title="4LR \+ 2SSR">4LR<\/button>/);
-  assert.doesNotMatch(higherControls, />4UR<\/button>/);
+  assert.match(higherControls, /title="4LR \+ 2SSR">4LR \+ 2SSR<\/button>/);
+  assert.doesNotMatch(higherControls, />4UR \+ 2SSR<\/button>/);
 });
 
 test('exclusive UR240 fabrication baseline and shared leaf budget display actual allocated investments', async () => {
@@ -584,6 +589,8 @@ test('real character stats render published totals and parts, while global stock
     assert.doesNotMatch(invalid, /class="character-stat-row"/);
     assert.equal(getCharacterStatsResult(null, catalog, policy, state, []), null);
   } finally { await server.close(); }
+  const invalidDraft = await renderDraft(broken);
+  assert.equal((invalidDraft.match(/>速度 —<\/span>/g) ?? []).length, 2, 'team speed must not show plausible totals while the shared inventory is invalid');
   assert.match(await renderStats(null), /将角色拖入队伍位置，再查看角色属性/);
 });
 
@@ -593,7 +600,7 @@ test('automatic same-column rune installation shows its exact shared stock and p
   const category = catalog.runeCategories.find(item => item.slots.includes(1) && !policy.runes.fixedStock.excludedCategoryIds.includes(item.id));
   const filled = fillColumnEmptyRunes(team, 0, 1, 0, { categoryId: category.id, level: 11 }, catalog, policy);
   const markup = await renderDraft(filled);
-  assert.match(markup, /首次新增填入同列空孔，首次设置等级一起同步；离开等级框后独立调整，已有符石保留/);
+  assert.match(markup, /四个孔均可填入同列对应空孔，首次等级一起同步；离开等级框后独立调整，已有符石保留/);
   for (const name of ['武器', '项链', '手套']) assert.match(markup, new RegExp(`aria-label="${name}第1孔固定符石等级"[^>]*>[\\s\\S]*?<option value="11" selected=""`));
   assert.ok(markup.includes(`${category.name} · Lv.11</span><span>已用 3 / 3</span><strong>余 0</strong>`));
   const tuned = fillColumnEmptyRunes(filled, 0, 2, 0, { level: 10 }, catalog, policy);
@@ -661,6 +668,50 @@ test('the real category and level controls synchronize a new speed batch through
     assert.equal(state.batch, null, 'selecting an empty hole cancels the batch rather than looking like unfinished number input');
     assert.deepEqual(levels(), [0, 1, 1]);
     assert.equal(control('武器第1孔符石等级').props.disabled, true);
+  } finally { await server.close(); }
+});
+
+test('Lily second-hole magic uses the tier that can fill her column and reports partial stock without overwriting other characters', async () => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
+  try {
+    const { EquipmentEditor } = await server.ssrLoadModule('/src/App.jsx');
+    const team = createTeam();
+    team.members[0] = applyEquipmentPreset(createMember(141), 'ur2-ssr4', catalog, policy);
+    team.members[1] = applyEquipmentPreset(createMember(8), 'ur2-ssr4', catalog, policy);
+    for (const gear of team.members[1].equipment.slice(0, 2)) gear.runes[0] = { categoryId: 3, level: 11 };
+    let state = { team, batch: null };
+    function editor() {
+      const member = state.team.members[0];
+      return EquipmentEditor({
+        gear: member.equipment[0], index: 0, member, memberIndex: 0, catalog, policy, freeLibrary,
+        errors: [], inventory: calculateTeam(state.team, catalog, policy, freeLibrary).fixedRuneInventory,
+        borrowableWeapons: [], ownWeaponClaimed: false, runeFillReport: state.fillReport,
+        batchSourceRuneIndex: state.batch?.slot === 1 ? state.batch.runeIndex : null,
+        onRuneChange(index, rune, kind) { state = updateColumnRune(state.team, 0, 1, index, rune, catalog, policy, { batch: state.batch, kind }); },
+      });
+    }
+    function control(label) {
+      const find = node => React.isValidElement(node)
+        ? node.props['aria-label'] === label ? node : React.Children.toArray(node.props.children).map(find).find(Boolean)
+        : null;
+      const found = find(editor());
+      assert.ok(found, label);
+      return found;
+    }
+    control('武器第1孔符石类别').props.onChange({ target: { value: '9' } });
+    control('武器第2孔符石类别').props.onChange({ target: { value: '3' } });
+    assert.deepEqual(state.team.members[0].equipment.slice(0, 3).map(gear => gear.runes[1]), Array.from({ length: 3 }, () => ({ categoryId: 3, level: 10 })));
+    assert.deepEqual(state.team.members[1].equipment.slice(0, 2).map(gear => gear.runes[0].level), [11, 11]);
+    assert.match(renderToStaticMarkup(editor()), /第 2 孔 魔力：项链／手套已同步/);
+    const speed = calculateCharacterStats(state.team.members[0], catalog, policy, getArcanaState(state.team, catalog, policy, freeLibrary)).rows.find(row => row.key === 'Speed').displayValue;
+    assert.ok((await renderDraft(state.team)).includes(`>速度 ${speed}</span>`));
+    state = { team: cloneTeam(team), batch: null };
+    state.team.members[2] = applyEquipmentPreset(createMember(27), 'ur2-ssr4', catalog, policy);
+    for (const gear of state.team.members[2].equipment.slice(0, 2)) gear.runes[0] = { categoryId: 3, level: 10 };
+    control('武器第2孔符石类别').props.onChange({ target: { value: '3' } });
+    assert.deepEqual(state.team.members[0].equipment.slice(0, 3).map(gear => gear.runes[1].level), [11, 0, 0]);
+    assert.match(renderToStaticMarkup(editor()), /项链对应等级库存不足；手套对应等级库存不足/);
+    assert.equal(validateTeam(state.team, catalog, policy, { freeLibrary }).valid, true);
   } finally { await server.close(); }
 });
 

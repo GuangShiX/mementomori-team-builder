@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createMember, createTeam } from '../src/domain.mjs';
-import { fillColumnEmptyRunes, updateColumnRune } from '../src/rune-interactions.mjs';
+import { fillColumnEmptyRunes, updateColumnRune, chooseInitialColumnRuneLevel } from '../src/rune-interactions.mjs';
 const [catalog, policy] = await Promise.all(['catalog', 'pricing-policy'].map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
 function equipped() {
   const team = createTeam(); team.members[0] = createMember(8);
@@ -136,4 +136,90 @@ test('right-column batches follow only their actual generated holes and discard 
   const skipped = tune(constrained, 1, 10);
   assert.equal(skipped.batch, null);
   assert.deepEqual(levels(skipped.team), [10, 1, 1, 0, 0, 0]);
+});
+
+test('category installation works for every one of four holes from each of the six equipment slots', () => {
+  for (const slot of [1, 2, 3, 4, 5, 6]) for (const runeIndex of [0, 1, 2, 3]) {
+    const team = equipped();
+    const before = JSON.stringify(team);
+    const categoryId = slot <= 3 ? 3 : 10;
+    const column = slot <= 3 ? [1, 2, 3] : [4, 5, 6];
+    const chosen = choose(team, slot, categoryId, 11, runeIndex);
+    assert.deepEqual(levels(chosen.team, runeIndex), [1, 2, 3, 4, 5, 6].map(targetSlot => column.includes(targetSlot) ? 11 : 0), `slot ${slot}, hole ${runeIndex + 1}`);
+    for (const targetSlot of column) assert.deepEqual(chosen.team.members[0].equipment[targetSlot - 1].runes[runeIndex], { categoryId, level: 11 });
+    assert.equal(chosen.batch.runeIndex, runeIndex);
+    assert.deepEqual(chosen.batch.targets.map(target => target.slot), column.filter(targetSlot => targetSlot !== slot));
+    assert.ok(chosen.batch.targets.every(target => target.runeIndex === runeIndex));
+    assert.equal(JSON.stringify(team), before);
+  }
+  const speed = choose(equipped(), 1, 9, 1, 0);
+  const magic = updateColumnRune(speed.team, 0, 1, 1, { categoryId: 3, level: 11 }, catalog, policy, { batch: speed.batch, kind: 'category' });
+  assert.deepEqual(levels(magic.team, 0), [1, 1, 1, 0, 0, 0]);
+  assert.deepEqual(levels(magic.team, 1), [11, 11, 11, 0, 0, 0]);
+  assert.equal(magic.batch.runeIndex, 1);
+});
+
+test('changing an occupied source category stays independent and never lowers the source to fill other holes', () => {
+  const team = equipped();
+  team.members[0].equipment[0].runes[3] = { categoryId: 4, level: 11 };
+  team.members[0].equipment[1].runes[3] = { categoryId: 2, level: 10 };
+  const snapshot = JSON.stringify(team);
+  const initialLevel = chooseInitialColumnRuneLevel(team.members[0], 1, 3, 3, catalog, policy, inventory(1, 3));
+  assert.equal(initialLevel, 11, 'only the existing source needs a new category; its level must not drop for empty targets');
+  const chosen = choose(team, 1, 3, initialLevel, 3);
+  assert.deepEqual(chosen.team.members[0].equipment.slice(0, 3).map(gear => gear.runes[3]), [{ categoryId: 3, level: 11 }, { categoryId: 2, level: 10 }, team.members[0].equipment[2].runes[3]]);
+  assert.equal(chosen.batch, null);
+  assert.equal(JSON.stringify(team), snapshot);
+  const independent = updateColumnRune(team, 0, 1, 3, { level: 10 }, catalog, policy);
+  assert.deepEqual(independent.team.members[0].equipment[2].runes[3], team.members[0].equipment[2].runes[3]);
+  assert.equal(independent.batch, null);
+  const legacy = fillColumnEmptyRunes(team, 0, 1, 3, { categoryId: 3, level: 11 }, catalog, policy);
+  assert.equal(legacy.members[0].equipment[2].runes[3].level, 0, 'the fill API keeps the occupied-source behavior');
+});
+
+const inventory = (eleven, ten, categoryId = 3) => [{ categoryId, level: 11, remaining: eleven }, { categoryId, level: 10, remaining: ten }];
+
+test('initial ordinary rune level chooses a tier that can fill the whole column, including the fourth hole', () => {
+  const team = equipped();
+  team.members[1] = createMember(27);
+  for (const gear of team.members[1].equipment.slice(0, 2)) {
+    gear.rarity = 'SSR';
+    gear.runes[0] = { categoryId: 3, level: 11 };
+  }
+  const snapshot = JSON.stringify(team);
+  const available = inventory(1, 3);
+  const level = chooseInitialColumnRuneLevel(team.members[0], 1, 3, 3, catalog, policy, available);
+  assert.equal(level, 10);
+  const chosen = choose(team, 1, 3, level, 3);
+  assert.deepEqual(levels(chosen.team, 3), [10, 10, 10, 0, 0, 0]);
+  assert.equal(JSON.stringify(team), snapshot);
+  assert.deepEqual(available, inventory(1, 3));
+  const right = chooseInitialColumnRuneLevel(team.members[0], 6, 3, 10, catalog, policy, inventory(1, 3, 10));
+  assert.equal(right, 10);
+  assert.deepEqual(levels(choose(team, 6, 10, right, 3).team, 3), [0, 0, 0, 10, 10, 10]);
+});
+
+test('when no tier fills the whole column the largest remaining stock wins, with policy order breaking ties', () => {
+  const team = equipped();
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 2, 1, 3, catalog, policy, inventory(1, 2)), 10);
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 2, 1, 3, catalog, policy, inventory(1, 1)), 11);
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 2, 1, 3, catalog, policy, inventory(0, 0)), 11);
+  const reversed = { ...policy, runes: { ...policy.runes, fixedStock: { ...policy.runes.fixedStock, tiers: [...policy.runes.fixedStock.tiers].reverse() } } };
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 2, 1, 3, catalog, reversed, inventory(1, 1)), 10);
+});
+
+test('initial tier demand excludes occupied, duplicate and unequipped targets while preserving an already equipped same category', () => {
+  const team = equipped();
+  team.members[0].equipment[1].runes[3] = { categoryId: 2, level: 11 };
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 1, 3, 3, catalog, policy, inventory(2, 3)), 11, 'one occupied target reduces the need to two runes');
+  team.members[0].equipment[2].runes[0] = { categoryId: 3, level: 10 };
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 1, 3, 3, catalog, policy, inventory(1, 3)), 11, 'a duplicate target needs no additional rune');
+  team.members[0].equipment[2].runes[0].level = 0;
+  team.members[0].equipment[2].rarity = 'NONE';
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 1, 3, 3, catalog, policy, inventory(1, 3)), 11);
+  team.members[0].equipment[0].runes[3] = { categoryId: 3, level: 10 };
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 1, 3, 3, catalog, policy, inventory(3, 0)), 10, 'the source does not consume another rune or change its valid level');
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 1, 2, 9, catalog, policy, []), 1);
+  team.members[0].equipment[0].runes[2] = { categoryId: 9, level: 13 };
+  assert.equal(chooseInitialColumnRuneLevel(team.members[0], 1, 2, 5, catalog, policy, []), 13);
 });

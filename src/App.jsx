@@ -8,7 +8,7 @@ import {
 import { placeRosterCharacter, swapTeamPositions } from './team-interactions.mjs';
 import { getEquipmentPresetOptions, applyEquipmentPreset, changeMemberRarity } from './equipment-presets.mjs';
 import { calculateCharacterStats } from './character-stats.mjs';
-import { updateColumnRune } from './rune-interactions.mjs';
+import { updateColumnRune, chooseInitialColumnRuneLevel } from './rune-interactions.mjs';
 import teamSeat from './assets/team-seat.svg';
 
 const DRAFT_KEY = 'mementomori-team-builder:draft:v1';
@@ -283,7 +283,7 @@ function MemberEquipmentSummary({ member, position, catalog }) {
   </div>;
 }
 
-export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, onChange, onRuneChange, onRuneCommit, batchSourceRuneIndex, errors, memberIndex, inventory, borrowableWeapons, ownWeaponClaimed }) {
+export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, onChange, onRuneChange, onRuneCommit, batchSourceRuneIndex, runeFillReport, errors, memberIndex, inventory, borrowableWeapons, ownWeaponClaimed }) {
   const prefix = `members[${memberIndex}].equipment[${index}]`;
   const availableRunes = catalog.runeCategories.filter(category => runeSlots(category).includes(gear.slot));
   const levels = equipmentLevels(catalog, gear.rarity, gear.weaponKind).filter(level => level <= policy.characterLevel);
@@ -384,7 +384,8 @@ export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibr
       </div>
       <div className="rune-section">
         <div className="rune-heading"><span>符石孔</span><span>{gear.slot <= 3 ? '攻击类' : '防御类'} · 同类不可重复</span></div>
-        <p className="rune-auto-note">首次新增填入同列空孔，首次设置等级一起同步；离开等级框后独立调整，已有符石保留。</p>
+        <p className="rune-auto-note">四个孔均可填入同列对应空孔，首次等级一起同步；离开等级框后独立调整，已有符石保留。</p>
+        {runeFillReport && <p className="rune-auto-note" role="status">第 {runeFillReport.runeIndex + 1} 孔 {catalog.runeCategories.find(category => category.id === runeFillReport.categoryId)?.name}：{runeFillReport.filledSlots.length ? `${runeFillReport.filledSlots.map(slot => SLOT_NAMES[slot]).join('／')}已同步` : '本孔已更新'}{runeFillReport.skippedSlots.map(item => `；${SLOT_NAMES[item.slot]}${{ unequipped: '未装备', incompatible: '不支持此符石', occupied: '已有符石，已保留', duplicate: '其它孔已有同类符石', stock: '对应等级库存不足' }[item.reason]}`).join('')}。</p>}
         <div className="rune-holes">{gear.runes.map((rune, runeIndex) => {
           const active = rune.level !== 0 || batchSourceRuneIndex === runeIndex;
           const fixedLevel = active && isFixedCategory(rune.categoryId);
@@ -395,8 +396,7 @@ export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibr
               <select aria-label={`${SLOT_NAMES[gear.slot]}第${runeIndex + 1}孔符石类别`} value={active ? rune.categoryId : ''} onChange={event => {
                 if (event.target.value === '') { setRune(runeIndex, { level: 0 }, 'category'); return; }
                 const categoryId = Number(event.target.value);
-                const availableTier = stockTiers.find(tier => inventory.some(item => item.categoryId === categoryId && item.level === tier.level && item.remaining > 0));
-                setRune(runeIndex, { categoryId, level: isFixedCategory(categoryId) ? availableTier?.level ?? stockTiers[0]?.level : rune.level > 0 ? rune.level : 1 });
+                setRune(runeIndex, { categoryId, level: chooseInitialColumnRuneLevel(member, gear.slot, runeIndex, categoryId, catalog, policy, inventory) });
               }}>
                 <option value="">空孔</option>
                 {availableRunes.map(category => {
@@ -596,6 +596,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   const [dropTarget, setDropTarget] = useState(null);
   const [rosterDropActive, setRosterDropActive] = useState(false);
   const [runeBatch, setRuneBatch] = useState(null);
+  const [runeFillReport, setRuneFillReport] = useState(null);
   const importInput = useRef(null);
   const editorRef = useRef(null);
   const draftBackupDone = useRef(!restoredDraft.needsBackup);
@@ -615,7 +616,8 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     try { return { cost: calculateTeam(team, catalog, policy, freeLibrary), errors: [] }; }
     catch (error) { return { cost: null, errors: error.errors ?? [{ message: error.message }] }; }
   }, [team, catalog, policy, freeLibrary]);
-  const characterStats = useMemo(() => getCharacterStatsResult(selectedMember, catalog, policy, arcanaState, valuation.errors), [selectedMember, catalog, policy, arcanaState, valuation.errors]);
+  const teamStats = useMemo(() => team.members.map(member => getCharacterStatsResult(member, catalog, policy, arcanaState, valuation.errors)), [team, catalog, policy, arcanaState, valuation.errors]);
+  const characterStats = teamStats[selectedIndex];
   const canExport = memberCount === 5 && valuation.errors.length === 0;
   const inventory = useMemo(() => fixedRuneInventory(team, catalog, policy, valuation.cost), [team, catalog, policy, valuation.cost]);
   const borrowableWeapons = useMemo(() => selectedMember ? getBorrowableWeapons(team, selectedIndex, catalog, freeLibrary) : [], [team, selectedMember, selectedIndex, catalog, freeLibrary]);
@@ -624,7 +626,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     (character.baseRarity == null || character.baseRarity === 8)
     && (element === 'all' || character.element === element)
     && `${character.name} ${character.subtitle ?? ''} ${character.variant ?? ''} ${character.aliases?.join?.(' ') ?? ''} ${aliases.get(character.id) ?? ''} ${character.id}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
-  useEffect(() => { setRuneBatch(null); }, [selectedIndex, activePage]);
+  useEffect(() => { setRuneBatch(null); setRuneFillReport(null); }, [selectedIndex, activePage]);
   useEffect(() => {
     try {
       if (!draftBackupDone.current && restoredDraft.originalRaw) {
@@ -639,7 +641,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     }
   }, [team, catalog.version, restoredDraft]);
   function changeTeam(update, { keepRuneBatch = false } = {}) {
-    if (!keepRuneBatch) setRuneBatch(null);
+    if (!keepRuneBatch) { setRuneBatch(null); setRuneFillReport(null); }
     setNotice(null);
     setTeam(current => typeof update === 'function' ? update(current) : update);
   }
@@ -697,6 +699,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     try {
       const result = updateColumnRune(team, selectedIndex, slot, runeIndex, nextRune, catalog, policy, { batch: runeBatch, kind });
       setRuneBatch(result.batch);
+      setRuneFillReport(result.fillReport ? { ...result.fillReport, memberIndex: selectedIndex } : null);
       changeTeam(result.team, { keepRuneBatch: true });
     } catch (error) { setNotice({ kind: 'error', text: error.message }); }
   }
@@ -764,6 +767,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       </aside>
       <div className="center-column">
         <section className="panel details-panel" ref={editorRef} aria-label="当前角色装备配置">
+          <div className="workbench-sticky">
           <div className="panel-heading gear-panel-heading"><span className="section-index">02</span><h2>角色与装备</h2></div>
           <div className="character-workbench-header">
             <div className="character-overview">{selectedMember && selectedCharacter ? (
@@ -778,13 +782,14 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
               onDragOver={event => { if (!event.dataTransfer.types.includes(TEAM_DRAG_TYPE)) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setDropTarget(index); }}
               onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(current => current === index ? null : current); }} onDrop={event => dropMember(event, index)}>
               <span className="slot-position">0{index + 1}</span>
-              {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={member.rarity} /><span className="member-rarity">{member.rarity}</span><span className="member-level">Lv.{team.level}</span></button> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div></div>}
+              {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={member.rarity} /><span className="member-speed" title="当前构筑速度，不含战斗技能增益">速度 {teamStats[index]?.valid ? teamStats[index].rows.find(row => row.key === 'Speed')?.displayValue ?? '—' : '—'}</span></button> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div></div>}
             </div>{member && <MemberEquipmentSummary member={member} position={index + 1} catalog={catalog} />}</div>;
           })}</div></div>
           <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
         </section>
           </div>
           <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>配队与装备</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button><button id="stats-tab" role="tab" aria-selected={activePage === 'stats'} aria-controls="stats-page" onClick={() => setActivePage('stats')}>角色属性</button></nav>
+          </div>
           {activePage === 'arcana' ? <ArcanaEditor state={arcanaState} catalog={catalog} onPurchase={purchaseArcana} /> : activePage === 'stats' ? <CharacterStatsPanel result={characterStats} policy={policy} /> : <div id="team-page" role="tabpanel" aria-labelledby="team-tab">
           {selectedMember && selectedCharacter ? <>
             {valuation.errors.length > 0 && <div className="notice error validation-notice" role="alert"><strong>当前配置需要修正</strong><ul>{valuation.errors.slice(0, 6).map((issue, i) => <li key={`${issue.path}-${i}`}>{issue.message}</li>)}</ul>{valuation.errors.length > 6 && <p>另有 {valuation.errors.length - 6} 项，请逐项检查。</p>}</div>}
@@ -794,7 +799,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
             <p className="equipment-default-note">新装备默认魔装 40，可按实际配置调整。</p>
             {(freeCharacters.has(selectedCharacter.id) || freeLibrary?.exclusiveWeapons?.some(item => item.characterId === selectedCharacter.id)) && <p className="free-library-note">免费库：{freeCharacters.has(selectedCharacter.id) ? `角色本体免费至 ${freeCharacters.get(selectedCharacter.id).rarity}` : ''}{freeLibrary?.exclusiveWeapons?.filter(item => item.characterId === selectedCharacter.id).map(item => `${freeCharacters.has(selectedCharacter.id) ? '；' : ''}${item.level} 级 ${item.rarity} 专武免费`).join('')}。更高配置按差额计价。</p>}
             {policy.runes?.fixedStock && <p className="fixed-stock-note">普通符石：每类 {fixedRuneCaption(policy)}，整队共享。穿透与速度可自由调整等级。</p>}
-            <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} onRuneChange={(runeIndex, nextRune, kind) => updateRune(slot, runeIndex, nextRune, kind)} onRuneCommit={runeIndex => finishRuneBatch(slot, runeIndex)} batchSourceRuneIndex={runeBatch?.memberIndex === selectedIndex && runeBatch.slot === slot ? runeBatch.runeIndex : null} />)}</div>
+            <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} onRuneChange={(runeIndex, nextRune, kind) => updateRune(slot, runeIndex, nextRune, kind)} onRuneCommit={runeIndex => finishRuneBatch(slot, runeIndex)} batchSourceRuneIndex={runeBatch?.memberIndex === selectedIndex && runeBatch.slot === slot ? runeBatch.runeIndex : null} runeFillReport={runeFillReport?.memberIndex === selectedIndex && runeFillReport.slot === slot ? runeFillReport : null} />)}</div>
           </> : <div className="empty-detail"><div className="empty-detail-mark"><Icon name="gear" size={23} /></div><h2>从一名角色开始</h2><p>将角色头像拖入队伍位置，设定稀有度与六部位装备。<br />受「{curseName}」影响，全队等级固定为{policy.characterLevel}级。</p></div>}
           </div>}
         </section>
