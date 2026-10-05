@@ -9,7 +9,9 @@
       "element": "blue",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/5.png"
+      "portrait": "./assets/characters/5.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000206.png",
+      "exclusiveWeaponIconId": 206
     },
     {
       "id": 6,
@@ -18,7 +20,9 @@
       "element": "blue",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/6.png"
+      "portrait": "./assets/characters/6.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000212.png",
+      "exclusiveWeaponIconId": 212
     },
     {
       "id": 7,
@@ -27,7 +31,9 @@
       "element": "blue",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/7.png"
+      "portrait": "./assets/characters/7.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000218.png",
+      "exclusiveWeaponIconId": 218
     },
     {
       "id": 8,
@@ -36,7 +42,9 @@
       "element": "blue",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/8.png"
+      "portrait": "./assets/characters/8.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000224.png",
+      "exclusiveWeaponIconId": 224
     },
     {
       "id": 10,
@@ -45,7 +53,9 @@
       "element": "blue",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/10.png"
+      "portrait": "./assets/characters/10.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000236.png",
+      "exclusiveWeaponIconId": 236
     },
     {
       "id": 15,
@@ -54,7 +64,9 @@
       "element": "red",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/15.png"
+      "portrait": "./assets/characters/15.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000242.png",
+      "exclusiveWeaponIconId": 242
     },
     {
       "id": 16,
@@ -63,7 +75,9 @@
       "element": "red",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/16.png"
+      "portrait": "./assets/characters/16.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000248.png",
+      "exclusiveWeaponIconId": 248
     },
     {
       "id": 17,
@@ -72,7 +86,9 @@
       "element": "red",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/17.png"
+      "portrait": "./assets/characters/17.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000254.png",
+      "exclusiveWeaponIconId": 254
     },
     {
       "id": 18,
@@ -81,7 +97,9 @@
       "element": "red",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/18.png"
+      "portrait": "./assets/characters/18.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000260.png",
+      "exclusiveWeaponIconId": 260
     },
     {
       "id": 20,
@@ -90,7 +108,9 @@
       "element": "red",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/20.png"
+      "portrait": "./assets/characters/20.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000272.png",
+      "exclusiveWeaponIconId": 272
     },
     {
       "id": 25,
@@ -99,7 +119,9 @@
       "element": "green",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/25.png"
+      "portrait": "./assets/characters/25.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000278.png",
+      "exclusiveWeaponIconId": 278
     },
     {
       "id": 26,
@@ -108,7 +130,9 @@
       "element": "green",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/26.png"
+      "portrait": "./assets/characters/26.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000284.png",
+      "exclusiveWeaponIconId": 284
     },
     {
       "id": 27,
@@ -117,7 +141,9 @@
       "element": "green",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/27.png"
+      "portrait": "./assets/characters/27.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000290.png",
+      "exclusiveWeaponIconId": 290
     },
     {
       "id": 28,
@@ -126,7 +152,9 @@
       "element": "green",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/28.png"
+      "portrait": "./assets/characters/28.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000296.png",
+      "exclusiveWeaponIconId": 296
     },
     {
       "id": 29,
@@ -135,7 +163,9 @@
       "element": "green",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/29.png"
+      "portrait": "./assets/characters/29.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000302.png",
+      "exclusiveWeaponIconId": 302
     },
     {
       "id": 35,
@@ -144,7 +174,9 @@
       "element": "yellow",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/35.png"
+      "portrait": "./assets/characters/35.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000314.png",
+      "exclusiveWeaponIconId": 314
     },
     {
       "id": 36,
@@ -153,7 +185,9 @@
       "element": "yellow",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/36.png"
+      "portrait": "./assets/characters/36.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000320.png",
+      "exclusiveWeaponIconId": 320
     },
     {
       "id": 37,
@@ -162,7 +196,9 @@
       "element": "yellow",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/37.png"
+      "portrait": "./assets/characters/37.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000326.png",
+      "exclusiveWeaponIconId": 326
     },
     {
       "id": 38,
@@ -171,7 +207,9 @@
       "element": "yellow",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/38.png"
+      "portrait": "./assets/characters/38.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000332.png",
+      "exclusiveWeaponIconId": 332
     },
     {
       "id": 39,
@@ -180,7 +218,9 @@
       "element": "yellow",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/39.png"
+      "portrait": "./assets/characters/39.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000338.png",
+      "exclusiveWeaponIconId": 338
     },
     {
       "id": 41,
@@ -189,7 +229,9 @@
       "element": "light",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/41.png"
+      "portrait": "./assets/characters/41.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000350.png",
+      "exclusiveWeaponIconId": 350
     },
     {
       "id": 46,
@@ -198,7 +240,9 @@
       "element": "dark",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/46.png"
+      "portrait": "./assets/characters/46.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000380.png",
+      "exclusiveWeaponIconId": 380
     },
     {
       "id": 42,
@@ -207,7 +251,9 @@
       "element": "light",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/42.png"
+      "portrait": "./assets/characters/42.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000356.png",
+      "exclusiveWeaponIconId": 356
     },
     {
       "id": 19,
@@ -216,7 +262,9 @@
       "element": "red",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/19.png"
+      "portrait": "./assets/characters/19.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000266.png",
+      "exclusiveWeaponIconId": 266
     },
     {
       "id": 47,
@@ -225,7 +273,9 @@
       "element": "dark",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/47.png"
+      "portrait": "./assets/characters/47.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000386.png",
+      "exclusiveWeaponIconId": 386
     },
     {
       "id": 30,
@@ -234,7 +284,9 @@
       "element": "green",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/30.png"
+      "portrait": "./assets/characters/30.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000308.png",
+      "exclusiveWeaponIconId": 308
     },
     {
       "id": 40,
@@ -243,7 +295,9 @@
       "element": "yellow",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/40.png"
+      "portrait": "./assets/characters/40.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000344.png",
+      "exclusiveWeaponIconId": 344
     },
     {
       "id": 9,
@@ -252,7 +306,9 @@
       "element": "blue",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/9.png"
+      "portrait": "./assets/characters/9.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000230.png",
+      "exclusiveWeaponIconId": 230
     },
     {
       "id": 43,
@@ -261,7 +317,9 @@
       "element": "light",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/43.png"
+      "portrait": "./assets/characters/43.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000362.png",
+      "exclusiveWeaponIconId": 362
     },
     {
       "id": 51,
@@ -270,7 +328,9 @@
       "element": "red",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/51.png"
+      "portrait": "./assets/characters/51.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000410.png",
+      "exclusiveWeaponIconId": 410
     },
     {
       "id": 48,
@@ -279,7 +339,9 @@
       "element": "dark",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/48.png"
+      "portrait": "./assets/characters/48.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000392.png",
+      "exclusiveWeaponIconId": 392
     },
     {
       "id": 49,
@@ -288,7 +350,9 @@
       "element": "dark",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/49.png"
+      "portrait": "./assets/characters/49.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000398.png",
+      "exclusiveWeaponIconId": 398
     },
     {
       "id": 53,
@@ -297,7 +361,9 @@
       "element": "yellow",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/53.png"
+      "portrait": "./assets/characters/53.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000422.png",
+      "exclusiveWeaponIconId": 422
     },
     {
       "id": 55,
@@ -306,7 +372,9 @@
       "element": "green",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/55.png"
+      "portrait": "./assets/characters/55.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000434.png",
+      "exclusiveWeaponIconId": 434
     },
     {
       "id": 54,
@@ -315,7 +383,9 @@
       "element": "red",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/54.png"
+      "portrait": "./assets/characters/54.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000428.png",
+      "exclusiveWeaponIconId": 428
     },
     {
       "id": 44,
@@ -324,7 +394,9 @@
       "element": "light",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/44.png"
+      "portrait": "./assets/characters/44.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000368.png",
+      "exclusiveWeaponIconId": 368
     },
     {
       "id": 52,
@@ -333,7 +405,9 @@
       "element": "blue",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/52.png"
+      "portrait": "./assets/characters/52.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000416.png",
+      "exclusiveWeaponIconId": 416
     },
     {
       "id": 58,
@@ -342,7 +416,9 @@
       "element": "red",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/58.png"
+      "portrait": "./assets/characters/58.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000452.png",
+      "exclusiveWeaponIconId": 452
     },
     {
       "id": 67,
@@ -351,7 +427,9 @@
       "element": "yellow",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/67.png"
+      "portrait": "./assets/characters/67.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000506.png",
+      "exclusiveWeaponIconId": 506
     },
     {
       "id": 70,
@@ -360,7 +438,9 @@
       "element": "green",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/70.png"
+      "portrait": "./assets/characters/70.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000524.png",
+      "exclusiveWeaponIconId": 524
     },
     {
       "id": 71,
@@ -369,7 +449,9 @@
       "element": "yellow",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/71.png"
+      "portrait": "./assets/characters/71.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000530.png",
+      "exclusiveWeaponIconId": 530
     },
     {
       "id": 60,
@@ -378,7 +460,9 @@
       "element": "green",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/60.png"
+      "portrait": "./assets/characters/60.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000464.png",
+      "exclusiveWeaponIconId": 464
     },
     {
       "id": 72,
@@ -387,7 +471,9 @@
       "element": "red",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/72.png"
+      "portrait": "./assets/characters/72.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000536.png",
+      "exclusiveWeaponIconId": 536
     },
     {
       "id": 50,
@@ -396,7 +482,9 @@
       "element": "dark",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/50.png"
+      "portrait": "./assets/characters/50.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000404.png",
+      "exclusiveWeaponIconId": 404
     },
     {
       "id": 57,
@@ -405,7 +493,9 @@
       "element": "blue",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/57.png"
+      "portrait": "./assets/characters/57.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000446.png",
+      "exclusiveWeaponIconId": 446
     },
     {
       "id": 62,
@@ -414,7 +504,9 @@
       "element": "red",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/62.png"
+      "portrait": "./assets/characters/62.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000476.png",
+      "exclusiveWeaponIconId": 476
     },
     {
       "id": 45,
@@ -423,7 +515,9 @@
       "element": "light",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/45.png"
+      "portrait": "./assets/characters/45.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000374.png",
+      "exclusiveWeaponIconId": 374
     },
     {
       "id": 61,
@@ -432,7 +526,9 @@
       "element": "dark",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/61.png"
+      "portrait": "./assets/characters/61.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000470.png",
+      "exclusiveWeaponIconId": 470
     },
     {
       "id": 68,
@@ -441,7 +537,9 @@
       "element": "blue",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/68.png"
+      "portrait": "./assets/characters/68.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000512.png",
+      "exclusiveWeaponIconId": 512
     },
     {
       "id": 73,
@@ -450,7 +548,9 @@
       "element": "yellow",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/73.png"
+      "portrait": "./assets/characters/73.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000542.png",
+      "exclusiveWeaponIconId": 542
     },
     {
       "id": 74,
@@ -459,7 +559,9 @@
       "element": "blue",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/74.png"
+      "portrait": "./assets/characters/74.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000548.png",
+      "exclusiveWeaponIconId": 548
     },
     {
       "id": 66,
@@ -468,7 +570,9 @@
       "element": "yellow",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/66.png"
+      "portrait": "./assets/characters/66.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000500.png",
+      "exclusiveWeaponIconId": 500
     },
     {
       "id": 64,
@@ -477,7 +581,9 @@
       "element": "blue",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/64.png"
+      "portrait": "./assets/characters/64.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000488.png",
+      "exclusiveWeaponIconId": 488
     },
     {
       "id": 56,
@@ -486,7 +592,9 @@
       "element": "green",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/56.png"
+      "portrait": "./assets/characters/56.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000440.png",
+      "exclusiveWeaponIconId": 440
     },
     {
       "id": 84,
@@ -495,7 +603,9 @@
       "element": "blue",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/84.png"
+      "portrait": "./assets/characters/84.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000608.png",
+      "exclusiveWeaponIconId": 608
     },
     {
       "id": 85,
@@ -504,7 +614,9 @@
       "element": "red",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/85.png"
+      "portrait": "./assets/characters/85.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000614.png",
+      "exclusiveWeaponIconId": 614
     },
     {
       "id": 76,
@@ -513,7 +625,9 @@
       "element": "green",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/76.png"
+      "portrait": "./assets/characters/76.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000560.png",
+      "exclusiveWeaponIconId": 560
     },
     {
       "id": 63,
@@ -522,7 +636,9 @@
       "element": "dark",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/63.png"
+      "portrait": "./assets/characters/63.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000482.png",
+      "exclusiveWeaponIconId": 482
     },
     {
       "id": 59,
@@ -531,7 +647,9 @@
       "element": "blue",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/59.png"
+      "portrait": "./assets/characters/59.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000458.png",
+      "exclusiveWeaponIconId": 458
     },
     {
       "id": 75,
@@ -540,7 +658,9 @@
       "element": "red",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/75.png"
+      "portrait": "./assets/characters/75.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000554.png",
+      "exclusiveWeaponIconId": 554
     },
     {
       "id": 88,
@@ -549,7 +669,9 @@
       "element": "light",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/88.png"
+      "portrait": "./assets/characters/88.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000632.png",
+      "exclusiveWeaponIconId": 632
     },
     {
       "id": 78,
@@ -558,7 +680,9 @@
       "element": "yellow",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/78.png"
+      "portrait": "./assets/characters/78.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000572.png",
+      "exclusiveWeaponIconId": 572
     },
     {
       "id": 82,
@@ -567,7 +691,9 @@
       "element": "green",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/82.png"
+      "portrait": "./assets/characters/82.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000596.png",
+      "exclusiveWeaponIconId": 596
     },
     {
       "id": 77,
@@ -576,7 +702,9 @@
       "element": "blue",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/77.png"
+      "portrait": "./assets/characters/77.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000566.png",
+      "exclusiveWeaponIconId": 566
     },
     {
       "id": 69,
@@ -585,7 +713,9 @@
       "element": "dark",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/69.png"
+      "portrait": "./assets/characters/69.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000518.png",
+      "exclusiveWeaponIconId": 518
     },
     {
       "id": 95,
@@ -594,7 +724,9 @@
       "element": "blue",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/95.png"
+      "portrait": "./assets/characters/95.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000674.png",
+      "exclusiveWeaponIconId": 674
     },
     {
       "id": 96,
@@ -603,7 +735,9 @@
       "element": "yellow",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/96.png"
+      "portrait": "./assets/characters/96.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000680.png",
+      "exclusiveWeaponIconId": 680
     },
     {
       "id": 80,
@@ -612,7 +746,9 @@
       "element": "green",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/80.png"
+      "portrait": "./assets/characters/80.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000584.png",
+      "exclusiveWeaponIconId": 584
     },
     {
       "id": 65,
@@ -621,7 +757,9 @@
       "element": "light",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/65.png"
+      "portrait": "./assets/characters/65.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000494.png",
+      "exclusiveWeaponIconId": 494
     },
     {
       "id": 79,
@@ -630,7 +768,9 @@
       "element": "blue",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/79.png"
+      "portrait": "./assets/characters/79.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000578.png",
+      "exclusiveWeaponIconId": 578
     },
     {
       "id": 81,
@@ -639,7 +779,9 @@
       "element": "yellow",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/81.png"
+      "portrait": "./assets/characters/81.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000590.png",
+      "exclusiveWeaponIconId": 590
     },
     {
       "id": 86,
@@ -648,7 +790,9 @@
       "element": "light",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/86.png"
+      "portrait": "./assets/characters/86.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000620.png",
+      "exclusiveWeaponIconId": 620
     },
     {
       "id": 105,
@@ -657,7 +801,9 @@
       "element": "dark",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/105.png"
+      "portrait": "./assets/characters/105.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000734.png",
+      "exclusiveWeaponIconId": 734
     },
     {
       "id": 106,
@@ -666,7 +812,9 @@
       "element": "blue",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/106.png"
+      "portrait": "./assets/characters/106.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000740.png",
+      "exclusiveWeaponIconId": 740
     },
     {
       "id": 107,
@@ -675,7 +823,9 @@
       "element": "red",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/107.png"
+      "portrait": "./assets/characters/107.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000746.png",
+      "exclusiveWeaponIconId": 746
     },
     {
       "id": 108,
@@ -684,7 +834,9 @@
       "element": "green",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/108.png"
+      "portrait": "./assets/characters/108.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000752.png",
+      "exclusiveWeaponIconId": 752
     },
     {
       "id": 109,
@@ -693,7 +845,9 @@
       "element": "light",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/109.png"
+      "portrait": "./assets/characters/109.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000758.png",
+      "exclusiveWeaponIconId": 758
     },
     {
       "id": 93,
@@ -702,7 +856,9 @@
       "element": "red",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/93.png"
+      "portrait": "./assets/characters/93.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000662.png",
+      "exclusiveWeaponIconId": 662
     },
     {
       "id": 111,
@@ -711,7 +867,9 @@
       "element": "green",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/111.png"
+      "portrait": "./assets/characters/111.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000770.png",
+      "exclusiveWeaponIconId": 770
     },
     {
       "id": 112,
@@ -720,7 +878,9 @@
       "element": "red",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/112.png"
+      "portrait": "./assets/characters/112.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000776.png",
+      "exclusiveWeaponIconId": 776
     },
     {
       "id": 113,
@@ -729,7 +889,9 @@
       "element": "yellow",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/113.png"
+      "portrait": "./assets/characters/113.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000782.png",
+      "exclusiveWeaponIconId": 782
     },
     {
       "id": 114,
@@ -738,7 +900,9 @@
       "element": "green",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/114.png"
+      "portrait": "./assets/characters/114.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000788.png",
+      "exclusiveWeaponIconId": 788
     },
     {
       "id": 115,
@@ -747,7 +911,9 @@
       "element": "yellow",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/115.png"
+      "portrait": "./assets/characters/115.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000794.png",
+      "exclusiveWeaponIconId": 794
     },
     {
       "id": 116,
@@ -756,7 +922,9 @@
       "element": "green",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/116.png"
+      "portrait": "./assets/characters/116.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000800.png",
+      "exclusiveWeaponIconId": 800
     },
     {
       "id": 117,
@@ -765,7 +933,9 @@
       "element": "light",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/117.png"
+      "portrait": "./assets/characters/117.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000806.png",
+      "exclusiveWeaponIconId": 806
     },
     {
       "id": 89,
@@ -774,7 +944,9 @@
       "element": "red",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/89.png"
+      "portrait": "./assets/characters/89.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000638.png",
+      "exclusiveWeaponIconId": 638
     },
     {
       "id": 100,
@@ -783,7 +955,9 @@
       "element": "yellow",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/100.png"
+      "portrait": "./assets/characters/100.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000704.png",
+      "exclusiveWeaponIconId": 704
     },
     {
       "id": 122,
@@ -792,7 +966,9 @@
       "element": "red",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/122.png"
+      "portrait": "./assets/characters/122.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000836.png",
+      "exclusiveWeaponIconId": 836
     },
     {
       "id": 121,
@@ -801,7 +977,9 @@
       "element": "light",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/121.png"
+      "portrait": "./assets/characters/121.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000830.png",
+      "exclusiveWeaponIconId": 830
     },
     {
       "id": 87,
@@ -810,7 +988,9 @@
       "element": "dark",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/87.png"
+      "portrait": "./assets/characters/87.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000626.png",
+      "exclusiveWeaponIconId": 626
     },
     {
       "id": 123,
@@ -819,7 +999,9 @@
       "element": "blue",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/123.png"
+      "portrait": "./assets/characters/123.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000842.png",
+      "exclusiveWeaponIconId": 842
     },
     {
       "id": 124,
@@ -828,7 +1010,9 @@
       "element": "green",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/124.png"
+      "portrait": "./assets/characters/124.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000848.png",
+      "exclusiveWeaponIconId": 848
     },
     {
       "id": 125,
@@ -837,7 +1021,9 @@
       "element": "dark",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/125.png"
+      "portrait": "./assets/characters/125.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000854.png",
+      "exclusiveWeaponIconId": 854
     },
     {
       "id": 126,
@@ -846,7 +1032,9 @@
       "element": "yellow",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/126.png"
+      "portrait": "./assets/characters/126.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000860.png",
+      "exclusiveWeaponIconId": 860
     },
     {
       "id": 102,
@@ -855,7 +1043,9 @@
       "element": "red",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/102.png"
+      "portrait": "./assets/characters/102.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000716.png",
+      "exclusiveWeaponIconId": 716
     },
     {
       "id": 83,
@@ -864,7 +1054,9 @@
       "element": "yellow",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/83.png"
+      "portrait": "./assets/characters/83.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000602.png",
+      "exclusiveWeaponIconId": 602
     },
     {
       "id": 129,
@@ -873,7 +1065,9 @@
       "element": "dark",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/129.png"
+      "portrait": "./assets/characters/129.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000878.png",
+      "exclusiveWeaponIconId": 878
     },
     {
       "id": 130,
@@ -882,7 +1076,9 @@
       "element": "red",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/130.png"
+      "portrait": "./assets/characters/130.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000884.png",
+      "exclusiveWeaponIconId": 884
     },
     {
       "id": 131,
@@ -891,7 +1087,9 @@
       "element": "blue",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/131.png"
+      "portrait": "./assets/characters/131.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000890.png",
+      "exclusiveWeaponIconId": 890
     },
     {
       "id": 132,
@@ -900,7 +1098,9 @@
       "element": "green",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/132.png"
+      "portrait": "./assets/characters/132.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000896.png",
+      "exclusiveWeaponIconId": 896
     },
     {
       "id": 128,
@@ -909,7 +1109,9 @@
       "element": "light",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/128.png"
+      "portrait": "./assets/characters/128.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000872.png",
+      "exclusiveWeaponIconId": 872
     },
     {
       "id": 101,
@@ -918,7 +1120,9 @@
       "element": "blue",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/101.png"
+      "portrait": "./assets/characters/101.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000710.png",
+      "exclusiveWeaponIconId": 710
     },
     {
       "id": 135,
@@ -927,7 +1131,9 @@
       "element": "yellow",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/135.png"
+      "portrait": "./assets/characters/135.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000914.png",
+      "exclusiveWeaponIconId": 914
     },
     {
       "id": 103,
@@ -936,7 +1142,9 @@
       "element": "green",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/103.png"
+      "portrait": "./assets/characters/103.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000722.png",
+      "exclusiveWeaponIconId": 722
     },
     {
       "id": 137,
@@ -945,7 +1153,9 @@
       "element": "dark",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/137.png"
+      "portrait": "./assets/characters/137.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000926.png",
+      "exclusiveWeaponIconId": 926
     },
     {
       "id": 99,
@@ -954,7 +1164,9 @@
       "element": "red",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/99.png"
+      "portrait": "./assets/characters/99.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000698.png",
+      "exclusiveWeaponIconId": 698
     },
     {
       "id": 139,
@@ -963,7 +1175,9 @@
       "element": "yellow",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/139.png"
+      "portrait": "./assets/characters/139.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000938.png",
+      "exclusiveWeaponIconId": 938
     },
     {
       "id": 134,
@@ -972,7 +1186,9 @@
       "element": "blue",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/134.png"
+      "portrait": "./assets/characters/134.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000908.png",
+      "exclusiveWeaponIconId": 908
     },
     {
       "id": 141,
@@ -981,7 +1197,9 @@
       "element": "light",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/141.png"
+      "portrait": "./assets/characters/141.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000950.png",
+      "exclusiveWeaponIconId": 950
     },
     {
       "id": 92,
@@ -990,7 +1208,9 @@
       "element": "green",
       "job": 4,
       "baseRarity": 8,
-      "portrait": "./assets/characters/92.png"
+      "portrait": "./assets/characters/92.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000656.png",
+      "exclusiveWeaponIconId": 656
     },
     {
       "id": 90,
@@ -999,7 +1219,9 @@
       "element": "yellow",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/90.png"
+      "portrait": "./assets/characters/90.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000644.png",
+      "exclusiveWeaponIconId": 644
     },
     {
       "id": 148,
@@ -1008,7 +1230,9 @@
       "element": "red",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/148.png"
+      "portrait": "./assets/characters/148.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000992.png",
+      "exclusiveWeaponIconId": 992
     },
     {
       "id": 140,
@@ -1017,7 +1241,9 @@
       "element": "dark",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/140.png"
+      "portrait": "./assets/characters/140.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000944.png",
+      "exclusiveWeaponIconId": 944
     },
     {
       "id": 149,
@@ -1026,7 +1252,9 @@
       "element": "blue",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/149.png"
+      "portrait": "./assets/characters/149.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000998.png",
+      "exclusiveWeaponIconId": 998
     },
     {
       "id": 153,
@@ -1035,7 +1263,9 @@
       "element": "yellow",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/153.png"
+      "portrait": "./assets/characters/153.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_001022.png",
+      "exclusiveWeaponIconId": 1022
     },
     {
       "id": 150,
@@ -1044,7 +1274,9 @@
       "element": "green",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/150.png"
+      "portrait": "./assets/characters/150.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_001004.png",
+      "exclusiveWeaponIconId": 1004
     },
     {
       "id": 151,
@@ -1053,7 +1285,9 @@
       "element": "light",
       "job": 2,
       "baseRarity": 8,
-      "portrait": "./assets/characters/151.png"
+      "portrait": "./assets/characters/151.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_001010.png",
+      "exclusiveWeaponIconId": 1010
     },
     {
       "id": 97,
@@ -1062,7 +1296,9 @@
       "element": "blue",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/97.png"
+      "portrait": "./assets/characters/97.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_000686.png",
+      "exclusiveWeaponIconId": 686
     },
     {
       "id": 154,
@@ -1071,7 +1307,9 @@
       "element": "green",
       "job": 1,
       "baseRarity": 8,
-      "portrait": "./assets/characters/154.png"
+      "portrait": "./assets/characters/154.png",
+      "exclusiveWeaponIcon": "./assets/equipment/EQP_001028.png",
+      "exclusiveWeaponIconId": 1028
     }
   ],
   "runeCategories": [
@@ -2431,5 +2669,183 @@
     "light": "./assets/ui/icon_element_5.png",
     "dark": "./assets/ui/icon_element_6.png"
   },
-  "teamFrame": "./assets/ui/toggle_04_off.png"
+  "teamFrame": "./assets/ui/toggle_04_off.png",
+  "iconArt": {
+    "schemaVersion": 1,
+    "frames": {
+      "common": "./assets/ui/frame_common_slice.png",
+      "lr": "./assets/ui/frame_common_lr_slice.png"
+    },
+    "goldStar": "./assets/ui/icon_rarity_plus_star_1.png",
+    "characterRarities": {
+      "SR": {
+        "frame": "common",
+        "tintMatrix": "0.977 0 0 0 0 0 0.863 0 0 0 0 0 0.587 0 0 0 0 0 1 0",
+        "starCount": 0
+      },
+      "LR": {
+        "frame": "lr",
+        "tintMatrix": null,
+        "starCount": 0
+      },
+      "LR5": {
+        "frame": "lr",
+        "tintMatrix": null,
+        "starCount": 5
+      }
+    },
+    "equipmentRarities": {
+      "SSR": {
+        "frame": "common",
+        "tintMatrix": "0.682353 0 0 0 0 0 0.407843 0 0 0 0 0 0.929412 0 0 0 0 0 1 0",
+        "starCount": 0
+      },
+      "UR": {
+        "frame": "common",
+        "tintMatrix": "0.890196 0 0 0 0 0 0.333333 0 0 0 0 0 0.4 0 0 0 0 0 1 0",
+        "starCount": 0
+      },
+      "LR": {
+        "frame": "lr",
+        "tintMatrix": null,
+        "starCount": 0
+      }
+    },
+    "characterGeometry": {
+      "canvasSize": 154,
+      "sourceSize": 62,
+      "sourceInsets": {
+        "left": 25,
+        "top": 26,
+        "right": 25,
+        "bottom": 25
+      },
+      "targetInsets": {
+        "left": 28,
+        "top": 29,
+        "right": 28,
+        "bottom": 28
+      },
+      "outward": 3
+    },
+    "equipmentGeometry": {
+      "canvasSize": 128,
+      "sourceSize": 62,
+      "sourceInsets": {
+        "left": 20,
+        "top": 20,
+        "right": 20,
+        "bottom": 20
+      },
+      "targetInsets": {
+        "left": 20,
+        "top": 20,
+        "right": 20,
+        "bottom": 20
+      },
+      "outward": 0
+    },
+    "characterStars": {
+      "canvasSize": 154,
+      "x": 23,
+      "y": 127,
+      "step": 21,
+      "width": 23,
+      "height": 22
+    },
+    "equipmentIcons": {
+      "1": {
+        "SSR": {
+          "1": "./assets/equipment/EQP_000212.png",
+          "2": "./assets/equipment/EQP_000184.png",
+          "3": "./assets/equipment/EQP_000182.png",
+          "4": "./assets/equipment/EQP_000180.png",
+          "5": "./assets/equipment/EQP_000181.png",
+          "6": "./assets/equipment/EQP_000183.png"
+        },
+        "UR": {
+          "1": "./assets/equipment/EQP_000212.png",
+          "2": "./assets/equipment/EQP_000192.png",
+          "3": "./assets/equipment/EQP_000190.png",
+          "4": "./assets/equipment/EQP_000188.png",
+          "5": "./assets/equipment/EQP_000189.png",
+          "6": "./assets/equipment/EQP_000191.png"
+        },
+        "LR": {
+          "1": "./assets/equipment/EQP_000212.png",
+          "2": "./assets/equipment/EQP_000200.png",
+          "3": "./assets/equipment/EQP_000198.png",
+          "4": "./assets/equipment/EQP_000196.png",
+          "5": "./assets/equipment/EQP_000197.png",
+          "6": "./assets/equipment/EQP_000199.png"
+        }
+      },
+      "2": {
+        "SSR": {
+          "1": "./assets/equipment/EQP_000254.png",
+          "2": "./assets/equipment/EQP_000184.png",
+          "3": "./assets/equipment/EQP_000182.png",
+          "4": "./assets/equipment/EQP_000180.png",
+          "5": "./assets/equipment/EQP_000181.png",
+          "6": "./assets/equipment/EQP_000183.png"
+        },
+        "UR": {
+          "1": "./assets/equipment/EQP_000254.png",
+          "2": "./assets/equipment/EQP_000192.png",
+          "3": "./assets/equipment/EQP_000190.png",
+          "4": "./assets/equipment/EQP_000188.png",
+          "5": "./assets/equipment/EQP_000189.png",
+          "6": "./assets/equipment/EQP_000191.png"
+        },
+        "LR": {
+          "1": "./assets/equipment/EQP_000254.png",
+          "2": "./assets/equipment/EQP_000200.png",
+          "3": "./assets/equipment/EQP_000198.png",
+          "4": "./assets/equipment/EQP_000196.png",
+          "5": "./assets/equipment/EQP_000197.png",
+          "6": "./assets/equipment/EQP_000199.png"
+        }
+      },
+      "4": {
+        "SSR": {
+          "1": "./assets/equipment/EQP_000206.png",
+          "2": "./assets/equipment/EQP_000184.png",
+          "3": "./assets/equipment/EQP_000182.png",
+          "4": "./assets/equipment/EQP_000180.png",
+          "5": "./assets/equipment/EQP_000181.png",
+          "6": "./assets/equipment/EQP_000183.png"
+        },
+        "UR": {
+          "1": "./assets/equipment/EQP_000206.png",
+          "2": "./assets/equipment/EQP_000192.png",
+          "3": "./assets/equipment/EQP_000190.png",
+          "4": "./assets/equipment/EQP_000188.png",
+          "5": "./assets/equipment/EQP_000189.png",
+          "6": "./assets/equipment/EQP_000191.png"
+        },
+        "LR": {
+          "1": "./assets/equipment/EQP_000206.png",
+          "2": "./assets/equipment/EQP_000200.png",
+          "3": "./assets/equipment/EQP_000198.png",
+          "4": "./assets/equipment/EQP_000196.png",
+          "5": "./assets/equipment/EQP_000197.png",
+          "6": "./assets/equipment/EQP_000199.png"
+        }
+      }
+    },
+    "representativeExclusiveWeapons": {
+      "1": {
+        "characterId": 6,
+        "iconId": 212
+      },
+      "2": {
+        "characterId": 17,
+        "iconId": 254
+      },
+      "4": {
+        "characterId": 5,
+        "iconId": 206
+      }
+    }
+  }
 }

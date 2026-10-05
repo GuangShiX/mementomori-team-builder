@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createTeam, createMember, createEquipment, calculateTeam, validateTeam,
+  createTeam, createMember, createEquipment, selectEquipmentRarity, calculateTeam, validateTeam,
   createExport, parseImport, cloneTeam, DomainValidationError,
   deriveWeaponSync,
   getBorrowableWeapons, isWeaponOwnerClaimed,
@@ -80,6 +80,55 @@ test('empty slots keep stable positions and cost no character or equipment resou
   assert.deepEqual(createMember(catalog.characters[0]).equipment.map(item => item.slot), [1, 2, 3, 4, 5, 6]);
   assert.equal(validateTeam(team, catalog, policy).valid, true);
   assert.equal(validateTeam(team, catalog, policy, { requireFullTeam: true }).errors.filter(item => item.code === 'EMPTY_MEMBER').length, 5);
+});
+
+test('first equipment selection defaults magic armor to forty without changing empty equipment factories', () => {
+  for (const rarity of ['SSR', 'UR', 'LR']) {
+    const empty = createEquipment(2);
+    const selected = selectEquipmentRarity(empty, rarity);
+    assert.equal(empty.matchlessSacredTreasureLevel, 0);
+    assert.equal(selected.matchlessSacredTreasureLevel, 40);
+    assert.equal(selected.legendSacredTreasureLevel, 0);
+    assert.equal(selected.seriesId, { SSR: 12, UR: 13, LR: 14 }[rarity]);
+    selected.runes[0].level = 10;
+    assert.equal(empty.runes[0].level, 0);
+  }
+  assert.deepEqual(createMember(1).equipment.map(gear => gear.matchlessSacredTreasureLevel), [0, 0, 0, 0, 0, 0]);
+  assert.throws(() => selectEquipmentRarity(createEquipment(2), 'SR'), RangeError);
+});
+
+test('existing equipment and imported builds retain magic armor zero or chosen level', () => {
+  for (const level of [0, 17, 40]) {
+    const team = fullTeam();
+    const original = equip(team.members[0], 2, { matchlessSacredTreasureLevel: level });
+    const imported = parseImport(createExport(team, catalog, policy), catalog, policy).team;
+    assert.equal(imported.members[0].equipment[1].matchlessSacredTreasureLevel, level);
+    const changed = selectEquipmentRarity(imported.members[0].equipment[1], 'UR');
+    assert.equal(changed.matchlessSacredTreasureLevel, level);
+    assert.equal(selectEquipmentRarity(changed, 'SSR').matchlessSacredTreasureLevel, level);
+    assert.equal(original.matchlessSacredTreasureLevel, level);
+  }
+});
+
+test('removing equipment clears magic armor and all investment while allowing a valid export', () => {
+  const team = fullTeam();
+  const baseline = calculateTeam(team, catalog, policy);
+  const empty = team.members[0].equipment[1];
+  const selected = selectEquipmentRarity(empty, 'SSR');
+  team.members[0].equipment[1] = selected;
+  assert.equal(calculateTeam(team, catalog, policy).matchlessExperience, catalog.equipmentCosts.sacredExperience[40]);
+  Object.assign(selected, { reinforcementLevel: 10, legendSacredTreasureLevel: 10 });
+  selected.runes[0] = { categoryId: 5, level: 10 };
+  const removed = selectEquipmentRarity(selected, 'NONE');
+  team.members[0].equipment[1] = removed;
+  assert.deepEqual(removed, createEquipment(2));
+  assert.equal(validateTeam(team, catalog, policy, { requireFullTeam: true }).valid, true);
+  const exported = createExport(team, catalog, policy);
+  assert.equal(exported.costBreakdown.matchlessExperience, 0);
+  assert.deepEqual(exported.costBreakdown.resources, baseline.resources);
+  assert.equal(exported.costBreakdown.totalDiamonds, baseline.totalDiamonds);
+  assert.equal(parseImport(exported, catalog, policy).team.members[0].equipment[1].matchlessSacredTreasureLevel, 0);
+  assert.equal(selectEquipmentRarity(removed, 'SSR').matchlessSacredTreasureLevel, 40);
 });
 
 test('normal and light/dark characters use approved copies for SR, LR and LR5', () => {

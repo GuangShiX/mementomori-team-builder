@@ -158,6 +158,17 @@ export function createEquipment(slot) {
   };
 }
 
+export function selectEquipmentRarity(gear, rarity) {
+  if (!isObject(gear) || !EQUIPMENT_SLOTS.includes(gear.slot)) throw new RangeError('装备槽必须为 1 至 6。');
+  if (!EQUIPMENT_RARITIES.includes(rarity)) throw new RangeError('装备稀有度仅支持无装备、SSR、UR 和 LR。');
+  if (rarity === 'NONE') return createEquipment(gear.slot);
+  return {
+    ...gear, rarity, seriesId: defaultSeries(rarity),
+    matchlessSacredTreasureLevel: gear.rarity === 'NONE' ? 40 : gear.matchlessSacredTreasureLevel,
+    runes: gear.runes.map(rune => ({ ...rune })),
+  };
+}
+
 export function createMember(character) {
   const characterId = isObject(character) ? character.id : character;
   if (!Number.isSafeInteger(characterId) || characterId <= 0) throw new RangeError('角色编号无效。');

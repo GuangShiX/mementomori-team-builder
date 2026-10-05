@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
-  createTeam, createMember, createEquipment, calculateTeam, validateTeam,
+  createTeam, createMember, selectEquipmentRarity, calculateTeam, validateTeam,
   createExport, parseImport, cloneTeam, migrateLegacyWeaponConfiguration, getBorrowableWeapons, isWeaponOwnerClaimed, EQUIPMENT_SLOTS, RESOURCE_KEYS,
 } from './domain.mjs';
 import { placeRosterCharacter, swapTeamPositions } from './team-interactions.mjs';
@@ -157,15 +157,39 @@ function Icon({ name, size = 16, ...props }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name] ?? paths.gear}</svg>;
 }
 
-function Portrait({ character, elementIcons, badge = true }) {
+function GameIconFrame({ iconArt, rarity, type = 'character' }) {
+  const filterId = `icon-tint-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const variant = (type === 'character' ? iconArt?.characterRarities : iconArt?.equipmentRarities)?.[rarity];
+  const geometry = type === 'character' ? iconArt?.characterGeometry : iconArt?.equipmentGeometry;
+  const source = iconArt?.frames?.[variant?.frame];
+  if (!source || !geometry) return null;
+  const { sourceInsets, targetInsets, canvasSize } = geometry;
+  const stars = iconArt.characterStars;
+  const edges = ['top', 'right', 'bottom', 'left'];
+  const style = {
+    borderImageSource: `url("${source}")`,
+    borderImageSlice: edges.map(edge => sourceInsets[edge]).join(' '),
+    borderImageWidth: edges.map(edge => `${targetInsets[edge] / canvasSize * 100}%`).join(' '),
+    inset: `${-(geometry.outward ?? 0) / canvasSize * 100}%`,
+    ...(variant.tintMatrix ? { filter: `url(#${filterId})` } : {}),
+  };
+  return <>
+    {variant.tintMatrix && <svg className="icon-filter-defs" width="0" height="0" aria-hidden="true"><defs><filter id={filterId} colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values={variant.tintMatrix} /></filter></defs></svg>}
+    <span className="game-icon-frame" data-rarity={rarity} data-frame={variant.frame} style={style} aria-hidden="true" />
+    {variant.starCount > 0 && iconArt.goldStar && stars && <span className="rarity-stars" aria-hidden="true">{Array.from({ length: variant.starCount }, (_, index) => <img key={index} src={iconArt.goldStar} alt="" draggable={false} style={{ left: `${(stars.x + index * stars.step) / stars.canvasSize * 100}%`, top: `${stars.y / stars.canvasSize * 100}%`, width: `${stars.width / stars.canvasSize * 100}%`, height: `${stars.height / stars.canvasSize * 100}%` }} />)}</span>}
+  </>;
+}
+
+function Portrait({ character, elementIcons, iconArt, rarity = 'SR', badge = true }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [character?.id, character?.portrait]);
   const element = ELEMENTS[character?.element];
   const elementIcon = elementIcons?.[character?.element];
-  return <div className="portrait-frame">
+  return <div className={`portrait-frame${iconArt?.characterRarities?.[rarity] ? ' has-rarity-frame' : ''}`}>
     {character?.portrait && !failed
       ? <img className="portrait-image" src={character.portrait} alt="" loading="lazy" draggable={false} onError={() => setFailed(true)} />
       : <span className="portrait-fallback" aria-hidden="true">{character?.name?.slice(0, 1) ?? '✧'}</span>}
+    <GameIconFrame iconArt={iconArt} rarity={rarity} />
     {badge && element && elementIcon && <img className="element-badge" src={elementIcon} alt={`${element.name}属性`} title={`${element.name}属性`} draggable={false} />}
   </div>;
 }
@@ -187,6 +211,34 @@ function equipmentLevels(catalog, rarity, weaponKind) {
   return catalog.equipmentCosts?.allowedLevels?.[rarity] ?? [];
 }
 
+function EquipmentArt({ gear, member, catalog, rarity = gear.rarity }) {
+  const character = catalog.characters.find(item => item.id === member.characterId);
+  const owner = catalog.characters.find(item => item.id === (gear.weaponOwnerCharacterId ?? member.characterId));
+  const source = gear.slot === 1 && gear.weaponKind === 'exclusive'
+    ? owner?.exclusiveWeaponIcon
+    : catalog.iconArt?.equipmentIcons?.[character?.job]?.[rarity]?.[gear.slot];
+  return <span className="equipment-art" data-rarity={rarity}>
+    {source ? <img className="equipment-art-image" src={source} alt="" loading="lazy" draggable={false} /> : <span className="equipment-art-fallback" aria-hidden="true">{rarity}</span>}
+    <GameIconFrame iconArt={catalog.iconArt} rarity={rarity} type="equipment" />
+  </span>;
+}
+
+function MemberEquipmentSummary({ member, position, catalog }) {
+  const equipped = member.equipment.filter(gear => gear.rarity !== 'NONE');
+  const levels = equipped.map(gear => gear.matchlessSacredTreasureLevel);
+  const validLevels = levels.every(level => Number.isFinite(level));
+  const minimum = Math.min(...levels);
+  const maximum = Math.max(...levels);
+  const caption = !equipped.length ? '未装备' : !validLevels ? '魔装待确认' : minimum === maximum ? `魔装 ${minimum}` : `魔装 ${minimum}–${maximum}`;
+  const details = member.equipment.map(gear => `${SLOT_NAMES[gear.slot]}：${gear.rarity === 'NONE' ? '未装备' : `${gear.rarity} · 魔装 ${gear.matchlessSacredTreasureLevel}`}`).join('；');
+  return <div className="member-equipment-summary" aria-label={`位置${position}装备与魔装`}>
+    <div className="member-equipment-icons">{member.equipment.map(gear => <span key={gear.slot} className={`member-equipment-item${gear.rarity === 'NONE' ? ' is-empty' : ''}`} title={`${SLOT_NAMES[gear.slot]}：${gear.rarity === 'NONE' ? '未装备' : `${gear.rarity} · 魔装 ${gear.matchlessSacredTreasureLevel}`}`} aria-label={`${SLOT_NAMES[gear.slot]} ${gear.rarity === 'NONE' ? '未装备' : `${gear.rarity} 魔装${gear.matchlessSacredTreasureLevel}`}`}>
+      {gear.rarity === 'NONE' ? <span aria-hidden="true">−</span> : <EquipmentArt gear={gear} member={member} catalog={catalog} />}
+    </span>)}</div>
+    <span className="member-matchless" title={details}>{caption}</span>
+  </div>;
+}
+
 function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, onChange, errors, memberIndex, inventory, borrowableWeapons, ownWeaponClaimed }) {
   const prefix = `members[${memberIndex}].equipment[${index}]`;
   const availableRunes = catalog.runeCategories.filter(category => runeSlots(category).includes(gear.slot));
@@ -206,9 +258,9 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
     onChange({ ...gear, level, reinforcementLevel: Math.min(Number(gear.reinforcementLevel) || 0, level) });
   }
   function selectRarity(rarity) {
-    if (rarity === 'NONE') { onChange(createEquipment(gear.slot)); return; }
+    if (rarity === 'NONE') { onChange(selectEquipmentRarity(gear, rarity)); return; }
     const updated = {
-      ...gear, rarity, seriesId: RARITY_SERIES[rarity], weaponKind: gear.slot === 1 ? 'exclusive' : gear.weaponKind,
+      ...selectEquipmentRarity(gear, rarity), weaponKind: gear.slot === 1 ? 'exclusive' : gear.weaponKind,
       weaponOwnerCharacterId: gear.slot === 1 ? rarity === 'SSR' ? member.characterId : ownerId : null,
       runes: gear.runes.map((rune, index) => rune.level === 0
         ? { ...rune, categoryId: availableRunes[index]?.id ?? availableRunes[0]?.id ?? rune.categoryId }
@@ -242,6 +294,12 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
         <option value="NONE">未装备</option><option value="SSR">SSR</option><option value="UR">UR</option>
         <option value="LR" disabled={member.rarity !== 'LR5'}>LR{member.rarity !== 'LR5' ? ' · 需 LR5' : ''}</option>
       </select>
+    </div>
+    <div className="equipment-tier-options" role="group" aria-label={`${SLOT_NAMES[gear.slot]}装备档位`}>
+      {['SSR', 'UR', 'LR'].map(rarity => <button key={rarity} className={`equipment-tier-button${gear.rarity === rarity ? ' active' : ''}`} type="button" aria-label={`${SLOT_NAMES[gear.slot]}切换${rarity}${rarity === 'LR' && member.rarity !== 'LR5' ? '，需要LR5角色' : ''}`} aria-pressed={gear.rarity === rarity} disabled={rarity === 'LR' && member.rarity !== 'LR5'} onClick={() => selectRarity(rarity)}>
+        <EquipmentArt gear={{ ...gear, weaponKind: gear.slot === 1 ? 'exclusive' : gear.weaponKind, weaponOwnerCharacterId: rarity === 'SSR' ? member.characterId : ownerId }} member={member} catalog={catalog} rarity={rarity} />
+        <span>{rarity}</span>
+      </button>)}
     </div>
     {gear.rarity === 'NONE' ? <p className="empty-equipment-note">选择装备后设置养成与符石</p> : <>
       <div className="fixed-series">{gear.weaponKind === 'exclusive' ? `${borrowed ? '借用 ' : ''}${ownerCharacter?.name ?? '角色'}专属武器` : series?.name ?? gear.rarity}{gear.rarity === 'LR' ? ' · 需 LR5 角色' : ''}</div>
@@ -280,9 +338,9 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
           const active = rune.level !== 0;
           const fixedLevel = active && isFixedCategory(rune.categoryId);
           const issue = errors.find(item => item.path.startsWith(`${prefix}.runes[${runeIndex}]`));
-          return <div key={runeIndex}>
+          return <div className="rune-column" key={runeIndex}>
             <div className="rune-row">
-              <span className="rune-number">{runeIndex + 1}</span>
+              <span className="rune-number">第 {runeIndex + 1} 孔</span>
               <select aria-label={`${SLOT_NAMES[gear.slot]}第${runeIndex + 1}孔符石类别`} value={active ? rune.categoryId : ''} onChange={event => {
                 if (event.target.value === '') { setRune(runeIndex, { level: 0 }); return; }
                 const categoryId = Number(event.target.value);
@@ -298,6 +356,7 @@ function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, on
                   return <option key={category.id} value={category.id} disabled={unavailable || gear.runes.some((other, i) => i !== runeIndex && other.level > 0 && other.categoryId === category.id)}>{category.name.replace(/符石$/, '')}{categoryStock.length > 0 ? ` · 余${remaining}` : ''}</option>;
                 })}
               </select>
+              <span className="rune-level-label">等级</span>
               {fixedLevel
                 ? <select aria-label={`${SLOT_NAMES[gear.slot]}第${runeIndex + 1}孔固定符石等级`} className="fixed-rune-level" value={rune.level} onChange={event => setRune(runeIndex, { level: Number(event.target.value) })}>
                   {!stockTiers.some(tier => tier.level === rune.level) && <option value={rune.level}>Lv.{rune.level} · 不可用</option>}
@@ -531,22 +590,8 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成</h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><span>秘仪加成将在后续自动计算</span></aside></div>
     {notice && <div className={`notice ${notice.kind}`} role="status" style={{ marginBottom: 16 }}>{notice.text}</div>}
     <main className="workspace">
-      <aside className="panel catalog-panel left-column" aria-label="选择角色与配队">
+      <aside className="panel catalog-panel left-column" aria-label="选择角色">
         <div className="panel-header"><div className="panel-heading"><span className="section-index">01</span><h2>选择角色</h2></div><span className="count">{filtered.length} 位</span></div>
-        <section className="team-panel" aria-label="当前五人配队">
-          <div className="panel-header"><div className="panel-heading"><h3>我的配队 <span className="count">{memberCount} / 5</span></h3></div><div className="team-header-controls"><button className="quiet-button reset-button" onClick={() => { changeTeam({ ...createTeam(), level: policy.characterLevel }); setSelectedIndex(-1); }}>新建方案</button></div></div>
-          <div className="team-lineup" style={catalog.teamFrame ? { '--team-frame-image': `url("${catalog.teamFrame}")` } : undefined}><div className="team-slots">{team.members.map((member, index) => {
-            const character = member ? characters.get(member.characterId) : null;
-            return <div key={index} className={`team-slot${member ? '' : ' empty'}${member && index === selectedIndex ? ' selected' : ''}${dropTarget === index ? ' drop-target' : ''}`} style={{ backgroundImage: `url("${teamSeat}")` }} draggable={Boolean(member)}
-              onDragStart={event => member && startDrag(event, { kind: 'member', index, characterId: member.characterId })} onDragEnd={endDrag}
-              onDragOver={event => { if (!event.dataTransfer.types.includes(TEAM_DRAG_TYPE)) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setDropTarget(index); }}
-              onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(current => current === index ? null : current); }} onDrop={event => dropMember(event, index)}>
-              <span className="slot-position">0{index + 1}</span>
-              {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} elementIcons={catalog.elementIcons} /><span className="member-rarity">{member.rarity}</span><span className="member-level">Lv.{team.level}</span></button> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div></div>}
-            </div>;
-          })}</div></div>
-          <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
-        </section>
       <div className={`catalog-roster${rosterDropActive ? ' remove-drop-target' : ''}`} role="region" aria-label="角色目录"
         onDragOver={event => { if (dragPayload.current?.kind !== 'member') return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setRosterDropActive(true); }}
         onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setRosterDropActive(false); }} onDrop={dropToRoster}>
@@ -556,7 +601,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
           const inTeam = team.members.some(member => member?.characterId === character.id);
           const entitlement = freeCharacters.get(character.id);
           return <div className={`character-tile${inTeam ? ' in-team' : ''}`} role="listitem" key={character.id} title={`${characterLabel(character)} · 拖到站位${inTeam ? '调整位置' : '加入或替换'}${entitlement ? ` · 免费库 ${entitlement.rarity}` : ''}`} aria-label={`拖入${characterLabel(character)}`} draggable onDragStart={event => startDrag(event, { kind: 'character', characterId: character.id })} onDragEnd={endDrag}>
-            <div style={{ position: 'relative' }}><Portrait character={character} elementIcons={catalog.elementIcons} />{inTeam && <span className="selected-check"><Icon name="check" size={10} /></span>}</div><span className="tile-name">{character.name}</span><span className="tile-subtitle" aria-hidden={!character.subtitle}>{character.subtitle || '\u00a0'}</span><span className="tile-free-cap" aria-hidden={!entitlement}>{entitlement ? `${entitlement.rarity} 免费` : '\u00a0'}</span>
+            <div style={{ position: 'relative' }}><Portrait character={character} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity="SR" />{inTeam && <span className="selected-check"><Icon name="check" size={10} /></span>}</div><span className="tile-name">{character.name}</span><span className="tile-subtitle" aria-hidden={!character.subtitle}>{character.subtitle || '\u00a0'}</span><span className="tile-free-cap" aria-hidden={!entitlement}>{entitlement ? `${entitlement.rarity} 免费` : '\u00a0'}</span>
           </div>;
         })}{filtered.length === 0 && <p className="no-results">没有找到符合条件的角色</p>}</div>
         <p className="catalog-help">拖动目录角色到站位加入或替换。<br />将队员拖回此目录可移出配队。</p>
@@ -565,10 +610,29 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       <div className="center-column">
         <section className="panel details-panel" ref={editorRef} aria-label="当前角色装备配置">
           <div className="panel-heading gear-panel-heading"><span className="section-index">02</span><h2>角色与装备</h2></div>
+          <div className="character-workbench-header">
+            <div className="character-overview">{selectedMember && selectedCharacter ? (
+            <div className="selected-character-header"><div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={selectedMember.rarity} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div><label className="rarity-control"><span className="field-label">角色稀有度</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => updateMember({ rarity: event.target.value })}><option value="SR">SR</option><option value="LR">LR</option><option value="LR5">LR5</option></select></label></div>
+            ) : <div className="character-overview-empty"><Icon name="gear" size={20} /><p>将角色拖入右侧队伍位置<br />即可编辑装备</p></div>}</div>
+        <section className="team-panel" aria-label="当前五人配队">
+          <div className="panel-header"><div className="panel-heading"><h3>我的配队 <span className="count">{memberCount} / 5</span></h3></div><div className="team-header-controls"><button className="quiet-button reset-button" onClick={() => { changeTeam({ ...createTeam(), level: policy.characterLevel }); setSelectedIndex(-1); }}>新建方案</button></div></div>
+          <div className="team-lineup" style={catalog.teamFrame ? { '--team-frame-image': `url("${catalog.teamFrame}")` } : undefined}><div className="team-slots">{team.members.map((member, index) => {
+            const character = member ? characters.get(member.characterId) : null;
+            return <div className="team-position" key={index}><div className={`team-slot${member ? '' : ' empty'}${member && index === selectedIndex ? ' selected' : ''}${dropTarget === index ? ' drop-target' : ''}`} style={{ backgroundImage: `url("${teamSeat}")` }} draggable={Boolean(member)}
+              onDragStart={event => member && startDrag(event, { kind: 'member', index, characterId: member.characterId })} onDragEnd={endDrag}
+              onDragOver={event => { if (!event.dataTransfer.types.includes(TEAM_DRAG_TYPE)) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setDropTarget(index); }}
+              onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(current => current === index ? null : current); }} onDrop={event => dropMember(event, index)}>
+              <span className="slot-position">0{index + 1}</span>
+              {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={member.rarity} /><span className="member-rarity">{member.rarity}</span><span className="member-level">Lv.{team.level}</span></button> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div></div>}
+            </div>{member && <MemberEquipmentSummary member={member} position={index + 1} catalog={catalog} />}</div>;
+          })}</div></div>
+          <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
+        </section>
+          </div>
           {selectedMember && selectedCharacter ? <>
-            <div className="selected-character-header"><div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div><label className="rarity-control"><span className="field-label">角色稀有度</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => updateMember({ rarity: event.target.value })}><option value="SR">SR</option><option value="LR">LR</option><option value="LR5">LR5</option></select></label></div>
             {valuation.errors.length > 0 && <div className="notice error validation-notice" role="alert"><strong>当前配置需要修正</strong><ul>{valuation.errors.slice(0, 6).map((issue, i) => <li key={`${issue.path}-${i}`}>{issue.message}</li>)}</ul>{valuation.errors.length > 6 && <p>另有 {valuation.errors.length - 6} 项，请逐项检查。</p>}</div>}
             <div className="equip-intro"><span>六部位装备</span><span>未装备部位不消耗材料</span></div>
+            <p className="equipment-default-note">新装备默认魔装 40，可按实际配置调整。</p>
             {(freeCharacters.has(selectedCharacter.id) || freeLibrary?.exclusiveWeapons?.some(item => item.characterId === selectedCharacter.id)) && <p className="free-library-note">免费库：{freeCharacters.has(selectedCharacter.id) ? `角色本体免费至 ${freeCharacters.get(selectedCharacter.id).rarity}` : ''}{freeLibrary?.exclusiveWeapons?.filter(item => item.characterId === selectedCharacter.id).map(item => `${freeCharacters.has(selectedCharacter.id) ? '；' : ''}${item.level} 级 ${item.rarity} 专武免费`).join('')}。更高配置按差额计价。</p>}
             {policy.runes?.fixedStock && <p className="fixed-stock-note">普通符石：每类 {fixedRuneCaption(policy)}，整队共享。穿透与速度可自由调整等级。</p>}
             <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} />)}</div>

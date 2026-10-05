@@ -774,6 +774,1241 @@
       "sha256": "98f4e731fe9880de6c962f217c51ee09eede11b18fa3354a2c82e9f7b47ff41d",
       "sourcePath": "assets/ui/toggle_04_off.png",
       "sourceResourceKey": "assets/aa/Android/29121095407936fd11fb775fb8b7cfef.bundle#Sprite:366755172800441101"
+    },
+    {
+      "id": "commonRarityFrame",
+      "path": "assets/ui/frame_common_slice.png",
+      "sha256": "dcd4ce9994b355b44682a3b8b2e0b842c128111b413a9fcd28db3dc96da131c2",
+      "sourcePath": "assets/ui/frame_common_slice.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:5673522489854298034",
+      "width": 62,
+      "height": 62
+    },
+    {
+      "id": "lrRarityFrame",
+      "path": "assets/ui/frame_common_lr_slice.png",
+      "sha256": "a9df6f5c1fa3397db1386077999773bdef3fde2e3d5683efe6a363538efe2828",
+      "sourcePath": "assets/ui/frame_common_lr_slice.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:-1558437834582794263",
+      "width": 62,
+      "height": 62
+    },
+    {
+      "id": "goldRarityStar",
+      "path": "assets/ui/icon_rarity_plus_star_1.png",
+      "sha256": "9998c41c3b1eefa17baba1f1d4b66f0e08e014206dfa0fd8bbd8a1ad718364f4",
+      "sourcePath": "assets/ui/icon_rarity_plus_star_1.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:-5077772158606538063",
+      "width": 22,
+      "height": 21
+    }
+  ],
+  "equipmentAssets": [
+    {
+      "iconId": 206,
+      "path": "assets/equipment/EQP_000206.png",
+      "sha256": "2dadfd95aadcdc81ae7da4231de1b6b4803020ec9e629276459e61473cbd4f04",
+      "sourcePath": "assets/equipment/EQP_000206.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000206.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 212,
+      "path": "assets/equipment/EQP_000212.png",
+      "sha256": "609f0c56a8cb62f2c5587e93fdc14b7d9ea72ea344e904d819b6630ddf26c88a",
+      "sourcePath": "assets/equipment/EQP_000212.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000212.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 218,
+      "path": "assets/equipment/EQP_000218.png",
+      "sha256": "acb016f3d378d1c0f11528d8ad9de7b8fa8c538ca1f1eff728248ce49082d2cf",
+      "sourcePath": "assets/equipment/EQP_000218.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000218.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 224,
+      "path": "assets/equipment/EQP_000224.png",
+      "sha256": "943d9afbda687dd3eef652c6de655e6bc4078e1bd99ea3f35705b1b05b24d5fb",
+      "sourcePath": "assets/equipment/EQP_000224.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000224.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 236,
+      "path": "assets/equipment/EQP_000236.png",
+      "sha256": "cbaaea9c4f48a5cbc21f7fee0cc18834fd3f032b443c941f6fd307cf0e7e8f3c",
+      "sourcePath": "assets/equipment/EQP_000236.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000236.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 242,
+      "path": "assets/equipment/EQP_000242.png",
+      "sha256": "311e0f22725c812c67dbdf1d41631f4e3f9d7ecdd99018e03a47d289b5f9f043",
+      "sourcePath": "assets/equipment/EQP_000242.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000242.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 248,
+      "path": "assets/equipment/EQP_000248.png",
+      "sha256": "68d7f1c705bebb1bc511e757296fc55068a3313f66b79c844b8db59dd094cbb6",
+      "sourcePath": "assets/equipment/EQP_000248.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000248.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 254,
+      "path": "assets/equipment/EQP_000254.png",
+      "sha256": "8094892cdcd2f3c64d8d014a72f2f8bf5f87db7cbfd7bd09e7797de139d59275",
+      "sourcePath": "assets/equipment/EQP_000254.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000254.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 260,
+      "path": "assets/equipment/EQP_000260.png",
+      "sha256": "08d8b10d47c9a7473c1e9b1db1ff54d9ec2c554b722da04d316ed2073ff7f071",
+      "sourcePath": "assets/equipment/EQP_000260.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000260.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 272,
+      "path": "assets/equipment/EQP_000272.png",
+      "sha256": "be139f01f5516ea9df55db8f15b4b765255b40bc44bbd2efda0917fb5f57fd78",
+      "sourcePath": "assets/equipment/EQP_000272.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000272.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 278,
+      "path": "assets/equipment/EQP_000278.png",
+      "sha256": "99cbe4313b34138b0e90f816a2401545c8b07edfb386c1e56f5d57345b024d41",
+      "sourcePath": "assets/equipment/EQP_000278.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000278.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 284,
+      "path": "assets/equipment/EQP_000284.png",
+      "sha256": "64d494b01d7ca2f97dfebb6e4fac713b9d8fdf7c5c87742b98c1568ca2d559bc",
+      "sourcePath": "assets/equipment/EQP_000284.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000284.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 290,
+      "path": "assets/equipment/EQP_000290.png",
+      "sha256": "a7353c462e8799d72926d39d23bf2235afd03a5a1d8fb92b001e3cdae5166048",
+      "sourcePath": "assets/equipment/EQP_000290.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000290.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 296,
+      "path": "assets/equipment/EQP_000296.png",
+      "sha256": "30dd77a4f1686b4bb04978362b6ae2f6674e4593dd252fb6a92ef0c4c29267a0",
+      "sourcePath": "assets/equipment/EQP_000296.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000296.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 302,
+      "path": "assets/equipment/EQP_000302.png",
+      "sha256": "6351da0a172a3e59fb42f359a41d71bd584440f9ca87b6c77f52dddd9b73f22f",
+      "sourcePath": "assets/equipment/EQP_000302.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000302.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 314,
+      "path": "assets/equipment/EQP_000314.png",
+      "sha256": "6a55b87a303c6e35cd9ab25f402af42ad423380f6e0ca9a4da0384e46078e11d",
+      "sourcePath": "assets/equipment/EQP_000314.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000314.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 320,
+      "path": "assets/equipment/EQP_000320.png",
+      "sha256": "f713741802852638c7c00ea7fd8d15dad4884407f431b4875aaa69b3f4c2471c",
+      "sourcePath": "assets/equipment/EQP_000320.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000320.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 326,
+      "path": "assets/equipment/EQP_000326.png",
+      "sha256": "79fa8012d278b77e5c160459f0d7973b165c59c102619e8b49506c05ce74186c",
+      "sourcePath": "assets/equipment/EQP_000326.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000326.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 332,
+      "path": "assets/equipment/EQP_000332.png",
+      "sha256": "85284da7a20b9010ea1753dee326c80c9054b4471f6c6c1c1a9f970547e17d23",
+      "sourcePath": "assets/equipment/EQP_000332.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000332.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 338,
+      "path": "assets/equipment/EQP_000338.png",
+      "sha256": "599695ee69fefd27662a910a784419403f1e906e502ddaa92f6656aebb8f49b6",
+      "sourcePath": "assets/equipment/EQP_000338.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000338.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 350,
+      "path": "assets/equipment/EQP_000350.png",
+      "sha256": "096122e4c18a8e741ccc3bba0288e6c29ed4565fa3ab74be070b9837749d4efd",
+      "sourcePath": "assets/equipment/EQP_000350.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000350.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 380,
+      "path": "assets/equipment/EQP_000380.png",
+      "sha256": "dba8939d9ec13af5bcfdb8adc3055b7e042412062570924f4d84d705fe1b2e2d",
+      "sourcePath": "assets/equipment/EQP_000380.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000380.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 356,
+      "path": "assets/equipment/EQP_000356.png",
+      "sha256": "1e7de562591d600a94a64c0e20e01385fd5b961f02cf0c15b47f09d65df97e9b",
+      "sourcePath": "assets/equipment/EQP_000356.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000356.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 266,
+      "path": "assets/equipment/EQP_000266.png",
+      "sha256": "7125c11a2eb9f818ac3cd65778d9261b00f23a4d4c13dd0e3327a1bc90100e7a",
+      "sourcePath": "assets/equipment/EQP_000266.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000266.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 386,
+      "path": "assets/equipment/EQP_000386.png",
+      "sha256": "4063a945fe8a680815fb421d7532da36194499f8ff5ea374940377f1b2f85cde",
+      "sourcePath": "assets/equipment/EQP_000386.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000386.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 308,
+      "path": "assets/equipment/EQP_000308.png",
+      "sha256": "baa0b8887d051998068050af0472bf3c5af769f7622403cb982e20915addbb75",
+      "sourcePath": "assets/equipment/EQP_000308.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000308.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 344,
+      "path": "assets/equipment/EQP_000344.png",
+      "sha256": "2b268a019585dd48f916f497639e984cf9e662be4e8024d8d3c54c77c5971b83",
+      "sourcePath": "assets/equipment/EQP_000344.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000344.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 230,
+      "path": "assets/equipment/EQP_000230.png",
+      "sha256": "a02e4002603dc4fb099ee9393dfe9d9f6036e0dce85f15379657eba9d526aea0",
+      "sourcePath": "assets/equipment/EQP_000230.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000230.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 362,
+      "path": "assets/equipment/EQP_000362.png",
+      "sha256": "95b0ce396575cd0855eddd3bc2208852fd1039bbefdf3ca237d4199482bd7cff",
+      "sourcePath": "assets/equipment/EQP_000362.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000362.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 410,
+      "path": "assets/equipment/EQP_000410.png",
+      "sha256": "8e865c8e02200833cdb379b86ee336369ce215426983440545f0cca61fd9a85e",
+      "sourcePath": "assets/equipment/EQP_000410.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000410.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 392,
+      "path": "assets/equipment/EQP_000392.png",
+      "sha256": "63b7679e18152eeed53a4af5a74bddfe5bdbad4b0da32baef539f8c79729b535",
+      "sourcePath": "assets/equipment/EQP_000392.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000392.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 398,
+      "path": "assets/equipment/EQP_000398.png",
+      "sha256": "8c0b54f98791d4ef8dcb8e9985ec70ed909d467f03bb496f051ea583f58ee71c",
+      "sourcePath": "assets/equipment/EQP_000398.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000398.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 422,
+      "path": "assets/equipment/EQP_000422.png",
+      "sha256": "ee07a2eee0d8e480e18627842a3e360148f3e7155a695a640fa661e30c3fc6ef",
+      "sourcePath": "assets/equipment/EQP_000422.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000422.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 434,
+      "path": "assets/equipment/EQP_000434.png",
+      "sha256": "8e1dee454fd18952780cfc032dd7569b6cf90b83c44882107e82dfbf225e045e",
+      "sourcePath": "assets/equipment/EQP_000434.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000434.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 428,
+      "path": "assets/equipment/EQP_000428.png",
+      "sha256": "602dfd45510dccafe767449f987b57338268aa92e17478631118f7a1d19d1014",
+      "sourcePath": "assets/equipment/EQP_000428.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000428.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 368,
+      "path": "assets/equipment/EQP_000368.png",
+      "sha256": "5d1161d3f57bec1d524f0205366957c351373cd30bc9bf9ba0bf41eaabe98f01",
+      "sourcePath": "assets/equipment/EQP_000368.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000368.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 416,
+      "path": "assets/equipment/EQP_000416.png",
+      "sha256": "fb171942fb50a7cd7a4235e34e1febca3445e68944c85ab0e6f089f0622fc58b",
+      "sourcePath": "assets/equipment/EQP_000416.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000416.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 452,
+      "path": "assets/equipment/EQP_000452.png",
+      "sha256": "024428420846ca67ff0b03a1c823aa5aedaff14af5e33740cc7558e072a544da",
+      "sourcePath": "assets/equipment/EQP_000452.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000452.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 506,
+      "path": "assets/equipment/EQP_000506.png",
+      "sha256": "2d49393e5c1a4714d3141f59c308df401f50ba693fcf58937b8f2ee6e3291c53",
+      "sourcePath": "assets/equipment/EQP_000506.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000506.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 524,
+      "path": "assets/equipment/EQP_000524.png",
+      "sha256": "8758e8462cf33ddad55680c93727a0c5f2e53a255f23a674b92010cfef4a1bd9",
+      "sourcePath": "assets/equipment/EQP_000524.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000524.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 530,
+      "path": "assets/equipment/EQP_000530.png",
+      "sha256": "0e990bb3f0dd5a75a229bd50fecedf766b025bb3a64202d3bc89e0cefdda56ae",
+      "sourcePath": "assets/equipment/EQP_000530.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000530.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 464,
+      "path": "assets/equipment/EQP_000464.png",
+      "sha256": "e0e3616ae69dfd4e5ec6c64cae7e5c01e21636d8eb15076579640a86c97228ad",
+      "sourcePath": "assets/equipment/EQP_000464.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000464.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 536,
+      "path": "assets/equipment/EQP_000536.png",
+      "sha256": "95244df97efde86b47726eeb04cbef67c1735c6e4d6afcb6741b0100f84676aa",
+      "sourcePath": "assets/equipment/EQP_000536.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000536.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 404,
+      "path": "assets/equipment/EQP_000404.png",
+      "sha256": "4c98011caa794e63155ace386ce6c13feae65c5dd7e894d3d1e16f0563313fab",
+      "sourcePath": "assets/equipment/EQP_000404.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000404.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 446,
+      "path": "assets/equipment/EQP_000446.png",
+      "sha256": "beda7f0c64998a09ea9c3306a0787ab6c5d7ba5f1276a8b5eb7e168aaa07eb20",
+      "sourcePath": "assets/equipment/EQP_000446.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000446.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 476,
+      "path": "assets/equipment/EQP_000476.png",
+      "sha256": "99dada0af3acd0549a72dc1b66f510bf786daa42c236270b4207b64c08f7f0b2",
+      "sourcePath": "assets/equipment/EQP_000476.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000476.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 374,
+      "path": "assets/equipment/EQP_000374.png",
+      "sha256": "2cc6c9f5dabd778c7aec23c026da345a6db47f2877e81490594b99b2cb2c345d",
+      "sourcePath": "assets/equipment/EQP_000374.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000374.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 470,
+      "path": "assets/equipment/EQP_000470.png",
+      "sha256": "f5205913ab5acf9ffd02c334fb98deddc55c3363d8bf543baa77f8b717dd1e95",
+      "sourcePath": "assets/equipment/EQP_000470.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000470.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 512,
+      "path": "assets/equipment/EQP_000512.png",
+      "sha256": "a670bf6422e9785377543a40039901c00ddadc06bc5b79f4b87a6187078364a0",
+      "sourcePath": "assets/equipment/EQP_000512.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000512.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 542,
+      "path": "assets/equipment/EQP_000542.png",
+      "sha256": "e3bce60ccc29978ec66abae294739ab4cf54689b351d7faea6bcd611163db3bd",
+      "sourcePath": "assets/equipment/EQP_000542.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000542.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 548,
+      "path": "assets/equipment/EQP_000548.png",
+      "sha256": "711329cffe347054589fde2a766d53966a7ae47e899d662c80503c87d8850722",
+      "sourcePath": "assets/equipment/EQP_000548.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000548.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 500,
+      "path": "assets/equipment/EQP_000500.png",
+      "sha256": "2c97f75e67e6b514c07218c839e9614107ac04a8901a8d98060be198270a3909",
+      "sourcePath": "assets/equipment/EQP_000500.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000500.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 488,
+      "path": "assets/equipment/EQP_000488.png",
+      "sha256": "6e5111abf3bd53efdd0e3c6900ce879381059bf7b11263e2ab7600ae1e50fb4d",
+      "sourcePath": "assets/equipment/EQP_000488.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000488.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 440,
+      "path": "assets/equipment/EQP_000440.png",
+      "sha256": "19ab652ad395b7efd88c75291b4abe7e9892b4c7eb4906b95730d6971e0ffd9b",
+      "sourcePath": "assets/equipment/EQP_000440.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000440.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 608,
+      "path": "assets/equipment/EQP_000608.png",
+      "sha256": "10a9971ef26686ec35f3485bdc04d7d2d397ad9c219a096edc9254a09472a28b",
+      "sourcePath": "assets/equipment/EQP_000608.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000608.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 614,
+      "path": "assets/equipment/EQP_000614.png",
+      "sha256": "7a6efc11d0e75d95efa7d4dd811ae1cafedbcfe1815ddca0fd76fcc3479f5b97",
+      "sourcePath": "assets/equipment/EQP_000614.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000614.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 560,
+      "path": "assets/equipment/EQP_000560.png",
+      "sha256": "29503374e411b0ff10faffa47fe51ebc0a1d12bdb7ff0684d475413a9794c300",
+      "sourcePath": "assets/equipment/EQP_000560.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000560.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 482,
+      "path": "assets/equipment/EQP_000482.png",
+      "sha256": "5a88397c179846c93bd00fb1ff4c5c2639cd9219bc1e2620c8ec560d155e2034",
+      "sourcePath": "assets/equipment/EQP_000482.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000482.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 458,
+      "path": "assets/equipment/EQP_000458.png",
+      "sha256": "766bc6bb707ab34f09e1e5938eb6f734af38d13d930d2243eb66bc80527fc3c8",
+      "sourcePath": "assets/equipment/EQP_000458.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000458.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 554,
+      "path": "assets/equipment/EQP_000554.png",
+      "sha256": "a6741d3ce64ba14bcd8f33262ae8a6e2a123498bff717a89298b7e168196ad4a",
+      "sourcePath": "assets/equipment/EQP_000554.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000554.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 632,
+      "path": "assets/equipment/EQP_000632.png",
+      "sha256": "7fde44593e4a3a9336f239d47d37ceb4093d392f046c3f0df6a53a8990a1eb1a",
+      "sourcePath": "assets/equipment/EQP_000632.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000632.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 572,
+      "path": "assets/equipment/EQP_000572.png",
+      "sha256": "a01f9c5145df40a40d9cf654e6542c4d1a0aa4b420008545900d8602593606cc",
+      "sourcePath": "assets/equipment/EQP_000572.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000572.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 596,
+      "path": "assets/equipment/EQP_000596.png",
+      "sha256": "c1a80c1bc370e1a9bcb91b51954e3832d0abdbc14ca1012d5bd1e398aea06d0d",
+      "sourcePath": "assets/equipment/EQP_000596.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000596.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 566,
+      "path": "assets/equipment/EQP_000566.png",
+      "sha256": "a7cd07f2015eca69210fb7dc022efa780165e939130bec4a3cb4d8fe563aa112",
+      "sourcePath": "assets/equipment/EQP_000566.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000566.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 518,
+      "path": "assets/equipment/EQP_000518.png",
+      "sha256": "400f06e00508608b07c5d3f79e637cd0fa6b6da90f024cff07085de41693c81b",
+      "sourcePath": "assets/equipment/EQP_000518.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000518.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 674,
+      "path": "assets/equipment/EQP_000674.png",
+      "sha256": "b24bd321b6d6b79bc121f111015881e8d9e7ac773235ebc7ea460e1cea26afd3",
+      "sourcePath": "assets/equipment/EQP_000674.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000674.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 680,
+      "path": "assets/equipment/EQP_000680.png",
+      "sha256": "cd29e7903ed85f9eb4d6ffd1664b7b9a83f9cc0e89f9d88cbc4714ae7ca3357a",
+      "sourcePath": "assets/equipment/EQP_000680.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000680.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 584,
+      "path": "assets/equipment/EQP_000584.png",
+      "sha256": "e965b45d6a30ad0620b8cac55f0e43495308d09b0de5ccb207ec301730657c95",
+      "sourcePath": "assets/equipment/EQP_000584.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000584.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 494,
+      "path": "assets/equipment/EQP_000494.png",
+      "sha256": "bdf3e2cf134ce5543be0b7b8cb8d87669006207ca9b85bbd1b22098a26a1b0f0",
+      "sourcePath": "assets/equipment/EQP_000494.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000494.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 578,
+      "path": "assets/equipment/EQP_000578.png",
+      "sha256": "711c6e838573494cf0a256c4c463e1ff0ccf1b013fb67e881c96c5377fc1040d",
+      "sourcePath": "assets/equipment/EQP_000578.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000578.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 590,
+      "path": "assets/equipment/EQP_000590.png",
+      "sha256": "38a9ae919fbe5e56c749fb8823d655495f7e2e5ec55517db8c1d5cd4763506ba",
+      "sourcePath": "assets/equipment/EQP_000590.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000590.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 620,
+      "path": "assets/equipment/EQP_000620.png",
+      "sha256": "f505f5a875500b8d93205da541bf41f55fbf491acf2dcf20724d6401b69f0b59",
+      "sourcePath": "assets/equipment/EQP_000620.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000620.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 734,
+      "path": "assets/equipment/EQP_000734.png",
+      "sha256": "5b2cab61d06ef5e0f88d0bd55acecd55b26de2a1182569c74a1ebd64ecf7a39c",
+      "sourcePath": "assets/equipment/EQP_000734.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000734.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 740,
+      "path": "assets/equipment/EQP_000740.png",
+      "sha256": "677f24a9c3f1db20e7250e9f7a41ef07829a51a3dee4b5e8109a0e2b006d3476",
+      "sourcePath": "assets/equipment/EQP_000740.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000740.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 746,
+      "path": "assets/equipment/EQP_000746.png",
+      "sha256": "e98459f6d85bc408630f09a5f856d27e2b3d72e04a0926a3a484b9234808db76",
+      "sourcePath": "assets/equipment/EQP_000746.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000746.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 752,
+      "path": "assets/equipment/EQP_000752.png",
+      "sha256": "4c6fd34140ef25571dd8a9f4c26cc9c9260fcebb79b7455a3f9a7f327150f0a3",
+      "sourcePath": "assets/equipment/EQP_000752.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000752.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 758,
+      "path": "assets/equipment/EQP_000758.png",
+      "sha256": "6ce20553e27d31ea35d64fe70373a7910d1688caa64bb6fa07c609d418610358",
+      "sourcePath": "assets/equipment/EQP_000758.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000758.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 662,
+      "path": "assets/equipment/EQP_000662.png",
+      "sha256": "f666041d92857f0e66d93b15827e63233830f50c553061f5c01c04c2517910c7",
+      "sourcePath": "assets/equipment/EQP_000662.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000662.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 770,
+      "path": "assets/equipment/EQP_000770.png",
+      "sha256": "e6966b07d5379183c60b91b2d2c0178ee0b6bf2a6b0a2b34e7ae306dfd757376",
+      "sourcePath": "assets/equipment/EQP_000770.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000770.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 776,
+      "path": "assets/equipment/EQP_000776.png",
+      "sha256": "9385b02f9a189a8f60d6ee65e2c892c5158ecf3d27df12dca16277dc8014a807",
+      "sourcePath": "assets/equipment/EQP_000776.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000776.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 782,
+      "path": "assets/equipment/EQP_000782.png",
+      "sha256": "a5536069bd79a6f73d19cbc28ccdaa5c4fbad901f42746e8fd96caa8d419e151",
+      "sourcePath": "assets/equipment/EQP_000782.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000782.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 788,
+      "path": "assets/equipment/EQP_000788.png",
+      "sha256": "826a832883ee7a5cb123314b7fd2c9f432dc339b4727a84e40d456cf887a4bc2",
+      "sourcePath": "assets/equipment/EQP_000788.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000788.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 794,
+      "path": "assets/equipment/EQP_000794.png",
+      "sha256": "043f872b0d951bc3911361f73328a102e54fedbc0d6767a1e4c6aebedaf4ed2d",
+      "sourcePath": "assets/equipment/EQP_000794.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000794.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 800,
+      "path": "assets/equipment/EQP_000800.png",
+      "sha256": "8cf776016fcee664ecbc35ba26076292e73b281410d2122e44d5e794bed25a00",
+      "sourcePath": "assets/equipment/EQP_000800.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000800.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 806,
+      "path": "assets/equipment/EQP_000806.png",
+      "sha256": "74caef0f3d9b6ca1df891891881976e2f00390baec8ef3bbd259558a3778b234",
+      "sourcePath": "assets/equipment/EQP_000806.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000806.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 638,
+      "path": "assets/equipment/EQP_000638.png",
+      "sha256": "446d1a3b3c30a2753ea6608218980e35164e8c4427d1a12c4b4128ea97f02cbe",
+      "sourcePath": "assets/equipment/EQP_000638.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000638.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 704,
+      "path": "assets/equipment/EQP_000704.png",
+      "sha256": "9108e228baafa3e1593ca206cc8a3fec6b809b6d8e301521f0635e4363bae7f6",
+      "sourcePath": "assets/equipment/EQP_000704.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000704.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 836,
+      "path": "assets/equipment/EQP_000836.png",
+      "sha256": "0985998915b0af8a9252075affe47ca4cacff1c77caa299f28f39f4255922428",
+      "sourcePath": "assets/equipment/EQP_000836.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000836.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 830,
+      "path": "assets/equipment/EQP_000830.png",
+      "sha256": "8d4cfe4c844c19dfa5022947d66b7caf110b00f6a2faee56362ff6cbadb8b8f5",
+      "sourcePath": "assets/equipment/EQP_000830.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000830.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 626,
+      "path": "assets/equipment/EQP_000626.png",
+      "sha256": "04cfa3d1070cb25c545f796abda012d1fb6f60ab1803f115aafa0e1af95e4dee",
+      "sourcePath": "assets/equipment/EQP_000626.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000626.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 842,
+      "path": "assets/equipment/EQP_000842.png",
+      "sha256": "cc587c87921e31a536d047daaa8e10ed886f9372fb8b33284d8eda37f28b4565",
+      "sourcePath": "assets/equipment/EQP_000842.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000842.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 848,
+      "path": "assets/equipment/EQP_000848.png",
+      "sha256": "ebf973366dfb3d89240bd1f58325d6ea3e5e762e0d5965ae77fe4c99c303e01b",
+      "sourcePath": "assets/equipment/EQP_000848.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000848.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 854,
+      "path": "assets/equipment/EQP_000854.png",
+      "sha256": "503e2c013ed7eba734196cb3154159cccb7d35ba82cf32798b62084040402e33",
+      "sourcePath": "assets/equipment/EQP_000854.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000854.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 860,
+      "path": "assets/equipment/EQP_000860.png",
+      "sha256": "3b36f3e9d8d408deb4ddd2b6f1df2d1becd7855da4ff7f8da347adca3aceb902",
+      "sourcePath": "assets/equipment/EQP_000860.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000860.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 716,
+      "path": "assets/equipment/EQP_000716.png",
+      "sha256": "4866c45b706a9801229daeffc7d66c8a907747d9c4505202ec1f487a82b6d88e",
+      "sourcePath": "assets/equipment/EQP_000716.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000716.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 602,
+      "path": "assets/equipment/EQP_000602.png",
+      "sha256": "e03e236dc378c8b5fefd3a6e024eb07310a9e6da994aa9eb2c85b7da24a24970",
+      "sourcePath": "assets/equipment/EQP_000602.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000602.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 878,
+      "path": "assets/equipment/EQP_000878.png",
+      "sha256": "6a25e055d2d4b35872572b4ce8022026dc392e104e03dd23583584ce8feb26ba",
+      "sourcePath": "assets/equipment/EQP_000878.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000878.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 884,
+      "path": "assets/equipment/EQP_000884.png",
+      "sha256": "e11bca42fb61f3813a92e2567912ee18c05bc495e9e3678100b0e622163f5edf",
+      "sourcePath": "assets/equipment/EQP_000884.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000884.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 890,
+      "path": "assets/equipment/EQP_000890.png",
+      "sha256": "cf0d62fe866138b8dd1a9230000c78dc32b13b34e9c64163ee9a8c8925cd93da",
+      "sourcePath": "assets/equipment/EQP_000890.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000890.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 896,
+      "path": "assets/equipment/EQP_000896.png",
+      "sha256": "9c5bc149368456a5d753fab2b2f51bb04a7b32631050a075040c005bb3b89b65",
+      "sourcePath": "assets/equipment/EQP_000896.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000896.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 872,
+      "path": "assets/equipment/EQP_000872.png",
+      "sha256": "671021dc8ee087e2d1f5d18d7083ed5d203a648997947070e25dc9f206e95e8a",
+      "sourcePath": "assets/equipment/EQP_000872.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000872.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 710,
+      "path": "assets/equipment/EQP_000710.png",
+      "sha256": "2d6cafbbaa8ddd5b6b82b4fa0a0d7d383cdc6d89bca413f769f3532ed3b951cd",
+      "sourcePath": "assets/equipment/EQP_000710.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000710.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 914,
+      "path": "assets/equipment/EQP_000914.png",
+      "sha256": "04edd45f4032edd21eefeb7e27cd771aaf6452655b1df721d6cd098daa63bb50",
+      "sourcePath": "assets/equipment/EQP_000914.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000914.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 722,
+      "path": "assets/equipment/EQP_000722.png",
+      "sha256": "88f43a9145fc56219ef68b3787fca260e7b1f811fe0f2aef63c40fc8d73b475b",
+      "sourcePath": "assets/equipment/EQP_000722.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000722.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 926,
+      "path": "assets/equipment/EQP_000926.png",
+      "sha256": "244238ca5764f32bb8b451e12b133b734a59dc29a1902dbb7c0b8f1292eac428",
+      "sourcePath": "assets/equipment/EQP_000926.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000926.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 698,
+      "path": "assets/equipment/EQP_000698.png",
+      "sha256": "8900cfbb4bca028d0ec155419ef702e97570edf4db3a2478920048d3b6acd7b2",
+      "sourcePath": "assets/equipment/EQP_000698.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000698.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 938,
+      "path": "assets/equipment/EQP_000938.png",
+      "sha256": "c1de4b82bd63fceefcfa5d0f2605a6e3ca0b2da94dbae94a3b1b6d49c8933c76",
+      "sourcePath": "assets/equipment/EQP_000938.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000938.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 908,
+      "path": "assets/equipment/EQP_000908.png",
+      "sha256": "77bd2c9c2efa47e2ac19f1237b98e507cbe94fd9d3f18a6c779c70182b92b117",
+      "sourcePath": "assets/equipment/EQP_000908.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000908.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 950,
+      "path": "assets/equipment/EQP_000950.png",
+      "sha256": "bf7d906ba20f6a3878de9f4ce4cc99728fc051c1fd96bf1fd3b6c6b56fbc47fe",
+      "sourcePath": "assets/equipment/EQP_000950.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000950.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 656,
+      "path": "assets/equipment/EQP_000656.png",
+      "sha256": "045beaaa3be951e0f2ac396d79199e820744877f092ced726ac29fdf5647296c",
+      "sourcePath": "assets/equipment/EQP_000656.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000656.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 644,
+      "path": "assets/equipment/EQP_000644.png",
+      "sha256": "96a5c885d4331e720c1c8052d914ff4b43d73bda69b2eddaec3503ca4032bae5",
+      "sourcePath": "assets/equipment/EQP_000644.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000644.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 992,
+      "path": "assets/equipment/EQP_000992.png",
+      "sha256": "f67925e912070262dd4558887b78e9caef23da54d15f84bf65b9a03bb8900919",
+      "sourcePath": "assets/equipment/EQP_000992.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000992.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 944,
+      "path": "assets/equipment/EQP_000944.png",
+      "sha256": "037645a179dde2613a1450c935d6174e4b15c26c044c776f32b1a5e3b172c43d",
+      "sourcePath": "assets/equipment/EQP_000944.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000944.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 998,
+      "path": "assets/equipment/EQP_000998.png",
+      "sha256": "68fb9a4ab6458a6332d66ad1da86086a57b80779047f2d4510651d99ffc9e5d7",
+      "sourcePath": "assets/equipment/EQP_000998.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000998.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 1022,
+      "path": "assets/equipment/EQP_001022.png",
+      "sha256": "fbdf4d13d06fe761258b89848d49c3f55640ba5d9c8d0270375b04f3e4278628",
+      "sourcePath": "assets/equipment/EQP_001022.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_001022.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 1004,
+      "path": "assets/equipment/EQP_001004.png",
+      "sha256": "9b0c3a8cad6e97620c1de68a2c00d63f1d61aaa9cf6ea7c1bda2f4cc3ffd4475",
+      "sourcePath": "assets/equipment/EQP_001004.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_001004.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 1010,
+      "path": "assets/equipment/EQP_001010.png",
+      "sha256": "9122fbc6afb52956aae46fc8970e89f2aeaa9ddd29e27ff961611cc591f29b41",
+      "sourcePath": "assets/equipment/EQP_001010.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_001010.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 686,
+      "path": "assets/equipment/EQP_000686.png",
+      "sha256": "ff6ab438f89f8025ba845ef4ae76c22cce5f22af8ac1d780f8291fbb910cdad3",
+      "sourcePath": "assets/equipment/EQP_000686.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000686.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 1028,
+      "path": "assets/equipment/EQP_001028.png",
+      "sha256": "c5f5d78181beee9c30ddade0f71513bdbaa1cefe9a65f07efcbfd9e22cec20e0",
+      "sourcePath": "assets/equipment/EQP_001028.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_001028.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 184,
+      "path": "assets/equipment/EQP_000184.png",
+      "sha256": "8dc64184e5d41f4265adffb0d7255bf175bb3fb5cf88255aedb6536866fbc4e6",
+      "sourcePath": "assets/equipment/EQP_000184.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000184.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 182,
+      "path": "assets/equipment/EQP_000182.png",
+      "sha256": "d2c67b35b45d12044e16b09e294e2d66d71cba784da3b769ace6ad1ca75fe608",
+      "sourcePath": "assets/equipment/EQP_000182.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000182.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 180,
+      "path": "assets/equipment/EQP_000180.png",
+      "sha256": "67fc6b580d8ea868e0fbb74a81ac36a563b961eb0cf41713f1cb33aa12f72fc0",
+      "sourcePath": "assets/equipment/EQP_000180.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000180.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 181,
+      "path": "assets/equipment/EQP_000181.png",
+      "sha256": "59bfe230268fe80ab410d33f1f811fb1e3e101b2742c8982fa650fe61936d0b2",
+      "sourcePath": "assets/equipment/EQP_000181.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000181.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 183,
+      "path": "assets/equipment/EQP_000183.png",
+      "sha256": "f90b4611c5753b9ccab2523648d7e79fa0ebbd65a8cfe4d18a58aa2c93185325",
+      "sourcePath": "assets/equipment/EQP_000183.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000183.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 192,
+      "path": "assets/equipment/EQP_000192.png",
+      "sha256": "d367647848d1412b2587877b3972f4f0826003b1c413fbe7a5f597cf4d0b7edd",
+      "sourcePath": "assets/equipment/EQP_000192.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000192.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 190,
+      "path": "assets/equipment/EQP_000190.png",
+      "sha256": "24782d1bddacb8cd637af5265ac4fd39ef4301224f0b21ed7ce389a8f03263c4",
+      "sourcePath": "assets/equipment/EQP_000190.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000190.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 188,
+      "path": "assets/equipment/EQP_000188.png",
+      "sha256": "d2a107049039f6a0d5fbc72bc8b06d80186e870b87bf1e5a869a51d52de858d9",
+      "sourcePath": "assets/equipment/EQP_000188.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000188.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 189,
+      "path": "assets/equipment/EQP_000189.png",
+      "sha256": "dbc553bf4ad621cad50b59ef8229be05a321fe22157c7bed260768c257366721",
+      "sourcePath": "assets/equipment/EQP_000189.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000189.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 191,
+      "path": "assets/equipment/EQP_000191.png",
+      "sha256": "a4d1fae5e29212c199151faf69d98c6240627f2c09182335229ea8132047b34f",
+      "sourcePath": "assets/equipment/EQP_000191.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000191.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 200,
+      "path": "assets/equipment/EQP_000200.png",
+      "sha256": "43b083353604e1b03b71689dccde2b795f3bcf8fe095656c154081e8790e831c",
+      "sourcePath": "assets/equipment/EQP_000200.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000200.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 198,
+      "path": "assets/equipment/EQP_000198.png",
+      "sha256": "6cb8bc8498ebe0a56beff66bf5247a211787a521eae7e2ad0ccd8d16f1abbc1f",
+      "sourcePath": "assets/equipment/EQP_000198.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000198.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 196,
+      "path": "assets/equipment/EQP_000196.png",
+      "sha256": "8d3487a712bc48f77be4ffcef9618b9e940447ab4aca066a7a8eea61780c4057",
+      "sourcePath": "assets/equipment/EQP_000196.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000196.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 197,
+      "path": "assets/equipment/EQP_000197.png",
+      "sha256": "6185840e4923f5d7eb6a42efa6d419019cd33cbef6049bf38fe823cab489b033",
+      "sourcePath": "assets/equipment/EQP_000197.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000197.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "iconId": 199,
+      "path": "assets/equipment/EQP_000199.png",
+      "sha256": "42ec186d3e88d923b7f2ccfffb7453d130b867be7039199a56fb194c403ec592",
+      "sourcePath": "assets/equipment/EQP_000199.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/Icon/Equipment/EQP_000199.png",
+      "width": 128,
+      "height": 128
     }
   ]
 }

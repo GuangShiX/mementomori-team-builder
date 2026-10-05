@@ -16,6 +16,8 @@ test('production UI renders the shipped empty and restored five-member draft wit
     const {default:App}=await server.ssrLoadModule('/src/App.jsx');
     const empty=renderToStaticMarkup(React.createElement(App,{catalog,policy}));
     assert.match(empty,/我的配队/);
+    assert.ok(empty.indexOf('aria-label="当前角色装备配置"')<empty.indexOf('aria-label="当前五人配队"'),'the empty lineup stays in the central equipment header');
+    assert.equal((empty.match(/class="team-slot empty"/g)??[]).length,5);
     assert.match(empty,/搜索角色/);
     assert.match(empty,/导出/);
     assert.match(empty,/诅咒·时之枷锁/);

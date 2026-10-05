@@ -1,4 +1,4 @@
-import { createMember, getBorrowableWeapons, isWeaponOwnerClaimed } from './domain.mjs';
+import { createMember, getBorrowableWeapons, isWeaponOwnerClaimed, selectEquipmentRarity } from './domain.mjs';
 
 const validPosition = (team, index) => Number.isInteger(index) && index >= 0 && index < team.members.length;
 
@@ -39,7 +39,7 @@ export function placeRosterCharacter(team, character, targetIndex, { catalog, fr
       const rarity = gift?.rarity ?? 'SSR';
       if (rarity === 'LR') members[targetIndex].rarity = 'LR5';
       members[targetIndex].equipment[0] = {
-        ...members[targetIndex].equipment[0], rarity, seriesId: { SSR: 12, UR: 13, LR: 14 }[rarity],
+        ...selectEquipmentRarity(members[targetIndex].equipment[0], rarity),
         weaponKind: 'exclusive', weaponOwnerCharacterId: gift?.characterId ?? character.id, level: gift?.level ?? 180,
       };
     }
