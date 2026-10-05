@@ -9,7 +9,7 @@ const catalog=JSON.parse(await readFile(new URL('../public/data/catalog.json',im
 const policy=JSON.parse(await readFile(new URL('../public/data/pricing-policy.json',import.meta.url)));
 
 test('production UI renders the shipped empty and restored five-member draft without a browser',async()=>{
-  const server=await createServer({server:{middlewareMode:true},appType:'custom'});
+  const server=await createServer({server:{middlewareMode:true,hmr:false,ws:false},appType:'custom'});
   const original=globalThis.localStorage;
   try{
     const {default:App}=await server.ssrLoadModule('/src/App.jsx');

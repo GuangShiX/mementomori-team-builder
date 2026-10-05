@@ -1,0 +1,173 @@
+{
+  "format": "mementomori-name-aliases",
+  "schemaVersion": 1,
+  "id": "mementomori-name-aliases",
+  "version": 2,
+  "characters": [
+    {
+      "characterId": 7,
+      "name": "芬里尔",
+      "aliases": [
+        "水狼"
+      ]
+    },
+    {
+      "characterId": 8,
+      "name": "佛罗伦斯",
+      "aliases": [
+        "佛",
+        "普通佛罗伦斯"
+      ]
+    },
+    {
+      "characterId": 26,
+      "name": "梅琳",
+      "aliases": [
+        "梅林"
+      ]
+    },
+    {
+      "characterId": 27,
+      "name": "科迪",
+      "aliases": [
+        "普通科迪"
+      ]
+    },
+    {
+      "characterId": 44,
+      "name": "露莎卡·天泣魔女",
+      "aliases": [
+        "天泣"
+      ]
+    },
+    {
+      "characterId": 46,
+      "name": "露娜琳德·雪幻魔女",
+      "aliases": [
+        "露娜",
+        "普通露娜"
+      ]
+    },
+    {
+      "characterId": 85,
+      "name": "玛提尔德",
+      "aliases": [
+        "香蕉"
+      ]
+    },
+    {
+      "characterId": 86,
+      "name": "玫莉亚·灾芽魔女",
+      "aliases": [
+        "灾芽",
+        "梅莉亚"
+      ]
+    },
+    {
+      "characterId": 96,
+      "name": "阿姆蕾特·仲夏日之梦",
+      "aliases": [
+        "夏姆",
+        "阿姆雷特仲夏夜之梦",
+        "阿姆雷特·仲夏夜之梦",
+        "阿姆蕾特仲夏日之梦"
+      ]
+    },
+    {
+      "characterId": 100,
+      "name": "穆瓦诺",
+      "aliases": [
+        "管家",
+        "穆诺瓦",
+        "穆諾瓦"
+      ]
+    },
+    {
+      "characterId": 107,
+      "name": "索尔缇娜·温暖的回忆",
+      "aliases": [
+        "圣妹",
+        "圣诞索尔缇娜",
+        "聖妹",
+        "聖誕索爾緹娜"
+      ]
+    },
+    {
+      "characterId": 109,
+      "name": "厄瑞涅",
+      "aliases": [
+        "教官"
+      ]
+    },
+    {
+      "characterId": 124,
+      "name": "耶尔德兹",
+      "aliases": [
+        "绿狼",
+        "綠狼"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "dew",
+      "name": "生命树之露",
+      "aliases": [
+        "叶子",
+        "葉子"
+      ],
+      "itemType": 24,
+      "itemId": 1
+    },
+    {
+      "id": "medicine",
+      "name": "强化秘药",
+      "aliases": [
+        "红水",
+        "紅水"
+      ],
+      "itemType": 12,
+      "itemId": 2
+    },
+    {
+      "id": "reinforcementWater",
+      "name": "强化水",
+      "aliases": [
+        "绿水",
+        "綠水"
+      ],
+      "itemType": 12,
+      "itemId": 1
+    },
+    {
+      "id": "runeTickets",
+      "name": "符石兑换券",
+      "aliases": [
+        "饼干",
+        "餅乾"
+      ],
+      "itemType": 13,
+      "itemId": 4
+    },
+    {
+      "id": "experienceOrbs",
+      "name": "经验珠",
+      "aliases": [
+        "绿球",
+        "綠球"
+      ],
+      "itemType": 11,
+      "itemId": 1
+    },
+    {
+      "id": "potentialOrbs",
+      "name": "潜能宝珠",
+      "aliases": [
+        "红球",
+        "紅球"
+      ],
+      "itemType": 11,
+      "itemId": 2
+    }
+  ]
+}

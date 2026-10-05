@@ -1,0 +1,230 @@
+{
+  "format": "mementomori-free-library",
+  "schemaVersion": 1,
+  "id": "mementomori-common-free-library",
+  "version": 2,
+  "characters": [
+    {
+      "characterId": 5,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 6,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 7,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 8,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 10,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 15,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 16,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 17,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 18,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 20,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 25,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 26,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 27,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 28,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 29,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 35,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 36,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 37,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 38,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 39,
+      "rarity": "LR5",
+      "reason": "常驻四色角色"
+    },
+    {
+      "characterId": 41,
+      "rarity": "LR",
+      "reason": "常驻光暗角色"
+    },
+    {
+      "characterId": 44,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    },
+    {
+      "characterId": 46,
+      "rarity": "LR",
+      "reason": "常驻光暗角色"
+    },
+    {
+      "characterId": 52,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    },
+    {
+      "characterId": 85,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    },
+    {
+      "characterId": 86,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    },
+    {
+      "characterId": 96,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    },
+    {
+      "characterId": 100,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    },
+    {
+      "characterId": 107,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    },
+    {
+      "characterId": 109,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    },
+    {
+      "characterId": 124,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    },
+    {
+      "characterId": 153,
+      "rarity": "SR",
+      "reason": "约定的免费限定角色本体"
+    }
+  ],
+  "exclusiveWeapons": [
+    {
+      "characterId": 7,
+      "rarity": "SSR",
+      "level": 180
+    },
+    {
+      "characterId": 8,
+      "rarity": "UR",
+      "level": 300
+    },
+    {
+      "characterId": 26,
+      "rarity": "SSR",
+      "level": 180
+    },
+    {
+      "characterId": 27,
+      "rarity": "UR",
+      "level": 300
+    },
+    {
+      "characterId": 46,
+      "rarity": "UR",
+      "level": 240
+    },
+    {
+      "characterId": 85,
+      "rarity": "SSR",
+      "level": 180
+    },
+    {
+      "characterId": 86,
+      "rarity": "UR",
+      "level": 240
+    },
+    {
+      "characterId": 96,
+      "rarity": "UR",
+      "level": 240
+    },
+    {
+      "characterId": 100,
+      "rarity": "SSR",
+      "level": 180
+    },
+    {
+      "characterId": 107,
+      "rarity": "SSR",
+      "level": 180
+    },
+    {
+      "characterId": 109,
+      "rarity": "UR",
+      "level": 240
+    },
+    {
+      "characterId": 124,
+      "rarity": "UR",
+      "level": 240
+    }
+  ]
+}

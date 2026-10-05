@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {createTeam,createMember,calculateTeam,createExport,parseImport,validateTeam} from '../src/domain.mjs';
+import {createTeam,createMember,calculateTeam,createExport,parseImport,validateTeam,deriveWeaponSync} from '../src/domain.mjs';
 const catalog = JSON.parse(await readFile(new URL('../public/data/catalog.json',import.meta.url)));
 const policy = JSON.parse(await readFile(new URL('../public/data/pricing-policy.json',import.meta.url)));
 const lock = JSON.parse(await readFile(new URL('../public/data/asset-lock.json',import.meta.url)));
+const freeLibrary = JSON.parse(await readFile(new URL('../public/data/free-library.json',import.meta.url)));
 const five = () => {const team=createTeam();team.members=catalog.characters.slice(0,5).map(createMember);return team;};
 
 test('all shipped portraits match the canonical public asset manifest',async()=>{
@@ -51,7 +52,7 @@ test('published LR normal and exclusive costs include the distinct leaf evolutio
 });
 test('sacred experience is cumulative and overage charges rather than blocking export',()=>{
   const team=five();
-  for(const member of team.members){const gear=member.equipment[0];Object.assign(gear,{rarity:'UR',seriesId:13,level:450,legendSacredTreasureLevel:40});}
+  for(const member of team.members){const gear=member.equipment[0];Object.assign(gear,{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:450,legendSacredTreasureLevel:40});}
   const result=calculateTeam(team,catalog,policy);
   assert.equal(result.resources.holySteel.consumed,3905);
   assert.equal(result.resources.holySteel.charged,405);
@@ -70,5 +71,112 @@ test('ordinary rune stock permits three level11 runes per category across the wh
   team.members[3].equipment[0].runes[0]={categoryId:6,level:11};
   assert.equal(validateTeam(team,catalog,policy).valid,true);
   team.members[3].equipment[0].runes[0].level=10;
+  assert.equal(validateTeam(team,catalog,policy).valid,true);
+  team.members[3].equipment[0].runes[0].level=9;
   assert.equal(validateTeam(team,catalog,policy).valid,false);
+});
+test('published free library applies permanent LR5 and LR caps with named limited characters free at SR only',()=>{
+  const team=createTeam();
+  team.members=[5,41,100,124,86].map(createMember);
+  ['LR5','LR5','LR','LR5','SR'].forEach((rarity,index)=>{team.members[index].rarity=rarity;});
+  const result=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.deepEqual(result.characterCosts.map(item=>item.chargedCopies),[0,12,7,19,0]);
+  assert.equal(result.characterDiamonds,38*17000);
+  assert.equal(result.freeLibraryVersion,2);
+  const exported=createExport(team,catalog,policy,freeLibrary);
+  exported.freeLibrarySnapshot.characters=catalog.characters.map(character=>({characterId:character.id,rarity:'LR5'}));
+  assert.equal(parseImport(exported,catalog,policy,freeLibrary).costBreakdown.characterDiamonds,38*17000);
+});
+test('published free weapons cover SSR240 and SSR180 crafting and retain exact crystal equivalents above the entitlement',()=>{
+  const team=createTeam();
+  team.members=[124,96,86,85,100].map(createMember);
+  for(const member of team.members){
+    const entitlement=freeLibrary.exclusiveWeapons.find(item=>item.characterId===member.characterId);
+    Object.assign(member.equipment[0],{rarity:'SSR',seriesId:12,weaponKind:'exclusive',level:entitlement.level});
+  }
+  const result=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(result.totalDiamonds,0);
+  assert.deepEqual(result.exclusiveWeaponCosts.map(item=>item.freeMagicCrystals),[82.5,82.5,82.5,24,24]);
+  assert.ok(result.exclusiveWeaponCosts.every(item=>item.diamonds===0));
+  team.members[3].equipment[0].level=240;
+  const upgraded=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(upgraded.resources.exclusiveFragments.charged,195);
+  assert.equal(upgraded.exclusiveWeaponCosts[3].chargedMagicCrystals,58.5);
+  assert.equal(upgraded.totalDiamonds,8983.2);
+  assert.equal(upgraded.exclusiveWeaponCosts[3].diamonds,8983.2);
+  assert.ok(Math.abs(policy.unitPrices.exclusiveFragments-policy.conversions.magicCrystalPrice*3/10)<1e-10);
+});
+test('published level10 and level11 ordinary rune allowances cannot borrow each other stock',()=>{
+  const team=five();
+  for(const member of team.members.slice(0,3)){
+    Object.assign(member.equipment[0],{rarity:'SSR',seriesId:12,level:450});
+    Object.assign(member.equipment[1],{rarity:'SSR',seriesId:12,level:450});
+    member.equipment[0].runes[0]={categoryId:4,level:11};
+    member.equipment[1].runes[0]={categoryId:4,level:10};
+  }
+  const result=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.deepEqual(result.fixedRuneInventory.filter(item=>item.categoryId===4).map(item=>[item.level,item.used,item.remaining]),[[11,3,0],[10,3,0]]);
+  Object.assign(team.members[3].equipment[0],{rarity:'SSR',seriesId:12,level:450});
+  team.members[3].equipment[0].runes[0]={categoryId:4,level:10};
+  assert.equal(validateTeam(team,catalog,policy,{freeLibrary}).errors.some(item=>item.code==='FIXED_RUNE_STOCK_EXCEEDED'&&item.path.endsWith('.10')),true);
+});
+test('free UR weapon baselines include their fifteen leaves and LR upgrades charge the additional fifty',()=>{
+  const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
+  for(const member of team.members){const free=freeLibrary.exclusiveWeapons.find(item=>item.characterId===member.characterId);Object.assign(member.equipment[0],{rarity:free.rarity,seriesId:free.rarity==='UR'?13:12,weaponKind:'exclusive',level:free.level});}
+  const free=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(free.totalDiamonds,0);
+  assert.equal(free.resources.lifeTreeDew.consumed,45);
+  assert.equal(free.resources.lifeTreeDew.freeLibraryCredit,45);
+  team.members[0].rarity='LR5';Object.assign(team.members[0].equipment[0],{rarity:'LR',seriesId:14,level:300});
+  const evolved=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(evolved.resources.lifeTreeDew.charged,50);
+  assert.equal(evolved.exclusiveWeaponCosts[0].chargedLifeTreeDew,50);
+});
+test('real free UR300 anchors can be upgraded outside the team while sync keeps target crafting at paid300',()=>{
+  const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
+  Object.assign(team.members[0].equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:300,syncSlot:1});
+  const base=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(base.weaponSync.effectiveLevels[0],300);
+  assert.deepEqual(base.weaponSync.slots[0].anchors.map(item=>item.characterId),[8,27]);
+  assert.equal(base.totalDiamonds,4837.11);
+  team.weaponSources=[8,27].map(characterId=>({characterId,characterRarity:'SR',rarity:'UR',level:450}));
+  const elevated=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(elevated.weaponSync.effectiveLevels[0],450);
+  assert.equal(elevated.exclusiveWeaponCosts[0].level,300);
+  assert.equal(elevated.exclusiveWeaponCosts[0].chargedFragments,105);
+  assert.equal(elevated.exclusiveWeaponCosts[0].syncSavedFragments,570);
+  assert.equal(elevated.weaponSourceCosts[0].diamonds,26258.58);
+  assert.equal(elevated.weaponSourceCosts[1].diamonds,26258.58);
+  assert.equal(elevated.resources.lifeTreeDew.charged,0);
+  assert.equal(elevated.totalDiamonds,57354.27);
+  Object.assign(team.members[1].equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:300,syncSlot:2});
+  assert.equal(deriveWeaponSync(team,catalog,policy,freeLibrary).slots[1].available,false);
+  team.weaponSources.push({characterId:26,characterRarity:'SR',rarity:'UR',level:400});
+  assert.equal(deriveWeaponSync(team,catalog,policy,freeLibrary).slots[1].effectiveLevel,400);
+  assert.equal(validateTeam(team,catalog,policy,{freeLibrary}).valid,true);
+  const exported=createExport(team,catalog,policy,freeLibrary);
+  exported.costBreakdown.weaponSync.effectiveLevels[1]=450;
+  assert.equal(parseImport(exported,catalog,policy,freeLibrary).costBreakdown.weaponSync.effectiveLevels[1],400);
+});
+test('real borrowed UR gift uses its physical owner for pricing and can serve as an equipped sync anchor',()=>{
+  const team=createTeam();team.members=[153,96,86,85,100].map(createMember);
+  Object.assign(team.members[0].equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',weaponOwnerCharacterId:27,level:300});
+  const borrowed=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(borrowed.totalDiamonds,0);
+  assert.equal(borrowed.exclusiveWeaponCosts[0].weaponOwnerCharacterId,27);
+  assert.equal(borrowed.exclusiveWeaponCosts[0].ownExclusiveSkillActive,false);
+  assert.equal(borrowed.weaponSync.anchors.find(item=>item.characterId===27).source,'team');
+  team.members[0].equipment[0].level=450;
+  Object.assign(team.members[1].equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:300,syncSlot:1});
+  assert.equal(calculateTeam(team,catalog,policy,freeLibrary).weaponSync.effectiveLevels[1],300);
+  team.weaponSources=[{characterId:8,characterRarity:'SR',rarity:'UR',level:450}];
+  const elevated=calculateTeam(team,catalog,policy,freeLibrary);
+  assert.equal(elevated.weaponSync.effectiveLevels[1],450);
+  assert.deepEqual(elevated.weaponSync.slots[0].anchors.map(item=>item.characterId),[8,27]);
+  assert.equal(elevated.totalDiamonds,57354.27);
+  const exported=createExport(team,catalog,policy,freeLibrary);
+  assert.equal(exported.team.members[0].equipment[0].weaponOwnerCharacterId,27);
+  assert.equal(parseImport(exported,catalog,policy,freeLibrary).costBreakdown.exclusiveWeaponCosts[0].ownExclusiveSkillActive,false);
+  team.weaponSources.push({characterId:27,characterRarity:'SR',rarity:'UR',level:450});
+  assert.equal(validateTeam(team,catalog,policy,{freeLibrary}).errors.some(item=>item.code==='DUPLICATE_WEAPON_SOURCE'),true);
 });

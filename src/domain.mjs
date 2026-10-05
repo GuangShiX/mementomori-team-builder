@@ -19,6 +19,103 @@ const round = (value, precision = 2) => {
 const error = (errors, path, code, message) => errors.push({ path, code, message });
 const defaultSeries = rarity => ({ SSR: 12, UR: 13, LR: 14 }[rarity] ?? null);
 const getSeries = catalog => catalog.equipmentSeries ?? catalog.series;
+const getFixedRuneTiers = stock => stock?.tiers ?? (stock ? [{ level: stock.level, perCategory: stock.perCategory }] : []);
+const syncSettings = policy => policy.weaponSync ?? { minimumLevel: 300, maximumSourceCount: 3, slots: [{ slot: 1, requiredAnchors: 2 }, { slot: 2, requiredAnchors: 3 }] };
+const weaponOwnerId = (member, gear = member?.equipment?.[0]) => gear?.weaponOwnerCharacterId ?? member?.characterId;
+
+export function isWeaponOwnerClaimed(team, memberIndex, ownerId) {
+  return (team?.members ?? []).some((member, index) => index !== memberIndex && member?.equipment?.[0]?.weaponKind === 'exclusive' && member.equipment[0].rarity !== 'NONE' && weaponOwnerId(member) === ownerId)
+    || (Array.isArray(team?.weaponSources) ? team.weaponSources : []).some(source => source?.characterId === ownerId);
+}
+
+export function getBorrowableWeapons(team, memberIndex, catalog, freeLibrary) {
+  const member = team?.members?.[memberIndex];
+  const actor = catalog.characters.find(item => item.id === member?.characterId);
+  if (!actor || ![1, 2, 4].includes(actor.job)) return [];
+  return (Array.isArray(freeLibrary?.exclusiveWeapons) ? freeLibrary.exclusiveWeapons : []).flatMap(weapon => {
+    const owner = catalog.characters.find(item => item.id === weapon.characterId);
+    return weapon.rarity === 'UR' && owner?.job === actor.job && !isWeaponOwnerClaimed(team, memberIndex, owner.id)
+      ? [{ ...weapon, characterName: owner.name, job: owner.job }] : [];
+  }).sort((a, b) => b.level - a.level || a.characterId - b.characterId);
+}
+
+export function deriveWeaponSync(team, catalog, policy, freeLibrary) {
+  const settings = syncSettings(policy);
+  const errors = [];
+  const members = Array.isArray(team?.members) ? team.members : [];
+  const targets = new Set(members.filter(member => member?.equipment?.[0]?.syncSlot > 0).map(member => weaponOwnerId(member)));
+  const candidates = new Map();
+  const add = (weapon, source) => {
+    if (!weapon || targets.has(weapon.characterId) || !['UR', 'LR'].includes(weapon.rarity)
+      || !integerIn(weapon.level, settings.minimumLevel, policy.characterLevel)) return;
+    const character = catalog.characters.find(item => item.id === weapon.characterId);
+    if (!character) return;
+    const previous = candidates.get(weapon.characterId);
+    if (!previous || weapon.level > previous.level || (weapon.level === previous.level && source !== 'freeLibrary')) {
+      candidates.set(weapon.characterId, { characterId: weapon.characterId, characterName: character.name, rarity: weapon.rarity, level: weapon.level, source });
+    }
+  };
+  for (const weapon of Array.isArray(freeLibrary?.exclusiveWeapons) ? freeLibrary.exclusiveWeapons : []) add(weapon, 'freeLibrary');
+  for (const member of members) {
+    const gear = member?.equipment?.[0];
+    if (gear?.weaponKind === 'exclusive' && !(gear.syncSlot > 0)) {
+      const ownerId = weaponOwnerId(member, gear);
+      candidates.delete(ownerId);
+      add({ characterId: ownerId, rarity: gear.rarity, level: gear.level }, 'team');
+    }
+  }
+  for (const weapon of Array.isArray(team?.weaponSources) ? team.weaponSources : []) {
+    candidates.delete(weapon?.characterId);
+    add(weapon, 'reserve');
+  }
+  const anchors = [...candidates.values()].sort((a, b) => b.level - a.level || a.characterId - b.characterId);
+  const slots = settings.slots.map(config => {
+    const usedBy = members.flatMap((member, index) => member?.equipment?.[0]?.syncSlot === config.slot ? [index + 1] : []);
+    const chosen = anchors.slice(0, config.requiredAnchors);
+    const available = chosen.length === config.requiredAnchors;
+    return { slot: config.slot, requiredAnchors: config.requiredAnchors, available, effectiveLevel: available ? Math.min(...chosen.map(item => item.level)) : null, usedBy, anchors: chosen };
+  });
+  const effectiveLevels = members.map((member, index) => {
+    const gear = member?.equipment?.[0];
+    if (!gear) return null;
+    const syncSlot = gear.syncSlot ?? 0;
+    if (syncSlot === 0) return gear.level;
+    const path = `members[${index}].equipment[0].syncSlot`;
+    const slot = slots.find(item => item.slot === syncSlot);
+    if (!slot) { error(errors, path, 'INVALID_WEAPON_SYNC_SLOT', '武器同步仅支持关闭、第 1 槽或第 2 槽。'); return null; }
+    if (!slot.available) error(errors, path, 'INSUFFICIENT_SYNC_ANCHORS', `第 ${syncSlot} 同步槽需要 ${slot.requiredAnchors} 种真实制作的 300 级以上专武作为基石。`);
+    if (slot.usedBy.length > 1) error(errors, path, 'DUPLICATE_WEAPON_SYNC_SLOT', `第 ${syncSlot} 同步槽只能放入一件专武。`);
+    if (slot.available && gear.level > slot.effectiveLevel) error(errors, path, 'SYNC_LEVEL_BELOW_BASE', '同步等级不能低于该武器已制作的等级，请提高基石或解除同步。');
+    return slot.effectiveLevel;
+  });
+  return { anchors, slots, effectiveLevels, errors };
+}
+
+function validateFreeLibrary(library, catalog, errors) {
+  if (library == null) return;
+  if (!isObject(library) || library.format !== 'mementomori-free-library' || library.schemaVersion !== 1 || !Number.isSafeInteger(library.version)
+    || library.version < 1 || !Array.isArray(library.characters) || !Array.isArray(library.exclusiveWeapons)) {
+    error(errors, 'freeLibrary', 'INVALID_FREE_LIBRARY', '免费库格式或版本无效。');
+    return;
+  }
+  for (const [group, entries] of [['characters', library.characters], ['exclusiveWeapons', library.exclusiveWeapons]]) {
+    const seen = new Set();
+    for (const [index, entry] of entries.entries()) {
+      const path = `freeLibrary.${group}[${index}]`;
+      if (!isObject(entry) || !catalog.characters.some(character => character.id === entry.characterId) || seen.has(entry.characterId)) {
+        error(errors, path, 'INVALID_FREE_LIBRARY_CHARACTER', '免费库角色必须来自当前目录且不能重复。');
+        continue;
+      }
+      seen.add(entry.characterId);
+      if (group === 'characters' && !RARITIES.includes(entry.rarity)) error(errors, `${path}.rarity`, 'INVALID_FREE_CHARACTER_RARITY', '免费角色稀有度仅支持 SR、LR 和 LR5。');
+      if (group === 'exclusiveWeapons' && (!['SSR', 'UR', 'LR'].includes(entry.rarity)
+        || !integerIn(entry.level, 1, 450)
+        || !finiteNonnegative(catalog.equipmentCosts?.fragments?.[`exclusive${entry.rarity}`]?.[entry.level]))) {
+        error(errors, path, 'INVALID_FREE_WEAPON', '免费专武的系列、等级或累计材料配置无效。');
+      }
+    }
+  }
+}
 
 export class DomainValidationError extends Error {
   constructor(errors) {
@@ -31,7 +128,7 @@ export class DomainValidationError extends Error {
 export function createEquipment(slot) {
   if (!EQUIPMENT_SLOTS.includes(slot)) throw new RangeError('装备槽必须为 1 至 6。');
   return {
-    slot, rarity: 'NONE', seriesId: null, weaponKind: 'normal', level: 450,
+    slot, rarity: 'NONE', seriesId: null, weaponKind: 'normal', level: 450, syncSlot: 0,
     reinforcementLevel: 0, legendSacredTreasureLevel: 0, matchlessSacredTreasureLevel: 0,
     runes: Array.from({ length: 4 }, () => ({ categoryId: 5, level: 0 })),
   };
@@ -44,18 +141,20 @@ export function createMember(character) {
 }
 
 export function createTeam() {
-  return { name: '我的配队', author: '', notes: '', level: 450, members: Array(5).fill(null) };
+  return { name: '我的配队', author: '', notes: '', level: 450, members: Array(5).fill(null), weaponSources: [] };
 }
 
 export function cloneTeam(team) {
   return {
     name: team.name, author: team.author ?? '', notes: team.notes ?? '', level: team.level,
+    weaponSources: (team.weaponSources ?? []).map(weapon => ({ characterId: weapon.characterId, characterRarity: weapon.characterRarity, rarity: weapon.rarity, level: weapon.level })),
     members: team.members.map(member => member === null ? null : {
       characterId: member.characterId, rarity: member.rarity,
       equipment: member.equipment.map(gear => ({
         slot: gear.slot, rarity: gear.rarity,
         seriesId: gear.seriesId ?? defaultSeries(gear.rarity),
-        weaponKind: gear.weaponKind ?? 'normal', level: gear.level,
+        weaponKind: gear.weaponKind ?? 'normal', level: gear.level, syncSlot: gear.syncSlot ?? 0,
+        weaponOwnerCharacterId: gear.slot === 1 ? weaponOwnerId(member, gear) : null,
         reinforcementLevel: gear.reinforcementLevel,
         legendSacredTreasureLevel: gear.legendSacredTreasureLevel,
         matchlessSacredTreasureLevel: gear.matchlessSacredTreasureLevel,
@@ -65,7 +164,7 @@ export function cloneTeam(team) {
   };
 }
 
-function validateStructure(team, catalog, policy, { requireFullTeam = false } = {}) {
+function validateStructure(team, catalog, policy, { requireFullTeam = false, freeLibrary } = {}) {
   const errors = [];
   if (!isObject(catalog) || !Array.isArray(catalog.characters) || !Array.isArray(catalog.runeCategories)) {
     error(errors, 'catalog', 'INVALID_CATALOG', '角色或符石目录无效。');
@@ -78,11 +177,31 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false } = 
   if (policy.allowanceScope != null && policy.allowanceScope !== 'wholeTeam') error(errors, 'policy.allowanceScope', 'UNSUPPORTED_ALLOWANCE_SCOPE', '当前规则仅支持整支配队共享免费材料额度。');
   if (policy.rounding?.mode != null && policy.rounding.mode !== 'roundFinalTotal') error(errors, 'policy.rounding.mode', 'UNSUPPORTED_ROUNDING_MODE', '当前规则按原始费用求和后舍入总价。');
   if (!integerIn(policy.rounding?.precision ?? 2, 0, 6)) error(errors, 'policy.rounding.precision', 'INVALID_ROUNDING_PRECISION', '报价小数位数必须为 0 至 6 的整数。');
+  const syncPolicy = syncSettings(policy);
+  if (!isObject(syncPolicy) || syncPolicy.minimumLevel !== 300 || !integerIn(syncPolicy.maximumSourceCount, 0, 20)
+    || !Array.isArray(syncPolicy.slots) || syncPolicy.slots.length !== 2
+    || ![1, 2].every(slot => syncPolicy.slots.some(item => item?.slot === slot && item.requiredAnchors === slot + 1))) {
+    error(errors, 'policy.weaponSync', 'INVALID_WEAPON_SYNC_POLICY', '武器同步规则必须保留 300 级门槛、第 1 槽两种基石和第 2 槽三种基石。');
+  }
+  if (policy.conversions?.magicCrystalPrice !== undefined) {
+    const crystalPrice = policy.conversions.magicCrystalPrice;
+    const crystals = policy.conversions.magicCrystalsPerExclusiveExchange ?? 3;
+    const fragments = policy.conversions.exclusiveFragmentsPerExchange ?? 10;
+    const fragmentPrice = policy.unitPrices?.exclusiveFragments;
+    if (!finiteNonnegative(crystalPrice) || !finiteNonnegative(crystals) || crystals === 0
+      || !finiteNonnegative(fragments) || fragments === 0 || !finiteNonnegative(fragmentPrice)
+      || Math.abs(crystalPrice * crystals / fragments - fragmentPrice) > 1e-8) {
+      error(errors, 'policy.conversions.magicCrystalPrice', 'INCONSISTENT_EXCLUSIVE_PRICE', '专武碎片单价必须与紫水晶单价及兑换比例一致。');
+    }
+  }
   const ticketCategoryIds = policy.runes?.ticketCategoryIds ?? [5, 9];
   if (!Array.isArray(ticketCategoryIds) || new Set(ticketCategoryIds).size !== ticketCategoryIds.length || ticketCategoryIds.some(id => !catalog.runeCategories.some(category => category.id === id))) error(errors, 'policy.runes.ticketCategoryIds', 'INVALID_RUNE_CONVERSION', '兑换券符石类型配置必须为目录中不重复的类型编号。');
   const fixedStock = policy.runes?.fixedStock;
+  const fixedTiers = getFixedRuneTiers(fixedStock);
   if (fixedStock !== undefined) {
-    if (!isObject(fixedStock) || !integerIn(fixedStock.level, 1, policy.limits?.runeLevel ?? 15) || !integerIn(fixedStock.perCategory, 0, 120)
+    if (!isObject(fixedStock) || !Array.isArray(fixedTiers) || fixedTiers.length === 0
+      || fixedTiers.some(tier => !isObject(tier) || !integerIn(tier.level, 1, policy.limits?.runeLevel ?? 15) || !integerIn(tier.perCategory, 0, 120))
+      || new Set(fixedTiers.map(tier => tier?.level)).size !== fixedTiers.length
       || !Array.isArray(fixedStock.excludedCategoryIds) || !Array.isArray(ticketCategoryIds)
       || fixedStock.excludedCategoryIds.length !== new Set(fixedStock.excludedCategoryIds).size
       || fixedStock.excludedCategoryIds.length !== ticketCategoryIds.length
@@ -90,6 +209,7 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false } = 
       error(errors, 'policy.runes.fixedStock', 'INVALID_FIXED_RUNE_STOCK', '普通符石固定库存配置无效；排除类型必须与兑换券符石类型一致。');
     }
   }
+  validateFreeLibrary(freeLibrary, catalog, errors);
   if (errors.length > 0) return errors;
   if (!isObject(team)) {
     error(errors, 'team', 'INVALID_TEAM', '配队必须为一个对象。');
@@ -106,6 +226,7 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false } = 
     return errors;
   }
   const seenCharacters = new Set();
+  const seenWeaponOwners = new Set();
   const fixedRuneCounts = new Map();
   const maxRuneLevel = catalog.limits?.runeLevel ?? policy.limits?.runeLevel ?? 15;
   const maxSacredLevel = catalog.limits?.sacredTreasureLevel ?? policy.limits?.sacredTreasureLevel ?? 40;
@@ -151,9 +272,25 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false } = 
       for (const [field, maximum] of [['reinforcementLevel', maxReinforcement], ['legendSacredTreasureLevel', maxSacredLevel], ['matchlessSacredTreasureLevel', maxSacredLevel]]) {
         if (!integerIn(gear[field], 0, maximum)) error(errors, `${path}.${field}`, 'INVALID_UPGRADE_LEVEL', `强化或圣装等级必须为 0 至 ${maximum} 的整数。`);
       }
-      if (Number.isSafeInteger(gear.reinforcementLevel) && gear.reinforcementLevel > gear.level) error(errors, `${path}.reinforcementLevel`, 'REINFORCEMENT_EXCEEDS_LEVEL', '强化等级不能超过装备等级。');
+      const syncSlot = gear.syncSlot ?? 0;
+      if (!integerIn(syncSlot, 0, 2)) error(errors, `${path}.syncSlot`, 'INVALID_WEAPON_SYNC_SLOT', '武器同步仅支持关闭、第 1 槽或第 2 槽。');
+      if (syncSlot === 0 && Number.isSafeInteger(gear.reinforcementLevel) && gear.reinforcementLevel > gear.level) error(errors, `${path}.reinforcementLevel`, 'REINFORCEMENT_EXCEEDS_LEVEL', '强化等级不能超过装备等级。');
       if (!['normal', 'exclusive'].includes(weaponKind)) error(errors, `${path}.weaponKind`, 'INVALID_WEAPON_KIND', '武器类型无效。');
+      if (gear.slot === 1 && weaponKind === 'normal' && ['UR', 'LR'].includes(gear.rarity)) error(errors, `${path}.weaponKind`, 'UNAVAILABLE_NORMAL_WEAPON', '通用 UR／LR 武器不可获取，请使用自己的专武或借用免费的同职业 UR 专武。');
       if (weaponKind === 'exclusive' && (gear.slot !== 1 || !['SSR', 'UR', 'LR'].includes(gear.rarity))) error(errors, `${path}.weaponKind`, 'INVALID_EXCLUSIVE_WEAPON', '专属武器仅支持第 1 槽的 SSR、UR 或 LR 装备。');
+      if (gear.slot === 1 && weaponKind === 'exclusive' && gear.rarity !== 'NONE') {
+        const ownerId = weaponOwnerId(member, gear);
+        const owner = catalog.characters.find(item => item.id === ownerId);
+        if (!owner) error(errors, `${path}.weaponOwnerCharacterId`, 'UNKNOWN_WEAPON_OWNER', '专武所属角色不在公开目录中。');
+        if (seenWeaponOwners.has(ownerId)) error(errors, `${path}.weaponOwnerCharacterId`, 'DUPLICATE_WEAPON_OWNER', '每个免费专武只提供一把，同一所属角色的专武不能同时装备给两个人。');
+        seenWeaponOwners.add(ownerId);
+        if (ownerId !== member.characterId) {
+          const gift = freeLibrary?.exclusiveWeapons.find(entry => entry.characterId === ownerId);
+          if (gift?.rarity !== 'UR' || !['UR', 'LR'].includes(gear.rarity)) error(errors, `${path}.weaponOwnerCharacterId`, 'UNAVAILABLE_BORROWED_WEAPON', '只能借用免费库中的 UR 专武，并按需进化到 LR；SSR 专武不能借用。');
+          if (!owner || !character || ![1, 2, 4].includes(owner.job) || owner.job !== character.job) error(errors, `${path}.weaponOwnerCharacterId`, 'BORROWED_WEAPON_JOB_MISMATCH', '借用专武必须与装备角色属于同一职业。');
+        }
+      }
+      if (syncSlot > 0 && (gear.slot !== 1 || weaponKind !== 'exclusive' || !['UR', 'LR'].includes(gear.rarity) || gear.level < syncPolicy.minimumLevel)) error(errors, `${path}.syncSlot`, 'INELIGIBLE_SYNC_WEAPON', '只有已制作到 300 级以上的 UR／LR 专武可以放入同步槽。');
       const seriesId = gear.seriesId ?? defaultSeries(gear.rarity);
       if (gear.rarity !== 'NONE' && Array.isArray(getSeries(catalog))) {
         const series = getSeries(catalog).find(item => item.id === seriesId);
@@ -180,22 +317,54 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false } = 
           const allowedSlots = category?.allowedSlots ?? category?.slots;
           if (Array.isArray(allowedSlots) && !allowedSlots.includes(gear.slot)) error(errors, runePath, 'RUNE_SLOT_RESTRICTION', '该符石类型不能用于此装备槽。');
           if (fixedStock && category && !fixedStock.excludedCategoryIds.includes(category.id)) {
-            if (rune.level !== fixedStock.level) error(errors, `${runePath}.level`, 'FIXED_RUNE_LEVEL', `${category.name}仅提供 ${fixedStock.level} 级免费符石，不能选择其它等级。`);
-            fixedRuneCounts.set(category.id, (fixedRuneCounts.get(category.id) ?? 0) + 1);
+            if (!fixedTiers.some(tier => tier.level === rune.level)) error(errors, `${runePath}.level`, 'FIXED_RUNE_LEVEL', `${category.name}仅提供 ${fixedTiers.map(tier => tier.level).join('、')} 级免费符石，不能选择其它等级。`);
+            const inventoryKey = `${category.id}:${rune.level}`;
+            fixedRuneCounts.set(inventoryKey, (fixedRuneCounts.get(inventoryKey) ?? 0) + 1);
           }
         }
       });
       if (gear.rarity === 'NONE' && (
         gear.reinforcementLevel !== 0 || gear.legendSacredTreasureLevel !== 0 || gear.matchlessSacredTreasureLevel !== 0
-        || gear.runes.some(rune => rune?.level !== 0) || weaponKind !== 'normal' || gear.seriesId != null
+        || gear.runes.some(rune => rune?.level !== 0) || weaponKind !== 'normal' || gear.seriesId != null || syncSlot !== 0
       )) error(errors, path, 'EMPTY_GEAR_HAS_UPGRADES', '无装备的槽位不能保留强化、圣装、魔装或符石。');
     });
   });
-  for (const [categoryId, used] of fixedRuneCounts) {
-    if (used > fixedStock.perCategory) {
+  for (const [inventoryKey, used] of fixedRuneCounts) {
+    const [categoryId, level] = inventoryKey.split(':').map(Number);
+    const tier = fixedTiers.find(item => item.level === level);
+    if (tier && used > tier.perCategory) {
       const category = catalog.runeCategories.find(item => item.id === categoryId);
-      error(errors, `fixedRuneInventory.${categoryId}`, 'FIXED_RUNE_STOCK_EXCEEDED', `${category.name}整队仅提供 ${fixedStock.perCategory} 颗 ${fixedStock.level} 级免费符石，当前使用 ${used} 颗。`);
+      error(errors, `fixedRuneInventory.${categoryId}.${level}`, 'FIXED_RUNE_STOCK_EXCEEDED', `${category.name}整队仅提供 ${tier.perCategory} 颗 ${level} 级免费符石，当前使用 ${used} 颗。`);
     }
+  }
+  const sources = team.weaponSources ?? [];
+  if (!Array.isArray(sources) || sources.length > syncPolicy.maximumSourceCount) {
+    error(errors, 'weaponSources', 'INVALID_WEAPON_SOURCE_LIST', `备用基石最多配置 ${syncPolicy.maximumSourceCount} 件专武。`);
+  } else {
+    const seenSources = new Set();
+    for (const [index, source] of sources.entries()) {
+      const path = `weaponSources[${index}]`;
+      if (!isObject(source)) { error(errors, path, 'INVALID_WEAPON_SOURCE', '备用基石数据无效。'); continue; }
+      const character = catalog.characters.find(item => item.id === source.characterId);
+      if (!character) error(errors, `${path}.characterId`, 'UNKNOWN_CHARACTER', '备用基石角色不在公开目录中。');
+      if (seenSources.has(source.characterId) || seenWeaponOwners.has(source.characterId)) error(errors, `${path}.characterId`, 'DUPLICATE_WEAPON_SOURCE', '备用基石不能重复，也不能与配队中已装备的专武所属角色重复。');
+      seenSources.add(source.characterId);
+      if (!RARITIES.includes(source.characterRarity)) error(errors, `${path}.characterRarity`, 'INVALID_RARITY', '备用基石角色稀有度仅支持 SR、LR 和 LR5。');
+      const selectedActor = team.members.find(member => member?.characterId === source.characterId);
+      if (selectedActor && source.characterRarity !== selectedActor.rarity) error(errors, `${path}.characterRarity`, 'SOURCE_CHARACTER_RARITY_MISMATCH', '备用基石所属角色已在配队中，其角色稀有度必须与配队中的同一角色一致。');
+      if (!['UR', 'LR'].includes(source.rarity)) error(errors, `${path}.rarity`, 'INVALID_WEAPON_SOURCE_RARITY', '备用基石只支持 UR 和 LR 专武。');
+      if (source.rarity === 'LR' && source.characterRarity !== 'LR5') error(errors, `${path}.rarity`, 'LR_REQUIRES_LR5', 'LR 备用专武需要 LR5 角色。');
+      if (!integerIn(source.level, syncPolicy.minimumLevel, policy.characterLevel)
+        || !finiteNonnegative(catalog.equipmentCosts?.fragments?.[`exclusive${source.rarity}`]?.[source.level])) error(errors, `${path}.level`, 'INVALID_WEAPON_SOURCE_LEVEL', '备用基石必须使用当前可制作的 300 至 450 级专武档位。');
+    }
+  }
+  if (errors.length === 0) {
+    const sync = deriveWeaponSync(team, catalog, policy, freeLibrary);
+    errors.push(...sync.errors);
+    team.members.forEach((member, index) => {
+      const gear = member?.equipment?.[0];
+      if (gear?.syncSlot > 0 && Number.isSafeInteger(sync.effectiveLevels[index]) && gear.reinforcementLevel > sync.effectiveLevels[index]) error(errors, `members[${index}].equipment[0].reinforcementLevel`, 'REINFORCEMENT_EXCEEDS_LEVEL', '强化等级不能超过同步后的实际武器等级。');
+    });
   }
   return errors;
 }
@@ -210,15 +379,22 @@ function readCost(table, level, errors, path, label) {
   return value;
 }
 
-function collectCosts(team, catalog, policy, errors) {
+function collectCosts(team, catalog, policy, errors, freeLibrary) {
   const precision = policy.rounding?.precision ?? 2;
   const consumed = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
+  const libraryCredits = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
   const characterCosts = [];
   const equipmentCosts = [];
+  const exclusiveWeaponCosts = [];
   const fixedStock = policy.runes?.fixedStock;
-  const fixedRuneInventory = fixedStock ? catalog.runeCategories.filter(category => !fixedStock.excludedCategoryIds.includes(category.id)).map(category => ({ categoryId: category.id, name: category.name, level: fixedStock.level, used: 0, available: fixedStock.perCategory, remaining: fixedStock.perCategory })) : [];
+  const fixedRuneInventory = fixedStock ? catalog.runeCategories.filter(category => !fixedStock.excludedCategoryIds.includes(category.id)).flatMap(category => getFixedRuneTiers(fixedStock).map(tier => ({ categoryId: category.id, name: category.name, level: tier.level, used: 0, available: tier.perCategory, remaining: tier.perCategory }))) : [];
   let legendExperience = 0;
   let matchlessExperience = 0;
+  const weaponSync = deriveWeaponSync(team, catalog, policy, freeLibrary);
+  const pricedMembers = [...team.members, ...(team.weaponSources ?? []).map(source => ({
+    characterId: source.characterId, rarity: source.characterRarity,
+    equipment: [{ ...createEquipment(1), rarity: source.rarity, seriesId: defaultSeries(source.rarity), weaponKind: 'exclusive', level: source.level }],
+  }))];
   const addResource = (resource, amount, path) => {
     if (!RESOURCE_KEYS.includes(resource) || !finiteNonnegative(amount)) {
       error(errors, path, 'UNKNOWN_RESOURCE', '材料类型或数量未知，无法估价。');
@@ -226,8 +402,11 @@ function collectCosts(team, catalog, policy, errors) {
     }
     consumed[resource] += amount;
   };
-  team.members.forEach((member, memberIndex) => {
+  pricedMembers.forEach((member, memberIndex) => {
     if (!member) return;
+    const sourceKind = memberIndex < 5 ? 'team' : 'reserve';
+    const sourceIndex = sourceKind === 'reserve' ? memberIndex - 5 : null;
+    const position = sourceKind === 'team' ? memberIndex + 1 : null;
     const character = catalog.characters.find(item => item.id === member.characterId);
     const lightDark = ['light', 'dark'].includes(character.element);
     const copies = policy.copies?.[member.rarity]?.[lightDark ? 'lightDark' : 'normal'];
@@ -235,28 +414,56 @@ function collectCosts(team, catalog, policy, errors) {
     if (!Number.isSafeInteger(copies) || copies < 1 || !finiteNonnegative(copyPrice)) {
       error(errors, `policy.copies.${member.rarity}`, 'INVALID_CHARACTER_PRICE', '角色本体数量或单价规则无效。');
     }
-    characterCosts.push({ position: memberIndex + 1, characterId: character.id, characterName: character.name, rarity: member.rarity, copies, unitPrice: copyPrice, diamonds: round(copies * copyPrice, precision) });
+    const freeCharacter = freeLibrary?.characters.find(entry => entry.characterId === character.id);
+    const entitlementCopies = freeCharacter ? policy.copies?.[freeCharacter.rarity]?.[lightDark ? 'lightDark' : 'normal'] : 0;
+    if (!Number.isSafeInteger(entitlementCopies) || entitlementCopies < 0) error(errors, 'freeLibrary.characters', 'INVALID_FREE_CHARACTER_PRICE', '免费库角色对应的累计本体规则无效。');
+    const freeCopies = Math.min(copies, entitlementCopies);
+    const chargedCopies = copies - freeCopies;
+    const alreadyPricedActor = sourceKind === 'reserve' && team.members.some(actor => actor?.characterId === character.id);
+    if (!alreadyPricedActor) characterCosts.push({ position, sourceKind, sourceIndex, characterId: character.id, characterName: character.name, rarity: member.rarity, copies, freeCopies, chargedCopies, freeRarity: freeCharacter?.rarity ?? null, unitPrice: copyPrice, grossDiamonds: round(copies * copyPrice, precision), freeDiamonds: round(freeCopies * copyPrice, precision), diamonds: round(chargedCopies * copyPrice, precision) });
     member.equipment.forEach((gear, gearIndex) => {
       if (gear.rarity === 'NONE') return;
-      const path = `members[${memberIndex}].equipment[${gearIndex}]`;
+      const path = sourceKind === 'team' ? `members[${memberIndex}].equipment[${gearIndex}]` : `weaponSources[${sourceIndex}]`;
+      const syncSlot = gear.syncSlot ?? 0;
+      const effectiveLevel = sourceKind === 'team' && gear.slot === 1 ? weaponSync.effectiveLevels[memberIndex] : gear.level;
       const gearResources = {};
-      const addGearResource = (resource, amount) => {
+      const gearLibraryCredits = {};
+      const addGearResource = (resource, amount, credit = 0) => {
         addResource(resource, amount, path);
         gearResources[resource] = (gearResources[resource] ?? 0) + amount;
+        if (credit > 0) {
+          libraryCredits[resource] += credit;
+          gearLibraryCredits[resource] = (gearLibraryCredits[resource] ?? 0) + credit;
+        }
       };
       const seriesId = gear.seriesId ?? defaultSeries(gear.rarity);
       const series = getSeries(catalog)?.find(item => item.id === seriesId);
       const weaponKind = gear.weaponKind ?? 'normal';
       const exclusive = weaponKind === 'exclusive';
+      const ownerId = exclusive ? weaponOwnerId(member, gear) : null;
+      const owner = exclusive ? catalog.characters.find(item => item.id === ownerId) : null;
+      const borrowed = exclusive && ownerId !== member.characterId;
+      const ownership = { weaponOwnerCharacterId: ownerId, weaponOwnerCharacterName: owner?.name ?? null, borrowed, ownExclusiveSkillActive: exclusive && !borrowed };
       const fragmentTableKey = exclusive ? `exclusive${gear.rarity}` : series?.costTable ?? gear.rarity;
       const fragmentResource = exclusive ? 'exclusiveFragments' : series?.costResource ?? (gear.rarity === 'SSR' ? 'ssrFragments' : 'urLrFragments');
       const fragments = readCost(catalog.equipmentCosts?.fragments?.[fragmentTableKey], gear.level, errors, `${path}.level`, '装备碎片');
-      addGearResource(fragmentResource, fragments);
+      const freeWeapon = exclusive ? freeLibrary?.exclusiveWeapons.find(entry => entry.characterId === ownerId) : null;
+      const freeWeaponFragments = freeWeapon ? readCost(catalog.equipmentCosts?.fragments?.[`exclusive${freeWeapon.rarity}`], freeWeapon.level, errors, 'freeLibrary.exclusiveWeapons', '免费专武碎片') : 0;
+      const freeFragments = Math.min(fragments, freeWeaponFragments);
+      addGearResource(fragmentResource, fragments, freeFragments);
+      let lifeTreeDew = 0;
+      let freeLifeTreeDew = 0;
       if (['UR', 'LR'].includes(gear.rarity)) {
         const materialKey = { UR: { normal: 'urLifeTreeDew', exclusive: 'exclusiveUrLifeTreeDew' }, LR: { normal: 'lrLifeTreeDew', exclusive: 'exclusiveLrLifeTreeDew' } }[gear.rarity][weaponKind];
-        const lifeTreeDew = policy.equipment?.[materialKey];
+        lifeTreeDew = policy.equipment?.[materialKey];
         if (!finiteNonnegative(lifeTreeDew)) error(errors, `policy.equipment.${materialKey}`, 'UNKNOWN_EVOLUTION_COST', '装备进化所需生命树之露数量尚未配置。');
-        else addGearResource('lifeTreeDew', lifeTreeDew);
+        else {
+          const freeMaterialKey = { UR: 'exclusiveUrLifeTreeDew', LR: 'exclusiveLrLifeTreeDew' }[freeWeapon?.rarity];
+          const entitledDew = freeMaterialKey ? policy.equipment?.[freeMaterialKey] : 0;
+          if (!finiteNonnegative(entitledDew)) error(errors, 'freeLibrary.exclusiveWeapons', 'UNKNOWN_FREE_EVOLUTION_COST', '免费专武的进化材料配置无效。');
+          else freeLifeTreeDew = Math.min(lifeTreeDew, entitledDew);
+          addGearResource('lifeTreeDew', lifeTreeDew, freeLifeTreeDew);
+        }
       }
       const medicine = readCost(catalog.equipmentCosts?.reinforcement?.[gear.slot === 1 ? 'weapon' : 'other'], gear.reinforcementLevel, errors, `${path}.reinforcementLevel`, '强化');
       addGearResource('reinforcementMedicine', medicine);
@@ -273,7 +480,7 @@ function collectCosts(team, catalog, policy, errors) {
         const ticketCategoryIds = policy.runes?.ticketCategoryIds ?? [5, 9];
         const ticketBased = ticketCategoryIds.includes(category.id);
         if (fixedStock && !ticketBased) {
-          const inventory = fixedRuneInventory.find(item => item.categoryId === category.id);
+          const inventory = fixedRuneInventory.find(item => item.categoryId === category.id && item.level === rune.level);
           inventory.used += 1;
           inventory.remaining = inventory.available - inventory.used;
           return;
@@ -286,7 +493,21 @@ function collectCosts(team, catalog, policy, errors) {
         const amount = 2 ** (rune.level - offset);
         addGearResource(ticketBased ? 'runeTickets' : 'unidentifiedRune7', amount);
       });
-      equipmentCosts.push({ position: memberIndex + 1, characterId: character.id, slot: gear.slot, rarity: gear.rarity, seriesId, seriesName: series?.name ?? gear.rarity, weaponKind, level: gear.level, legendExperience: legend, matchlessExperience: matchless, resources: gearResources });
+      equipmentCosts.push({ position, sourceKind, sourceIndex, characterId: character.id, characterName: character.name, slot: gear.slot, rarity: gear.rarity, seriesId, seriesName: series?.name ?? gear.rarity, weaponKind, ...ownership, level: gear.level, effectiveLevel, syncSlot, legendExperience: legend, matchlessExperience: matchless, resources: gearResources, freeLibraryCredits: gearLibraryCredits });
+      if (exclusive) {
+        const crystalsPerExchange = policy.conversions?.magicCrystalsPerExclusiveExchange ?? 3;
+        const fragmentsPerExchange = policy.conversions?.exclusiveFragmentsPerExchange ?? 10;
+        if (!finiteNonnegative(crystalsPerExchange) || crystalsPerExchange === 0 || !finiteNonnegative(fragmentsPerExchange) || fragmentsPerExchange === 0) error(errors, 'policy.conversions', 'INVALID_EXCLUSIVE_CONVERSION', '专武碎片与紫水晶的兑换比例无效。');
+        const crystalRatio = crystalsPerExchange / fragmentsPerExchange;
+        const fragmentPrice = policy.unitPrices?.exclusiveFragments;
+        const dewPrice = policy.unitPrices?.lifeTreeDew;
+        const baseDiamonds = (fragmentAmount, dewAmount) => (fragmentAmount > 0 ? fragmentAmount * fragmentPrice : 0) + (dewAmount > 0 ? dewAmount * dewPrice : 0);
+        const chargedFragments = fragments - freeFragments;
+        const chargedLifeTreeDew = lifeTreeDew - freeLifeTreeDew;
+        const effectiveFragments = syncSlot > 0 ? readCost(catalog.equipmentCosts?.fragments?.[fragmentTableKey], effectiveLevel, errors, `${path}.syncSlot`, '同步后同等级专武') : fragments;
+        const syncSavedFragments = Math.max(0, effectiveFragments - fragments);
+        exclusiveWeaponCosts.push({ position, sourceKind, sourceIndex, characterId: character.id, characterName: character.name, ...ownership, rarity: gear.rarity, level: gear.level, effectiveLevel, syncSlot, syncSavedFragments, syncSavedDiamonds: round(syncSavedFragments * fragmentPrice, precision), freeRarity: freeWeapon?.rarity ?? null, freeLevel: freeWeapon?.level ?? null, fragments, freeFragments, chargedFragments, magicCrystals: fragments * crystalRatio, freeMagicCrystals: freeFragments * crystalRatio, chargedMagicCrystals: chargedFragments * crystalRatio, magicCrystalUnitPrice: policy.conversions?.magicCrystalPrice ?? fragmentPrice / crystalRatio, lifeTreeDew, freeLifeTreeDew, chargedLifeTreeDew, grossDiamonds: round(baseDiamonds(fragments, lifeTreeDew), precision), freeDiamonds: round(baseDiamonds(freeFragments, freeLifeTreeDew), precision), diamonds: round(baseDiamonds(chargedFragments, chargedLifeTreeDew), precision) });
+      }
     });
   });
   const resources = {};
@@ -296,45 +517,79 @@ function collectCosts(team, catalog, policy, errors) {
     const unitPrice = policy.unitPrices?.[key];
     if (!finiteNonnegative(allowance)) error(errors, `policy.allowances.${key}`, 'INVALID_ALLOWANCE', '免费材料额度必须为非负数。');
     if (amount > 0 && !finiteNonnegative(unitPrice)) error(errors, `policy.unitPrices.${key}`, 'UNKNOWN_RESOURCE_PRICE', `${key} 单价尚未确认，无法估价。`);
-    const charged = finiteNonnegative(allowance) ? Math.max(0, amount - allowance) : NaN;
-    resources[key] = { consumed: amount, freeAllowance: allowance, charged, unitPrice: finiteNonnegative(unitPrice) ? unitPrice : null, diamonds: amount === 0 ? 0 : round(charged * unitPrice, precision) };
+    const freeLibraryCredit = libraryCredits[key];
+    const charged = finiteNonnegative(allowance) ? Math.max(0, amount - freeLibraryCredit - allowance) : NaN;
+    resources[key] = { consumed: amount, freeLibraryCredit, freeAllowance: allowance, charged, unitPrice: finiteNonnegative(unitPrice) ? unitPrice : null, diamonds: amount === 0 ? 0 : round(charged * unitPrice, precision) };
     const hardLimit = policy.hardLimits?.[key];
     if (hardLimit != null && (!finiteNonnegative(hardLimit) || amount > hardLimit)) error(errors, `resources.${key}`, 'RESOURCE_LIMIT_EXCEEDED', `${key} 超出当前规则允许的材料额度。`);
   }
-  return { characterCosts, equipmentCosts, resources, legendExperience, matchlessExperience, fixedRuneInventory };
+  // Allocate team allowances once, in team/slot order, so per-weapon fees agree with the total.
+  const remainingAllowances = Object.fromEntries(RESOURCE_KEYS.map(key => [key, resources[key].freeAllowance]));
+  for (const gear of equipmentCosts) {
+    gear.chargedResources = {};
+    gear.sharedAllowanceCredits = {};
+    for (const [key, amount] of Object.entries(gear.resources)) {
+      const aboveLibrary = Math.max(0, amount - (gear.freeLibraryCredits[key] ?? 0));
+      const sharedCredit = Math.min(aboveLibrary, remainingAllowances[key]);
+      remainingAllowances[key] -= sharedCredit;
+      gear.sharedAllowanceCredits[key] = sharedCredit;
+      gear.chargedResources[key] = aboveLibrary - sharedCredit;
+    }
+    if (gear.weaponKind !== 'exclusive') continue;
+    const weapon = exclusiveWeaponCosts.find(item => item.sourceKind === gear.sourceKind && item.position === gear.position && item.sourceIndex === gear.sourceIndex);
+    weapon.chargedFragments = gear.chargedResources.exclusiveFragments;
+    weapon.chargedLifeTreeDew = gear.chargedResources.lifeTreeDew ?? 0;
+    weapon.sharedAllowanceFragments = gear.sharedAllowanceCredits.exclusiveFragments;
+    weapon.sharedAllowanceLifeTreeDew = gear.sharedAllowanceCredits.lifeTreeDew ?? 0;
+    const crystalRatio = (policy.conversions?.magicCrystalsPerExclusiveExchange ?? 3) / (policy.conversions?.exclusiveFragmentsPerExchange ?? 10);
+    weapon.chargedMagicCrystals = weapon.chargedFragments * crystalRatio;
+    const fragmentDiamonds = weapon.chargedFragments > 0 ? weapon.chargedFragments * resources.exclusiveFragments.unitPrice : 0;
+    const dewDiamonds = weapon.chargedLifeTreeDew > 0 ? weapon.chargedLifeTreeDew * resources.lifeTreeDew.unitPrice : 0;
+    weapon.diamonds = round(fragmentDiamonds + dewDiamonds, precision);
+  }
+  const weaponSourceCosts = (team.weaponSources ?? []).map((source, sourceIndex) => {
+    const character = characterCosts.find(item => item.sourceKind === 'reserve' && item.sourceIndex === sourceIndex);
+    const weapon = exclusiveWeaponCosts.find(item => item.sourceKind === 'reserve' && item.sourceIndex === sourceIndex);
+    const characterDiamonds = character?.diamonds ?? 0;
+    return { sourceIndex, characterId: source.characterId, characterName: weapon.characterName, characterRarity: source.characterRarity, rarity: source.rarity, level: source.level, characterDiamonds, weaponDiamonds: weapon.diamonds, diamonds: round((character ? character.chargedCopies * character.unitPrice : 0) + weapon.chargedFragments * resources.exclusiveFragments.unitPrice + weapon.chargedLifeTreeDew * resources.lifeTreeDew.unitPrice, precision) };
+  });
+  return { characterCosts, equipmentCosts, exclusiveWeaponCosts, weaponSourceCosts, reserveSourceCosts: weaponSourceCosts, weaponSync, resources, legendExperience, matchlessExperience, fixedRuneInventory, freeLibraryVersion: freeLibrary?.version ?? null };
 }
 
 export function validateTeam(team, catalog, policy, options = {}) {
   const errors = validateStructure(team, catalog, policy, options);
-  if (errors.length === 0) collectCosts(team, catalog, policy, errors);
+  if (errors.length === 0) collectCosts(team, catalog, policy, errors, options.freeLibrary);
   return { valid: errors.length === 0, errors };
 }
 
-export function calculateTeam(team, catalog, policy) {
-  const errors = validateStructure(team, catalog, policy);
+export function calculateTeam(team, catalog, policy, freeLibrary) {
+  const errors = validateStructure(team, catalog, policy, { freeLibrary });
   if (errors.length > 0) throw new DomainValidationError(errors);
-  const result = collectCosts(team, catalog, policy, errors);
+  const result = collectCosts(team, catalog, policy, errors, freeLibrary);
   if (errors.length > 0) throw new DomainValidationError(errors);
-  const rawCharacterDiamonds = result.characterCosts.reduce((sum, item) => sum + item.copies * item.unitPrice, 0);
+  const rawCharacterDiamonds = result.characterCosts.reduce((sum, item) => sum + item.chargedCopies * item.unitPrice, 0);
   const rawResourceDiamonds = Object.values(result.resources).reduce((sum, item) => sum + (item.consumed > 0 ? item.charged * item.unitPrice : 0), 0);
   const precision = policy.rounding?.precision ?? 2;
   const characterDiamonds = round(rawCharacterDiamonds, precision);
+  const grossCharacterDiamonds = round(result.characterCosts.reduce((sum, item) => sum + item.copies * item.unitPrice, 0), precision);
+  const freeCharacterDiamonds = round(result.characterCosts.reduce((sum, item) => sum + item.freeCopies * item.unitPrice, 0), precision);
   const resourceDiamonds = round(rawResourceDiamonds, precision);
-  return { ...result, memberCount: team.members.filter(Boolean).length, characterDiamonds, resourceDiamonds, totalDiamonds: round(rawCharacterDiamonds + rawResourceDiamonds, precision), policyVersion: policy.version ?? null };
+  return { ...result, memberCount: team.members.filter(Boolean).length, grossCharacterDiamonds, freeCharacterDiamonds, characterDiamonds, resourceDiamonds, totalDiamonds: round(rawCharacterDiamonds + rawResourceDiamonds, precision), policyVersion: policy.version ?? null };
 }
 
-export function createExport(team, catalog, policy) {
-  const validation = validateTeam(team, catalog, policy, { requireFullTeam: true });
+export function createExport(team, catalog, policy, freeLibrary) {
+  const validation = validateTeam(team, catalog, policy, { requireFullTeam: true, freeLibrary });
   if (!validation.valid) throw new DomainValidationError(validation.errors);
   return {
     format: FORMAT, schemaVersion: SCHEMA_VERSION,
     catalogVersion: catalog.version ?? null, exportedAt: new Date().toISOString(),
     policySnapshot: cloneJson(policy), team: cloneTeam(team),
-    costBreakdown: calculateTeam(team, catalog, policy),
+    ...(freeLibrary ? { freeLibrarySnapshot: cloneJson(freeLibrary) } : {}),
+    costBreakdown: calculateTeam(team, catalog, policy, freeLibrary),
   };
 }
 
-export function parseImport(value, catalog, policy) {
+export function parseImport(value, catalog, policy, freeLibrary) {
   let imported = value;
   if (typeof value === 'string') {
     try { imported = JSON.parse(value); }
@@ -343,8 +598,8 @@ export function parseImport(value, catalog, policy) {
   if (!isObject(imported) || imported.format !== FORMAT || imported.schemaVersion !== SCHEMA_VERSION) {
     throw new DomainValidationError([{ path: 'file', code: 'UNSUPPORTED_FORMAT', message: '文件格式或版本不受支持。' }]);
   }
-  const validation = validateTeam(imported.team, catalog, policy, { requireFullTeam: true });
+  const validation = validateTeam(imported.team, catalog, policy, { requireFullTeam: true, freeLibrary });
   if (!validation.valid) throw new DomainValidationError(validation.errors);
   const team = cloneTeam(imported.team);
-  return { team, costBreakdown: calculateTeam(team, catalog, policy), warnings: ['导入文件中的策略和费用已按当前规则重新计算。'] };
+  return { team, costBreakdown: calculateTeam(team, catalog, policy, freeLibrary), warnings: ['导入文件中的策略、免费库和费用已按当前规则重新计算。'] };
 }

@@ -1,11 +1,14 @@
 {
-  "id": "owner-450-v1",
-  "version": 1,
-  "ruleSetId": "mementomori-investment-equivalent-v1",
+  "id": "owner-450-v3",
+  "version": 3,
+  "ruleSetId": "mementomori-investment-equivalent-v3",
   "title": "450级配队预算规则",
   "characterLevel": 450,
   "baseline": {
-    "levelLink": {"level": 450, "subLevel": 0},
+    "levelLink": {
+      "level": 450,
+      "subLevel": 0
+    },
     "arcanaMode": "ownerConfigured",
     "playerLevelMode": "ownerConfigured",
     "description": "角色共同链接等级450；秘仪与玩家等级加成由构建方采用统一基准。"
@@ -31,18 +34,45 @@
     "lifeTreeDew": 400
   },
   "copies": {
-    "SR": {"normal": 1, "lightDark": 1},
-    "LR": {"normal": 8, "lightDark": 14},
-    "LR5": {"normal": 20, "lightDark": 26}
+    "SR": {
+      "normal": 1,
+      "lightDark": 1
+    },
+    "LR": {
+      "normal": 8,
+      "lightDark": 14
+    },
+    "LR5": {
+      "normal": 20,
+      "lightDark": 26
+    }
   },
   "holySteelPerExperience": 1,
   "holySteelUnit": "level1SacredExperienceEquivalent",
   "rawHolySteelPerExperience": 1000,
   "runes": {
-    "ticketCategoryIds": [5, 9],
+    "ticketCategoryIds": [
+      5,
+      9
+    ],
     "ticketExponentOffset": 0,
     "unidentifiedRuneBaseLevel": 7,
-    "fixedStock": {"level": 11, "perCategory": 3, "excludedCategoryIds": [5, 9]}
+    "fixedStock": {
+      "tiers": [
+        {
+          "level": 11,
+          "perCategory": 3
+        },
+        {
+          "level": 10,
+          "perCategory": 3
+        }
+      ],
+      "excludedCategoryIds": [
+        5,
+        9
+      ]
+    }
   },
   "equipment": {
     "urLifeTreeDew": 0,
@@ -60,14 +90,40 @@
     "forbiddenProductPrice": 663.705882352941,
     "ssrFragmentsPerProduct": 15
   },
-  "rounding": {"precision": 2, "mode": "roundFinalTotal"},
-  "limits": {"runeLevel": 15, "sacredTreasureLevel": 40},
+  "rounding": {
+    "precision": 2,
+    "mode": "roundFinalTotal"
+  },
+  "limits": {
+    "runeLevel": 15,
+    "sacredTreasureLevel": 40
+  },
   "notes": [
     "免费额度由管理员按450级基准设定，属于整支配队，不是每名角色。",
     "圣装钢以一级圣装经验等价计量：3500份免费，超额每份100钻；此为构筑预算规则，不是历史实际花费。",
     "魔装仅记录累计经验，不计费；金币、普通强化水、精炼钢和打磨资源不纳入首版预算。",
-    "穿透、速度符石折算饼干。其它类别不开放购买，仅整队每类免费提供3颗11级符石；不可超库存或改变等级。",
-    "玩家导出报价用于预览，构建方应按当前认可的规则重新计算。"
+    "穿透、速度符石折算饼干。其它类别不开放购买，每类整队免费提供3颗11级和3颗10级符石；两种等级库存独立，不可合并、超库存或改变等级。",
+    "玩家导出报价用于预览，构建方应按当前认可的规则重新计算。",
+    "免费库独立维护并与5830共享；角色及指定专武只对累计本体和专武制作材料抵扣，强化、圣装和符石仍计入整队额度。",
+    "专武碎片按每10片等价3枚紫水晶换算；紫水晶等价仅用于造价明细，不重复计费。",
+    "武器同步仅适用于已制作至300级以上的UR或LR专武。第1／2同步槽分别需要2／3种真实基石，按最低基石等级同步；同步武器不能作为其它槽的基石。",
+    "免费佛罗伦斯和普通科迪UR300专武含15叶子，可作为队外基石。备用基石角色和专武超过免费库的部分只计费一次。同步只节省后续等级进化碎片，不免除本体、基础制作、稀有度进化叶子或强化费用。",
+    "通用UR／LR武器不可获取。可借用免费库中同职业的UR专武并进化，但借用专武不提供角色自身专武技能；每个所属角色的专武只能占用一次，已装备武器可同时作为基石。",
+    "备用基石所属角色已在配队中时，角色稀有度必须与配队一致，本体不重复计费；仅借用武器的角色本体费用按当前配队角色计算。"
   ],
-  "reference": "https://hitazuki.github.io/mementomori-calculator/#packCompare"
+  "reference": "https://hitazuki.github.io/mementomori-calculator/#packCompare",
+  "weaponSync": {
+    "minimumLevel": 300,
+    "maximumSourceCount": 3,
+    "slots": [
+      {
+        "slot": 1,
+        "requiredAnchors": 2
+      },
+      {
+        "slot": 2,
+        "requiredAnchors": 3
+      }
+    ]
+  }
 }

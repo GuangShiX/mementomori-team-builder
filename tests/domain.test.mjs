@@ -3,17 +3,19 @@ import assert from 'node:assert/strict';
 import {
   createTeam, createMember, createEquipment, calculateTeam, validateTeam,
   createExport, parseImport, cloneTeam, DomainValidationError,
+  deriveWeaponSync,
+  getBorrowableWeapons, isWeaponOwnerClaimed,
 } from '../src/domain.mjs';
 
 const catalog = {
   version: 'fixture-1',
   characters: [
-    { id: 1, name: '蓝角色', element: 'blue' },
-    { id: 2, name: '红角色', element: 'red' },
-    { id: 3, name: '绿角色', element: 'green' },
-    { id: 4, name: '光角色', element: 'light' },
-    { id: 5, name: '暗角色', element: 'dark' },
-    { id: 6, name: '黄角色', element: 'yellow' },
+    { id: 1, name: '蓝角色', element: 'blue', job: 1 },
+    { id: 2, name: '红角色', element: 'red', job: 1 },
+    { id: 3, name: '绿角色', element: 'green', job: 1 },
+    { id: 4, name: '光角色', element: 'light', job: 2 },
+    { id: 5, name: '暗角色', element: 'dark', job: 2 },
+    { id: 6, name: '黄角色', element: 'yellow', job: 1 },
   ],
   runeCategories: [
     { id: 5, name: '穿透', ticketBased: true, allowedSlots: [1, 2, 3] },
@@ -377,4 +379,344 @@ test('cloning never links member equipment or runes to the original', () => {
   assert.equal(original.members[0].rarity, 'SR');
   assert.equal(original.members[0].equipment[0].runes[0].level, 0);
   assert.equal(calculateTeam(original, catalog, policy).totalDiamonds, 85000);
+});
+
+test('two ordinary rune tiers have independent per-category inventory and preserve older level-eleven exports', () => {
+  const team = fullTeam();
+  const configured = stockPolicy();
+  configured.runes.fixedStock = { tiers: [{ level: 11, perCategory: 3 }, { level: 10, perCategory: 3 }], excludedCategoryIds: [5, 9] };
+  for (const member of team.members.slice(0, 3)) {
+    installStockRune(member, 1, 1, 11);
+    installStockRune(member, 1, 2, 10);
+  }
+  const result = calculateTeam(team, catalog, configured);
+  assert.deepEqual(result.fixedRuneInventory.filter(item => item.categoryId === 1).map(item => [item.level, item.used, item.remaining]), [[11, 3, 0], [10, 3, 0]]);
+  assert.equal(result.resources.unidentifiedRune7.consumed, 0);
+  const oldTeam = fullTeam();
+  installStockRune(oldTeam.members[0]);
+  const oldExport = createExport(oldTeam, catalog, stockPolicy());
+  assert.equal(parseImport(oldExport, catalog, configured).costBreakdown.fixedRuneInventory.find(item => item.categoryId === 1 && item.level === 11).used, 1);
+  installStockRune(team.members[3], 1, 1, 11);
+  assert.throws(() => calculateTeam(team, catalog, configured), err => err.errors.some(item => item.code === 'FIXED_RUNE_STOCK_EXCEEDED' && item.path.endsWith('.11')));
+  team.members[3].equipment[0].runes[0].level = 9;
+  assert.equal(validateTeam(team, catalog, configured).errors.some(item => item.code === 'FIXED_RUNE_LEVEL'), true);
+});
+
+const freeLibrary = {
+  format: 'mementomori-free-library', schemaVersion: 1, id: 'fixture-free-library', version: 1,
+  characters: [{ characterId: 1, rarity: 'LR5' }, { characterId: 2, rarity: 'SR' }, { characterId: 4, rarity: 'LR' }],
+  exclusiveWeapons: [{ characterId: 1, rarity: 'SSR', level: 240 }, { characterId: 2, rarity: 'SSR', level: 180 }],
+};
+
+test('free character caps deduct cumulative copies and only charge investment above each entitlement', () => {
+  const team = fullTeam();
+  ['SR', 'LR', 'LR5', 'LR5', 'LR'].forEach((rarity, index) => { team.members[index].rarity = rarity; });
+  const result = calculateTeam(team, catalog, policy, freeLibrary);
+  assert.deepEqual(result.characterCosts.map(item => [item.copies, item.freeCopies, item.chargedCopies]), [[1, 1, 0], [8, 1, 7], [20, 0, 20], [26, 14, 12], [14, 0, 14]]);
+  assert.equal(result.grossCharacterDiamonds, 69 * 17000);
+  assert.equal(result.freeCharacterDiamonds, 16 * 17000);
+  assert.equal(result.characterDiamonds, 53 * 17000);
+  assert.equal(result.totalDiamonds, result.characterDiamonds);
+  team.members[3].rarity = 'SR';
+  assert.equal(calculateTeam(team, catalog, policy, freeLibrary).characterCosts[3].diamonds, 0);
+});
+
+test('free SSR exclusive weapon pays only incremental fragments above its baseline, without exempting upgrades', () => {
+  const team = createTeam();
+  team.members[0] = createMember(2);
+  equip(team.members[0], 1, { weaponKind: 'exclusive', level: 200, reinforcementLevel: 1, legendSacredTreasureLevel: 1 });
+  const configured = copy(policy);
+  configured.allowances.reinforcementMedicine = 0;
+  configured.allowances.holySteel = 0;
+  const result = calculateTeam(team, catalog, configured, freeLibrary);
+  assert.equal(result.resources.exclusiveFragments.consumed, 280);
+  assert.equal(result.resources.exclusiveFragments.freeLibraryCredit, 240);
+  assert.equal(result.resources.exclusiveFragments.charged, 40);
+  assert.equal(result.resources.reinforcementMedicine.charged, 1000);
+  assert.equal(result.resources.holySteel.charged, 1);
+  assert.equal(result.characterDiamonds, 0);
+  assert.equal(result.exclusiveWeaponCosts[0].magicCrystals, 84);
+  assert.equal(result.exclusiveWeaponCosts[0].freeMagicCrystals, 72);
+  assert.equal(result.exclusiveWeaponCosts[0].chargedMagicCrystals, 12);
+  assert.equal(result.exclusiveWeaponCosts[0].diamonds, 1842.71);
+  assert.equal(result.totalDiamonds, 11942.71);
+  team.members[0].equipment[0].level = 180;
+  assert.equal(calculateTeam(team, catalog, configured, freeLibrary).resources.exclusiveFragments.charged, 0);
+});
+
+test('SSR free weapon credit survives UR and LR evolution but all additional leaf investment remains chargeable', () => {
+  const team = createTeam();
+  team.members[0] = createMember(1);
+  team.members[0].rarity = 'LR5';
+  equip(team.members[0], 1, { rarity: 'LR', seriesId: 14, weaponKind: 'exclusive' });
+  const result = calculateTeam(team, catalog, policy, freeLibrary);
+  assert.equal(result.resources.exclusiveFragments.consumed, 600);
+  assert.equal(result.resources.exclusiveFragments.freeLibraryCredit, 360);
+  assert.equal(result.resources.exclusiveFragments.charged, 240);
+  assert.equal(result.resources.lifeTreeDew.charged, 65);
+  assert.equal(result.exclusiveWeaponCosts[0].chargedMagicCrystals, 72);
+  assert.equal(result.totalDiamonds, 37056.24);
+  team.members[0].equipment[0] = createEquipment(1);
+  equip(team.members[0], 2, { rarity: 'LR', seriesId: 14 });
+  const normal = calculateTeam(team, catalog, policy, freeLibrary);
+  assert.equal(normal.resources.urLrFragments.freeLibraryCredit, 0);
+  assert.equal(normal.exclusiveWeaponCosts.length, 0);
+});
+
+test('free library snapshot is exported while imports recompute using only the current supplied library', () => {
+  const team = fullTeam();
+  const exported = createExport(team, catalog, policy, freeLibrary);
+  assert.deepEqual(exported.freeLibrarySnapshot, freeLibrary);
+  exported.freeLibrarySnapshot.characters = catalog.characters.map(character => ({ characterId: character.id, rarity: 'LR5' }));
+  exported.costBreakdown.totalDiamonds = 0;
+  assert.equal(parseImport(exported, catalog, policy, freeLibrary).costBreakdown.characterDiamonds, 34000);
+  assert.equal(parseImport(exported, catalog, policy).costBreakdown.characterDiamonds, 85000);
+});
+
+test('itemized exclusive weapon fees apply shared fragment and leaf allowances once after the free-library credit', () => {
+  const team = createTeam();
+  team.members[0] = createMember(1);
+  team.members[0].rarity = 'LR5';
+  equip(team.members[0], 1, { rarity: 'LR', seriesId: 14, weaponKind: 'exclusive' });
+  const configured = copy(policy);
+  configured.allowances.exclusiveFragments = 50;
+  configured.allowances.lifeTreeDew = 10;
+  const result = calculateTeam(team, catalog, configured, freeLibrary);
+  assert.equal(result.exclusiveWeaponCosts[0].chargedFragments, 190);
+  assert.equal(result.exclusiveWeaponCosts[0].chargedMagicCrystals, 57);
+  assert.equal(result.exclusiveWeaponCosts[0].chargedLifeTreeDew, 55);
+  assert.equal(result.exclusiveWeaponCosts[0].sharedAllowanceFragments, 50);
+  assert.equal(result.exclusiveWeaponCosts[0].sharedAllowanceLifeTreeDew, 10);
+  assert.equal(result.totalDiamonds, result.exclusiveWeaponCosts[0].diamonds);
+});
+
+test('purple-crystal price and fragment unit price must describe the same exclusive-weapon fee', () => {
+  const team = fullTeam();
+  equip(team.members[0], 1, { weaponKind: 'exclusive', level: 240 });
+  const configured = copy(policy);
+  configured.conversions = { magicCrystalPrice: 100, magicCrystalsPerExclusiveExchange: 3, exclusiveFragmentsPerExchange: 10 };
+  assert.throws(() => calculateTeam(team, catalog, configured), err => err.errors.some(item => item.code === 'INCONSISTENT_EXCLUSIVE_PRICE'));
+  configured.unitPrices.exclusiveFragments = 30;
+  const result = calculateTeam(team, catalog, configured);
+  assert.equal(result.exclusiveWeaponCosts[0].magicCrystals, 108);
+  assert.equal(result.exclusiveWeaponCosts[0].magicCrystalUnitPrice, 100);
+  assert.equal(result.exclusiveWeaponCosts[0].diamonds, 10800);
+});
+
+test('invalid free-library caps, duplicate entries and unavailable weapon baselines fail before valuation', () => {
+  for (const change of [
+    library => { library.characters[0].rarity = 'UR'; },
+    library => { library.characters.push({ characterId: 1, rarity: 'SR' }); },
+    library => { library.exclusiveWeapons[0].level = 450; },
+    library => { library.characters[0].characterId = 9999; },
+    library => { library.schemaVersion = 999; },
+  ]) {
+    const invalid = copy(freeLibrary);
+    change(invalid);
+    assert.throws(() => calculateTeam(fullTeam(), catalog, policy, invalid), DomainValidationError);
+  }
+  const invalidStock = stockPolicy();
+  invalidStock.runes.fixedStock.tiers = [{ level: 11, perCategory: 3 }, { level: 11, perCategory: 3 }];
+  assert.equal(validateTeam(fullTeam(), catalog, invalidStock).errors.some(item => item.code === 'INVALID_FIXED_RUNE_STOCK'), true);
+});
+
+const syncCatalog = () => {
+  const configured = copy(catalog);
+  for (const rarity of ['UR', 'LR']) {
+    configured.equipmentCosts.fragments[`exclusive${rarity}`] = { 240: 360, 300: 400, 350: 500, 400: 550, 450: 600 };
+  }
+  return configured;
+};
+const syncLibrary = () => ({
+  ...copy(freeLibrary),
+  characters: [...copy(freeLibrary.characters), { characterId: 5, rarity: 'LR5' }, { characterId: 6, rarity: 'LR5' }],
+  exclusiveWeapons: [...copy(freeLibrary.exclusiveWeapons), { characterId: 5, rarity: 'UR', level: 300 }, { characterId: 6, rarity: 'UR', level: 300 }],
+});
+const syncedTeam = () => {
+  const team = fullTeam();
+  equip(team.members[0], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300, syncSlot: 1 });
+  return team;
+};
+
+test('two free UR300 gifts enable the first synchronization slot without duplicating free equipment cost', () => {
+  const team = syncedTeam();
+  const result = calculateTeam(team, syncCatalog(), policy, syncLibrary());
+  assert.equal(result.weaponSync.slots[0].available, true);
+  assert.equal(result.weaponSync.slots[0].effectiveLevel, 300);
+  assert.deepEqual(result.weaponSync.slots[0].anchors.map(item => item.characterId), [5, 6]);
+  assert.equal(result.weaponSync.slots[1].available, false);
+  assert.equal(result.exclusiveWeaponCosts[0].level, 300);
+  assert.equal(result.exclusiveWeaponCosts[0].effectiveLevel, 300);
+  assert.equal(result.resources.exclusiveFragments.consumed, 400);
+  assert.equal(result.resources.exclusiveFragments.freeLibraryCredit, 360);
+  assert.equal(result.resources.lifeTreeDew.charged, 15);
+});
+
+test('paid outside reserves upgrade gifted anchors once and synchronization charges base production rather than effective level', () => {
+  const team = syncedTeam();
+  equip(team.members[4], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450 });
+  team.weaponSources = [{ characterId: 6, characterRarity: 'SR', rarity: 'UR', level: 450 }];
+  const configuredCatalog = syncCatalog();
+  const library = syncLibrary();
+  const result = calculateTeam(team, configuredCatalog, policy, library);
+  assert.equal(result.weaponSync.effectiveLevels[0], 450);
+  assert.equal(result.exclusiveWeaponCosts[0].syncSavedFragments, 200);
+  assert.equal(result.resources.exclusiveFragments.consumed, 1600);
+  assert.equal(result.resources.exclusiveFragments.freeLibraryCredit, 1160);
+  assert.equal(result.resources.exclusiveFragments.charged, 440);
+  assert.equal(result.resources.lifeTreeDew.consumed, 45);
+  assert.equal(result.resources.lifeTreeDew.freeLibraryCredit, 30);
+  assert.equal(result.resources.lifeTreeDew.charged, 15);
+  assert.equal(result.weaponSourceCosts.length, 1);
+  assert.equal(result.weaponSourceCosts[0].characterDiamonds, 0);
+  assert.equal(result.weaponSourceCosts[0].weaponDiamonds, 9213.54);
+  assert.equal(result.characterCosts.find(item => item.sourceKind === 'reserve').position, null);
+  const directlyCrafted = cloneTeam(team);
+  directlyCrafted.members[0].equipment[0].syncSlot = 0;
+  directlyCrafted.members[0].equipment[0].level = 450;
+  const directCost = calculateTeam(directlyCrafted, configuredCatalog, policy, library);
+  assert.equal(Math.round((directCost.totalDiamonds - result.totalDiamonds) * 100) / 100, 9213.54);
+});
+
+test('the second synchronization slot requires a third true anchor and uses the lowest of its best three', () => {
+  const team = syncedTeam();
+  equip(team.members[1], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300, syncSlot: 2 });
+  equip(team.members[4], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450 });
+  team.weaponSources = [{ characterId: 6, characterRarity: 'SR', rarity: 'UR', level: 450 }];
+  assert.equal(deriveWeaponSync(team, syncCatalog(), policy, syncLibrary()).slots[1].available, false, 'a synchronized output cannot become the third anchor');
+  equip(team.members[2], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 400 });
+  const result = calculateTeam(team, syncCatalog(), policy, syncLibrary());
+  assert.deepEqual(result.weaponSync.effectiveLevels.slice(0, 2), [450, 400]);
+  assert.deepEqual(result.weaponSync.slots[0].anchors.map(item => item.characterId), [5, 6]);
+  assert.deepEqual(result.weaponSync.slots[1].anchors.map(item => item.characterId), [5, 6, 3]);
+  team.members[0].equipment[0].reinforcementLevel = 450;
+  team.members[1].equipment[0].reinforcementLevel = 400;
+  assert.equal(validateTeam(team, syncCatalog(), policy, { freeLibrary: syncLibrary() }).valid, true);
+  team.members[1].equipment[0].reinforcementLevel = 401;
+  assert.equal(validateTeam(team, syncCatalog(), policy, { freeLibrary: syncLibrary() }).errors.some(item => item.code === 'REINFORCEMENT_EXCEEDS_LEVEL'), true);
+});
+
+test('sync targets cannot count their own free gifts and equipped low-level weapons suppress phantom higher gifts', () => {
+  const team = syncedTeam();
+  equip(team.members[4], 1, { weaponKind: 'exclusive', level: 240 });
+  let state = deriveWeaponSync(team, syncCatalog(), policy, syncLibrary());
+  assert.deepEqual(state.anchors.map(item => item.characterId), [6]);
+  assert.equal(state.slots[0].available, false);
+  equip(team.members[4], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300, syncSlot: 1 });
+  state = deriveWeaponSync(team, syncCatalog(), policy, syncLibrary());
+  assert.deepEqual(state.anchors.map(item => item.characterId), [6]);
+  assert.equal(state.errors.some(item => item.code === 'DUPLICATE_WEAPON_SYNC_SLOT'), true);
+  team.members[0].equipment[0].syncSlot = 0;
+  team.members[0].equipment[0].rarity = 'NONE';
+  team.members[0].equipment[0] = createEquipment(1);
+  assert.equal(deriveWeaponSync(team, syncCatalog(), policy, syncLibrary()).slots[0].available, false, 'a target gift is never its own source');
+});
+
+test('synchronization rejects low-rarity targets, repeated source characters and base level above the actual source floor', () => {
+  const configuredCatalog = syncCatalog();
+  const library = syncLibrary();
+  const low = syncedTeam();
+  Object.assign(low.members[0].equipment[0], { rarity: 'SSR', seriesId: 12, level: 240 });
+  assert.equal(validateTeam(low, configuredCatalog, policy, { freeLibrary: library }).errors.some(item => item.code === 'INELIGIBLE_SYNC_WEAPON'), true);
+  const aboveFloor = syncedTeam();
+  aboveFloor.members[0].equipment[0].level = 350;
+  assert.equal(validateTeam(aboveFloor, configuredCatalog, policy, { freeLibrary: library }).errors.some(item => item.code === 'SYNC_LEVEL_BELOW_BASE'), true);
+  const duplicates = syncedTeam();
+  equip(duplicates.members[4], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300 });
+  duplicates.weaponSources = [{ characterId: 5, characterRarity: 'SR', rarity: 'UR', level: 450 }];
+  assert.equal(validateTeam(duplicates, configuredCatalog, policy, { freeLibrary: library }).errors.some(item => item.code === 'DUPLICATE_WEAPON_SOURCE'), true);
+  duplicates.weaponSources = [{ characterId: 6, characterRarity: 'SR', rarity: 'LR', level: 450 }];
+  assert.equal(validateTeam(duplicates, configuredCatalog, policy, { freeLibrary: library }).errors.some(item => item.code === 'LR_REQUIRES_LR5'), true);
+});
+
+test('export and clone preserve source inventory and sync selection while import discards forged effective levels and fees', () => {
+  const team = syncedTeam();
+  equip(team.members[4], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 450 });
+  team.weaponSources = [{ characterId: 6, characterRarity: 'SR', rarity: 'UR', level: 450 }];
+  const configuredCatalog = syncCatalog();
+  const library = syncLibrary();
+  const exported = createExport(team, configuredCatalog, policy, library);
+  assert.equal(exported.team.members[0].equipment[0].syncSlot, 1);
+  assert.equal(exported.team.weaponSources[0].level, 450);
+  exported.costBreakdown.weaponSync.effectiveLevels[0] = 999;
+  exported.costBreakdown.totalDiamonds = 0;
+  exported.team.members[0].equipment[0].effectiveLevel = 999;
+  exported.team.weaponSources[0].diamonds = 0;
+  const imported = parseImport(exported, configuredCatalog, policy, library);
+  assert.equal(imported.costBreakdown.weaponSync.effectiveLevels[0], 450);
+  assert.equal('effectiveLevel' in imported.team.members[0].equipment[0], false);
+  assert.equal('diamonds' in imported.team.weaponSources[0], false);
+  const cloned = cloneTeam(imported.team);
+  cloned.weaponSources[0].level = 300;
+  assert.equal(imported.team.weaponSources[0].level, 450);
+  const oldExport = createExport(fullTeam(), configuredCatalog, policy, library);
+  delete oldExport.team.weaponSources;
+  for (const member of oldExport.team.members) for (const gear of member.equipment) delete gear.syncSlot;
+  const oldImported = parseImport(oldExport, configuredCatalog, policy, library);
+  assert.deepEqual(oldImported.team.weaponSources, []);
+  assert.equal(oldImported.team.members[0].equipment[0].syncSlot, 0);
+});
+
+test('borrowed free UR weapons price the actor body and weapon owner entitlement without activating own exclusive skills', () => {
+  const team = createTeam();
+  team.members[0] = createMember(3);
+  equip(team.members[0], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300, weaponOwnerCharacterId: 6 });
+  const result = calculateTeam(team, syncCatalog(), policy, syncLibrary());
+  assert.equal(result.characterDiamonds, 17000);
+  assert.equal(result.resources.exclusiveFragments.charged, 0);
+  assert.equal(result.resources.lifeTreeDew.charged, 0);
+  assert.equal(result.totalDiamonds, 17000);
+  assert.equal(result.exclusiveWeaponCosts[0].characterId, 3);
+  assert.equal(result.exclusiveWeaponCosts[0].weaponOwnerCharacterId, 6);
+  assert.equal(result.exclusiveWeaponCosts[0].borrowed, true);
+  assert.equal(result.exclusiveWeaponCosts[0].ownExclusiveSkillActive, false);
+  assert.equal(result.weaponSync.anchors.find(item => item.characterId === 6).source, 'team');
+  const exportedTeam = cloneTeam(team);
+  assert.equal(exportedTeam.members[0].equipment[0].weaponOwnerCharacterId, 6);
+  team.members[0].equipment[0].weaponOwnerCharacterId = 3;
+  assert.equal(calculateTeam(team, syncCatalog(), policy, syncLibrary()).exclusiveWeaponCosts[0].ownExclusiveSkillActive, true);
+});
+
+test('borrowed weapon restrictions enforce job, UR free inventory and one physical owner across equipped weapons and reserves', () => {
+  const team = fullTeam();
+  equip(team.members[0], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300, weaponOwnerCharacterId: 6 });
+  equip(team.members[1], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300, weaponOwnerCharacterId: 6 });
+  assert.equal(validateTeam(team, syncCatalog(), policy, { freeLibrary: syncLibrary() }).errors.some(item => item.code === 'DUPLICATE_WEAPON_OWNER'), true);
+  assert.equal(isWeaponOwnerClaimed(team, 2, 6), true);
+  assert.equal(getBorrowableWeapons(team, 2, syncCatalog(), syncLibrary()).length, 0);
+  team.members[1].equipment[0] = createEquipment(1);
+  team.weaponSources = [{ characterId: 6, characterRarity: 'SR', rarity: 'UR', level: 450 }];
+  assert.equal(validateTeam(team, syncCatalog(), policy, { freeLibrary: syncLibrary() }).errors.some(item => item.code === 'DUPLICATE_WEAPON_SOURCE'), true);
+  team.weaponSources = [];
+  team.members[0].equipment[0].weaponOwnerCharacterId = 5;
+  assert.equal(validateTeam(team, syncCatalog(), policy, { freeLibrary: syncLibrary() }).errors.some(item => item.code === 'BORROWED_WEAPON_JOB_MISMATCH'), true);
+  team.members[0].equipment[0].weaponOwnerCharacterId = 2;
+  assert.equal(validateTeam(team, syncCatalog(), policy, { freeLibrary: syncLibrary() }).errors.some(item => item.code === 'UNAVAILABLE_BORROWED_WEAPON'), true);
+});
+
+test('normal UR/LR weapon slots are unavailable while UR/LR armor and SSR ordinary weapons remain legal', () => {
+  const team = createTeam();team.members[0] = createMember(1);team.members[0].rarity = 'LR5';
+  equip(team.members[0], 1, { rarity: 'UR', seriesId: 13 });
+  assert.equal(validateTeam(team, catalog, policy).errors.some(item => item.code === 'UNAVAILABLE_NORMAL_WEAPON'), true);
+  equip(team.members[0], 1, { rarity: 'SSR', seriesId: 12 });
+  equip(team.members[0], 2, { rarity: 'UR', seriesId: 13 });
+  equip(team.members[0], 3, { rarity: 'LR', seriesId: 14 });
+  assert.equal(validateTeam(team, catalog, policy).valid, true);
+});
+
+test('a selected actor may supply a separate own reserve weapon when wearing borrowed gear without charging its body twice', () => {
+  const team = fullTeam();
+  equip(team.members[0], 1, { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', level: 300, weaponOwnerCharacterId: 6 });
+  team.weaponSources = [{ characterId: 1, characterRarity: 'SR', rarity: 'UR', level: 450 }];
+  const result = calculateTeam(team, syncCatalog(), policy, syncLibrary());
+  assert.equal(result.characterCosts.filter(item => item.characterId === 1).length, 1);
+  assert.equal(result.weaponSourceCosts[0].characterDiamonds, 0);
+  assert.equal(result.weaponSync.anchors.some(item => item.characterId === 1 && item.source === 'reserve'), true);
+  team.members[0].equipment[0].syncSlot = 1;
+  const sync = deriveWeaponSync(team, syncCatalog(), policy, syncLibrary());
+  assert.equal(sync.anchors.some(item => item.characterId === 6), false, 'borrowed target owner cannot become an anchor');
+  assert.equal(sync.slots[0].effectiveLevel, 300);
+  team.weaponSources[0].characterRarity = 'LR5';
+  team.weaponSources[0].rarity = 'LR';
+  assert.equal(validateTeam(team, syncCatalog(), policy, { freeLibrary: syncLibrary() }).errors.some(item => item.code === 'SOURCE_CHARACTER_RARITY_MISMATCH'), true);
 });
