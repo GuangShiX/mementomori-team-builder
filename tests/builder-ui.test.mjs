@@ -53,7 +53,9 @@ test('resource price help reflects policy unit prices and exchange rates rather 
     const { ResourcePriceHelp } = await server.ssrLoadModule('/src/App.jsx');
     const render = displayedPolicy => renderToStaticMarkup(React.createElement(ResourcePriceHelp, { policy: displayedPolicy }));
     const current = render(policy);
-    for (const price of [policy.unitPrices.characterCopy, policy.unitPrices.runeTickets, policy.unitPrices.reinforcementMedicine, policy.unitPrices.lifeTreeDew, policy.unitPrices.urLrFragments, policy.unitPrices.exclusiveFragments]) assert.ok(current.includes(`${amount(price)} 钻`));
+    for (const price of [policy.unitPrices.characterCopy, policy.unitPrices.runeTickets, policy.unitPrices.reinforcementMedicine, policy.unitPrices.lifeTreeDew]) assert.ok(current.includes(`${amount(price)} 钻`));
+    assert.ok(current.includes(`UR / LR 装备碎片</th><td>${amount(policy.unitPrices.urLrFragments * policy.conversions.urLrFragmentsPerExchange)} 钻<small>/ 50片</small>`));
+    assert.ok(current.includes(`专武碎片</th><td>${amount(policy.unitPrices.exclusiveFragments * policy.conversions.exclusiveFragmentsPerExchange)} 钻<small>/ 10片</small>`));
     assert.ok(current.includes(`${amount(policy.conversions.relicMaterialPrice)} 钻`));
     assert.ok(current.includes(`${amount(policy.conversions.magicCrystalPrice)} 钻`));
     assert.match(current, /本次普通 SSR 制作免费/);
@@ -71,6 +73,8 @@ test('resource price help reflects policy unit prices and exchange rates rather 
     assert.match(configured, /13,500 钻/);
     assert.match(configured, /圣遗物材料<\/th><td>1,000 钻/);
     assert.match(configured, /紫水晶<\/th><td>108 钻/);
+    assert.match(configured, /UR \/ LR 装备碎片<\/th><td>5,000 钻<small>\/ 40片<\/small>/);
+    assert.match(configured, /专武碎片<\/th><td>432 钻<small>\/ 12片<\/small>/);
     assert.match(configured, /5 个圣遗物材料 = 40 片 UR \/ LR 装备碎片/);
     assert.match(configured, /4 个紫水晶 = 12 片专武碎片/);
     assert.doesNotMatch(configured, /本次普通 SSR 制作免费/);
@@ -98,6 +102,7 @@ test('builder displays a nameless framed team to the right of the selected chara
   const displayedCatalog = {
     ...catalog,
     elementIcons: Object.fromEntries(Object.keys(catalog.elementIcons).map(key => [key, `./custom-elements/${key}.png`])),
+    jobIcons: Object.fromEntries([1, 2, 4].map(key => [key, `./custom-jobs/${key}.png`])),
     teamFrame: './custom-elements/team-frame.png',
     iconArt: { ...catalog.iconArt, frames: Object.fromEntries(Object.keys(catalog.iconArt.frames).map(key => [key, `./custom-elements/frame-${key}.png`])) },
     characters: catalog.characters.map(character => character.id === 124 ? { ...character, name: '【SP】特殊标识角色', subtitle: '固定一行副标题' } : character.id === 85 ? { ...character, subtitle: '' } : character),
@@ -165,6 +170,10 @@ test('builder displays a nameless framed team to the right of the selected chara
     assert.ok(markup.includes(`class="element-badge" src="./custom-elements/${key}.png"`));
   }
   assert.equal((markup.match(/class="element-badge"/g) ?? []).length, catalog.characters.length + 3, 'roster, both occupied seats and selected portrait must use the catalog icons');
+  for (const [job, name] of [[1, '战士'], [2, '射手'], [4, '法师']]) {
+    assert.ok(markup.includes(`class="job-badge" src="./custom-jobs/${job}.png" alt="${name}" title="${name}"`));
+  }
+  assert.equal((markup.match(/class="job-badge"/g) ?? []).length, catalog.characters.length + 3, 'profession icons follow the catalog in roster, seats and selected portrait');
   assert.match(lineup, /class="game-icon-frame" data-rarity="LR5" data-frame="lr"/);
   assert.equal((markup.match(/class="rarity-stars"/g) ?? []).length, 2, 'the team and selected portrait use current LR5, while catalog portraits remain SR');
   assert.match(selection, /class="game-icon-frame" data-rarity="SR" data-frame="common"/);
@@ -176,7 +185,8 @@ test('builder displays a nameless framed team to the right of the selected chara
   assert.match(css, /\.tile-name\{height:14px;line-height:14px\}/);
   assert.match(css, /\.tile-subtitle\{height:11px;line-height:11px\}/);
   assert.match(css, /\.portrait-frame \.portrait-image\{[^}]*object-fit:cover/);
-  assert.match(css, /\.portrait-frame \.element-badge\{[^}]*width:19px;[^}]*height:19px;object-fit:contain/);
+  assert.match(css, /\.portrait-frame \.element-badge,\.portrait-frame \.job-badge\{[^}]*width:24%;height:24%;object-fit:contain/);
+  assert.doesNotMatch(css, /[^{}]*\.(?:element|job)-badge[^{}]*\{[^}]*(?:width|height):[\d.]+px/);
   assert.match(css, /\.team-slot\{[^}]*aspect-ratio:100\/104/);
   assert.match(css, /\.portrait-frame\.has-rarity-frame\{overflow:visible/);
   assert.match(css, /\.rune-holes\{display:grid;grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);

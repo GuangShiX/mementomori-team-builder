@@ -33,10 +33,14 @@ if (process.argv.includes('--display-only')) {
 }
 const elementsOnly = process.argv.includes('--elements-only') || process.argv.includes('--ui-only');
 const arcanaPortraitsOnly = process.argv.includes('--arcana-portraits-only');
-const previousLock = elementsOnly || arcanaPortraitsOnly ? JSON.parse(await readFile(path.join(root, 'public/data/asset-lock.json'))) : null;
+const jobsOnly = process.argv.includes('--jobs-only');
+const previousLock = JSON.parse(await readFile(path.join(root, 'public/data/asset-lock.json')));
 const ref = process.env.ASSET_REF || previousLock?.ref || '440e579724fa1fa11c737c308ef59266d41f0453';
 if ((elementsOnly || arcanaPortraitsOnly) && ref !== previousLock.ref) throw new Error('Partial synchronization must use the existing locked asset ref.');
-const base = `https://raw.githubusercontent.com/GuangShiX/mmtm-assets-fallback/${ref}`;
+// Profession art may be added at a newer public ref without upgrading the existing art lock.
+const sourceRef = jobsOnly ? process.env.JOB_ASSET_REF || process.env.ASSET_REF || previousLock.jobAssetRef || previousLock.ref : ref;
+if (jobsOnly && !/^[a-f0-9]{40}$/.test(sourceRef)) throw new Error('Profession synchronization requires an exact published commit SHA.');
+const base = `https://raw.githubusercontent.com/GuangShiX/mmtm-assets-fallback/${sourceRef}`;
 const cache = process.env.PUBLIC_ASSET_CACHE;
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 async function fetchBytes(relative, hash) {
@@ -49,7 +53,7 @@ async function fetchBytes(relative, hash) {
   if (hash && sha(bytes) !== hash) throw new Error(`${relative}: canonical SHA-256 mismatch`);
   return bytes;
 }
-const index = arcanaPortraitsOnly ? {characters:[]} : JSON.parse(await fetchBytes('skills/index.json'));
+const index = arcanaPortraitsOnly || jobsOnly ? {characters:[]} : JSON.parse(await fetchBytes('skills/index.json'));
 const manifest = JSON.parse(await fetchBytes('manifest.json'));
 function pngSize(bytes, name) {
   if (bytes.length < 24 || !bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) throw new Error(`Invalid original PNG: ${name}`);
@@ -68,6 +72,29 @@ async function syncArt(category, name, expectedSize, identity = {}) {
   await mkdir(path.join(root, 'public', `assets/${category}`), {recursive:true});
   await writeFile(path.join(root, 'public', target), bytes);
   return {...identity,path:target,sha256:asset.sha256,sourcePath:asset.path,sourceResourceKey:asset.source_resource_key,...dimensions};
+}
+if (jobsOnly) {
+  const jobs = [[1,'warrior'],[2,'sniper'],[4,'sorcerer']];
+  // Require the complete original-art set before writing any consumer files.
+  for (const [,job] of jobs) {
+    const name = `icon_job_${job}.png`;
+    const asset = manifest.assets.find(item => item.category === 'ui' && item.name === name);
+    if (!asset?.sha256 || asset.path !== `assets/ui/${name}` || !asset.source_resource_key?.includes('#Sprite:')) throw new Error(`Canonical original profession Sprite missing: ${name}`);
+  }
+  const jobIcons = {};
+  const jobEntries = [];
+  for (const [jobId,job] of jobs) {
+    const asset = await syncArt('ui',`icon_job_${job}.png`,{width:50,height:50},{jobId,job,sourceRef});
+    jobIcons[jobId] = `./${asset.path}`;
+    jobEntries.push(asset);
+  }
+  const catalogPath = path.join(root,'public/data/catalog.json');
+  const catalog = JSON.parse(await readFile(catalogPath));
+  catalog.jobIcons = jobIcons;
+  await writeFile(catalogPath,JSON.stringify(catalog,null,2)+'\n');
+  await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify({...previousLock,jobAssetRef:sourceRef,jobIcons:jobEntries},null,2)+'\n');
+  console.log(`Synced ${jobEntries.length} original profession Sprites from ${sourceRef}; existing character catalog and art refs preserved.`);
+  process.exit(0);
 }
 async function syncArcanaPortraits() {
   const ids = [2,3,4,12,13,14,22,23,24,32,33,34];
@@ -171,6 +198,7 @@ const catalog = elementsOnly ? JSON.parse(await readFile(path.join(root, 'public
   },
 };
 catalog.elementIcons = elementIcons;
+if (previousLock.jobIcons) catalog.jobIcons = Object.fromEntries(previousLock.jobIcons.map(asset=>[asset.jobId,`./${asset.path}`]));
 catalog.teamFrame = `./${framePath}`;
 const equipmentAssets = [];
 const equipmentAssetByIconId = new Map();
@@ -220,5 +248,5 @@ catalog.iconArt = {
   representativeExclusiveWeapons:representatives,
 };
 await writeFile(path.join(root,'public/data/catalog.json'),JSON.stringify(catalog,null,2)+'\n');
-await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify(elementsOnly ? {...previousLock,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits} : {ref,source:base,portraits:entries,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits},null,2)+'\n');
+await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify(elementsOnly ? {...previousLock,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits} : {ref,source:base,portraits:entries,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits,...(previousLock.jobIcons?{jobAssetRef:previousLock.jobAssetRef,jobIcons:previousLock.jobIcons}:{})},null,2)+'\n');
 console.log(`Synced ${elementEntries.length} original element icons, ${uiAssets.length} UI Sprites, ${equipmentAssets.length} unique equipment icons and ${arcanaPortraits.length} arcana portraits; ${elementsOnly ? 'existing' : characters.length + ' public SR'} character catalog preserved.`);

@@ -3053,5 +3053,10 @@
         }
       }
     }
+  },
+  "jobIcons": {
+    "1": "./assets/ui/icon_job_warrior.png",
+    "2": "./assets/ui/icon_job_sniper.png",
+    "4": "./assets/ui/icon_job_sorcerer.png"
   }
 }

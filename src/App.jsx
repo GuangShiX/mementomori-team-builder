@@ -21,6 +21,7 @@ const ELEMENTS = {
   dark: { name: '暗' },
 };
 const SLOT_NAMES = { 1: '武器', 2: '项链', 3: '手套', 4: '头盔', 5: '衣服', 6: '脚' };
+const JOB_NAMES = { 1: '战士', 2: '射手', 4: '法师' };
 const RESOURCE_NAMES = {
   runeTickets: '饼干 · 符石兑换券', reinforcementMedicine: '红水 · 强化秘药',
   unidentifiedRune7: '7 级未鉴定符石', holySteel: '圣装经验等价',
@@ -203,17 +204,20 @@ function GameIconFrame({ iconArt, rarity, type = 'character' }) {
   </>;
 }
 
-function Portrait({ character, elementIcons, iconArt, rarity = 'SR', badge = true }) {
+function Portrait({ character, elementIcons, jobIcons, iconArt, rarity = 'SR', badge = true }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [character?.id, character?.portrait]);
   const element = ELEMENTS[character?.element];
   const elementIcon = elementIcons?.[character?.element];
+  const jobName = JOB_NAMES[character?.job];
+  const jobIcon = jobIcons?.[character?.job];
   return <div className={`portrait-frame${iconArt?.characterRarities?.[rarity] ? ' has-rarity-frame' : ''}`}>
     {character?.portrait && !failed
       ? <img className="portrait-image" src={character.portrait} alt="" loading="lazy" draggable={false} onError={() => setFailed(true)} />
       : <span className="portrait-fallback" aria-hidden="true">{character?.name?.slice(0, 1) ?? '✧'}</span>}
     <GameIconFrame iconArt={iconArt} rarity={rarity} />
     {badge && element && elementIcon && <img className="element-badge" src={elementIcon} alt={`${element.name}属性`} title={`${element.name}属性`} draggable={false} />}
+    {badge && jobName && jobIcon && <img className="job-badge" src={jobIcon} alt={jobName} title={jobName} draggable={false} />}
   </div>;
 }
 
@@ -453,7 +457,7 @@ export function ArcanaEditor({ state, catalog, onPurchase }) {
         const owned = ledger.get(id);
         const hasLR = ['LR', 'LR5'].includes(owned?.rarity);
         if (!character) return <div className="arcana-member unpublished" key={id}><span className="arcana-unpublished-placeholder">未开放</span><small>暂不可获取</small></div>;
-        return <div className="arcana-member" key={id}><Portrait character={character} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={owned?.rarity ?? 'SR'} /><span title={characterLabel(character)}>{character?.name}</span><small>{hasLR ? `持有 ${owned.rarity}` : '购买获得 LR'}</small></div>;
+        return <div className="arcana-member" key={id}><Portrait character={character} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity={owned?.rarity ?? 'SR'} /><span title={characterLabel(character)}>{character?.name}</span><small>{hasLR ? `持有 ${owned.rarity}` : '购买获得 LR'}</small></div>;
       })}</div>
       <p className="arcana-bonus-tier">{group.unlocked ? `${group.bonusTierLabel} 档加成 · 已生效` : group.published === false ? 'LR 档加成 · 暂未开放' : 'LR 档加成 · 补齐后生效'}</p>
       <div className="arcana-card-bonuses">{group.bonuses.map((bonus, index) => <span key={index}>{bonus.label}<strong>{bonusValue(bonus)}</strong></span>)}</div>
@@ -479,9 +483,9 @@ export function ResourcePriceHelp({ policy }) {
     ['圣装经验等价', prices.holySteel * (policy.holySteelPerExperience ?? 1), '份', '每份为一级圣装经验'],
     ['叶子 · 生命树之露', prices.lifeTreeDew, '个'],
     ['圣遗物材料', relicMaterials > 0 ? prices.urLrFragments * relicFragments / relicMaterials : null, '个'],
-    ['UR / LR 装备碎片', prices.urLrFragments, '片'],
+    ['UR / LR 装备碎片', prices.urLrFragments * relicFragments, `${amount(relicFragments)}片`],
     ['紫水晶', crystals > 0 ? prices.exclusiveFragments * exclusiveFragments / crystals : null, '个'],
-    ['专武碎片', prices.exclusiveFragments, '片'],
+    ['专武碎片', prices.exclusiveFragments * exclusiveFragments, `${amount(exclusiveFragments)}片`],
     ['禁忌武具材料', prices.ssrFragments * ssrFragments, '个', forgeFree ? '本次普通 SSR 制作免费' : '普通 SSR 制作参考价'],
     ['SSR 装备碎片', prices.ssrFragments, '片', forgeFree ? '本次普通 SSR 制作免费' : '普通 SSR 制作参考价'],
   ];
@@ -828,7 +832,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
           const inTeam = team.members.some(member => member?.characterId === character.id);
           const entitlement = freeCharacters.get(character.id);
           return <div className={`character-tile${inTeam ? ' in-team' : ''}`} role="listitem" key={character.id} title={`${characterLabel(character)} · 拖到站位${inTeam ? '调整位置' : '加入或替换'}${entitlement ? ` · 免费库 ${entitlement.rarity}` : ''}`} aria-label={`拖入${characterLabel(character)}`} draggable onDragStart={event => startDrag(event, { kind: 'character', characterId: character.id })} onDragEnd={endDrag}>
-            <div style={{ position: 'relative' }}><Portrait character={character} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity="SR" />{inTeam && <span className="selected-check"><Icon name="check" size={10} /></span>}</div><span className="tile-name">{character.name}</span><span className="tile-subtitle" aria-hidden={!character.subtitle}>{character.subtitle || '\u00a0'}</span><span className="tile-free-cap" aria-hidden={!entitlement}>{entitlement ? `${entitlement.rarity} 免费` : '\u00a0'}</span>
+            <div style={{ position: 'relative' }}><Portrait character={character} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity="SR" />{inTeam && <span className="selected-check"><Icon name="check" size={10} /></span>}</div><span className="tile-name">{character.name}</span><span className="tile-subtitle" aria-hidden={!character.subtitle}>{character.subtitle || '\u00a0'}</span><span className="tile-free-cap" aria-hidden={!entitlement}>{entitlement ? `${entitlement.rarity} 免费` : '\u00a0'}</span>
           </div>;
         })}{filtered.length === 0 && <p className="no-results">没有找到符合条件的角色</p>}</div>
         <p className="catalog-help">拖动目录角色到站位加入或替换。<br />将队员拖回此目录可移出配队。</p>
@@ -843,7 +847,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
           <div className="workbench-sticky">
           <div className="character-workbench-header">
             <div className="character-overview"><div className="selected-character-header">{selectedMember && selectedCharacter ? (
-              <div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={selectedMember.rarity} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div>
+              <div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity={selectedMember.rarity} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div>
             ) : <div className="character-overview-empty"><Icon name="gear" size={20} /><p>将角色拖入队伍位置<br />即可编辑装备</p></div>}
               <div className="character-overview-controls">
                 {selectedMember && selectedCharacter && <label className="rarity-control"><span className="field-label">角色稀有度</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => chooseMemberRarity(event.target.value)}><option value="SR" disabled={arcanaRequiresLR}>SR</option><option value="LR">LR</option><option value="LR5">LR5</option></select>{arcanaRequiresLR && <span className="arcana-rarity-note">已购秘仪至少需 LR</span>}</label>}
@@ -858,7 +862,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
               onDragOver={event => { if (!event.dataTransfer.types.includes(TEAM_DRAG_TYPE)) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setDropTarget(index); }}
               onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(current => current === index ? null : current); }} onDrop={event => dropMember(event, index)}>
               <span className="slot-position">0{index + 1}</span>
-              {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} elementIcons={catalog.elementIcons} iconArt={catalog.iconArt} rarity={member.rarity} /><span className="member-speed" title="当前构筑速度，不含战斗技能增益">速度 {teamStats[index]?.valid ? teamStats[index].rows.find(row => row.key === 'Speed')?.displayValue ?? '—' : '—'}</span></button> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div></div>}
+              {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity={member.rarity} /><span className="member-speed" title="当前构筑速度，不含战斗技能增益">速度 {teamStats[index]?.valid ? teamStats[index].rows.find(row => row.key === 'Speed')?.displayValue ?? '—' : '—'}</span></button> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div></div>}
             </div></div>;
           })}</div></div>
         </section>

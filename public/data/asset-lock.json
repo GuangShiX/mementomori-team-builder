@@ -2096,5 +2096,41 @@
       "sha256": "4231ff69dd8ce2f370098fd5640207f5842c0f317200ce2226a50d9639f9fa22",
       "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000034/CHR_000034_00_s.png"
     }
+  ],
+  "jobAssetRef": "211694cb6752686f4b1e343b05fc844902c6a4f4",
+  "jobIcons": [
+    {
+      "jobId": 1,
+      "job": "warrior",
+      "sourceRef": "211694cb6752686f4b1e343b05fc844902c6a4f4",
+      "path": "assets/ui/icon_job_warrior.png",
+      "sha256": "4b27447642b622dab1f584078982b673caca82804ca11e6a140abc7a36721e19",
+      "sourcePath": "assets/ui/icon_job_warrior.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:3315186087643974228",
+      "width": 50,
+      "height": 50
+    },
+    {
+      "jobId": 2,
+      "job": "sniper",
+      "sourceRef": "211694cb6752686f4b1e343b05fc844902c6a4f4",
+      "path": "assets/ui/icon_job_sniper.png",
+      "sha256": "0001fb0a9074319a593ee7cec9f30c1f8608e74ac617fd81999811da0016e7fe",
+      "sourcePath": "assets/ui/icon_job_sniper.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:-3166586490611880527",
+      "width": 50,
+      "height": 50
+    },
+    {
+      "jobId": 4,
+      "job": "sorcerer",
+      "sourceRef": "211694cb6752686f4b1e343b05fc844902c6a4f4",
+      "path": "assets/ui/icon_job_sorcerer.png",
+      "sha256": "f5fe84de307e4db858f207f4449fd579dc7fd7e295b5a58260220aca5ff7010c",
+      "sourcePath": "assets/ui/icon_job_sorcerer.png",
+      "sourceResourceKey": "assets/aa/Android/d8e6c8c3a22da3265163f34736d7d400.bundle#Sprite:323846835936649364",
+      "width": 50,
+      "height": 50
+    }
   ]
 }
