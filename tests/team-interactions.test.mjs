@@ -136,7 +136,21 @@ test('new UI members first equip their own free weapon, including the promised S
   assert.deepEqual(added.team.members[0].equipment.slice(1).map(gear => gear.matchlessSacredTreasureLevel), [0, 0, 0, 0, 0]);
 });
 
-test('a member without its own free weapon borrows the highest available compatible UR without duplicate claims', async () => {
+test('new members keep their own gifted weapon rarity and level across every gift tier', async () => {
+  const catalog = JSON.parse(await readFile(new URL('../public/data/catalog.json', import.meta.url)));
+  const freeLibrary = JSON.parse(await readFile(new URL('../public/data/free-library.json', import.meta.url)));
+  for (const gift of freeLibrary.exclusiveWeapons) {
+    const character = catalog.characters.find(character => character.id === gift.characterId);
+    const result = addRosterCharacter(createTeam(), character, { catalog, freeLibrary });
+    const weapon = result.team.members[0].equipment[0];
+    assert.equal(weapon.weaponOwnerCharacterId, gift.characterId);
+    assert.equal(weapon.rarity, gift.rarity);
+    assert.equal(weapon.level, gift.level);
+    assert.equal(weapon.matchlessSacredTreasureLevel, 40);
+  }
+});
+
+test('members without their own free weapons default to their own SSR180 even when compatible free weapons are available', async () => {
   const catalog = JSON.parse(await readFile(new URL('../public/data/catalog.json', import.meta.url)));
   const freeLibrary = JSON.parse(await readFile(new URL('../public/data/free-library.json', import.meta.url)));
   const candidates = catalog.characters.filter(character => character.job === 1 && !freeLibrary.exclusiveWeapons.some(gift => gift.characterId === character.id));
@@ -144,14 +158,14 @@ test('a member without its own free weapon borrows the highest available compati
   const second = addRosterCharacter(first.team, candidates[1], { catalog, freeLibrary });
   const firstWeapon = second.team.members[0].equipment[0];
   const secondWeapon = second.team.members[1].equipment[0];
-  assert.equal(firstWeapon.rarity, 'UR');
-  assert.equal(firstWeapon.level, 300);
+  assert.equal(firstWeapon.rarity, 'SSR');
+  assert.equal(firstWeapon.level, 180);
   assert.equal(firstWeapon.matchlessSacredTreasureLevel, 40);
-  assert.equal(secondWeapon.rarity, 'UR');
-  assert.equal(secondWeapon.level, 240);
+  assert.equal(secondWeapon.rarity, 'SSR');
+  assert.equal(secondWeapon.level, 180);
   assert.equal(secondWeapon.matchlessSacredTreasureLevel, 40);
-  assert.notEqual(firstWeapon.weaponOwnerCharacterId, secondWeapon.weaponOwnerCharacterId);
-  assert.equal(catalog.characters.find(character => character.id === firstWeapon.weaponOwnerCharacterId).job, candidates[0].job);
+  assert.equal(firstWeapon.weaponOwnerCharacterId, candidates[0].id);
+  assert.equal(secondWeapon.weaponOwnerCharacterId, candidates[1].id);
 });
 
 test('replacement retains compatible borrowed gear but switches an incompatible owner back to the new actor', async () => {
@@ -163,7 +177,8 @@ test('replacement retains compatible borrowed gear but switches an incompatible 
   const otherJobActor = noGifts.find(character => character.job !== 1);
   const added = addRosterCharacter(createTeam(), firstActor, { catalog, freeLibrary });
   const originalWeapon = added.team.members[0].equipment[0];
-  originalWeapon.matchlessSacredTreasureLevel = 17;
+  const borrowedGift = freeLibrary.exclusiveWeapons.find(gift => gift.rarity === 'UR' && catalog.characters.find(character => character.id === gift.characterId)?.job === firstActor.job);
+  Object.assign(originalWeapon, { weaponOwnerCharacterId: borrowedGift.characterId, rarity: borrowedGift.rarity, seriesId: 13, level: borrowedGift.level, matchlessSacredTreasureLevel: 17 });
   const same = placeRosterCharacter(added.team, sameJobActor, 0, { catalog, freeLibrary });
   assert.equal(same.team.members[0].equipment[0].weaponOwnerCharacterId, originalWeapon.weaponOwnerCharacterId);
   assert.equal(same.team.members[0].equipment[0].matchlessSacredTreasureLevel, 17);
@@ -172,6 +187,23 @@ test('replacement retains compatible borrowed gear but switches an incompatible 
   assert.equal(different.team.members[0].equipment[0].level, originalWeapon.level);
   assert.equal(different.team.members[0].equipment[0].rarity, originalWeapon.rarity);
   assert.equal(different.team.members[0].equipment[0].matchlessSacredTreasureLevel, 17);
+});
+
+test('replacement switches an owned weapon to the new actor while preserving every equipment upgrade', async () => {
+  const catalog = JSON.parse(await readFile(new URL('../public/data/catalog.json', import.meta.url)));
+  const freeLibrary = JSON.parse(await readFile(new URL('../public/data/free-library.json', import.meta.url)));
+  const firstActor = catalog.characters[0];
+  const replacement = catalog.characters.find(character => character.id !== firstActor.id);
+  const added = addRosterCharacter(createTeam(), firstActor, { catalog, freeLibrary });
+  const previous = added.team.members[0];
+  Object.assign(previous.equipment[0], { reinforcementLevel: 60, legendSacredTreasureLevel: 18, matchlessSacredTreasureLevel: 17 });
+  previous.equipment[0].runes[1] = { categoryId: 5, level: 10 };
+  const result = placeRosterCharacter(added.team, replacement, 0, { catalog, freeLibrary });
+  const weapon = result.team.members[0].equipment[0];
+  assert.equal(weapon.weaponOwnerCharacterId, replacement.id);
+  assert.deepEqual({ ...weapon, weaponOwnerCharacterId: firstActor.id }, previous.equipment[0]);
+  assert.equal(result.team.members[0].equipment[1], previous.equipment[1]);
+  assert.equal(previous.equipment[0].weaponOwnerCharacterId, firstActor.id, 'the previous build is not mutated');
 });
 
 test('new members without an available free weapon initialize only their paid weapon at magic armor forty', async () => {

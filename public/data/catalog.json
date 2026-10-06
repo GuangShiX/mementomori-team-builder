@@ -11,7 +11,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/5.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000206.png",
-      "exclusiveWeaponIconId": 206
+      "exclusiveWeaponIconId": 206,
+      "exclusiveWeaponName": "耀日天球"
     },
     {
       "id": 6,
@@ -22,7 +23,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/6.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000212.png",
-      "exclusiveWeaponIconId": 212
+      "exclusiveWeaponIconId": 212,
+      "exclusiveWeaponName": "誓约之剑"
     },
     {
       "id": 7,
@@ -33,7 +35,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/7.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000218.png",
-      "exclusiveWeaponIconId": 218
+      "exclusiveWeaponIconId": 218,
+      "exclusiveWeaponName": "瓦恩之精的利爪"
     },
     {
       "id": 8,
@@ -44,7 +47,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/8.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000224.png",
-      "exclusiveWeaponIconId": 224
+      "exclusiveWeaponIconId": 224,
+      "exclusiveWeaponName": "深红誓约之圣枪"
     },
     {
       "id": 10,
@@ -55,7 +59,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/10.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000236.png",
-      "exclusiveWeaponIconId": 236
+      "exclusiveWeaponIconId": 236,
+      "exclusiveWeaponName": "幽紫送葬器"
     },
     {
       "id": 15,
@@ -66,7 +71,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/15.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000242.png",
-      "exclusiveWeaponIconId": 242
+      "exclusiveWeaponIconId": 242,
+      "exclusiveWeaponName": "瑞拜尔之剑"
     },
     {
       "id": 16,
@@ -77,7 +83,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/16.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000248.png",
-      "exclusiveWeaponIconId": 248
+      "exclusiveWeaponIconId": 248,
+      "exclusiveWeaponName": "谈花手记"
     },
     {
       "id": 17,
@@ -88,7 +95,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/17.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000254.png",
-      "exclusiveWeaponIconId": 254
+      "exclusiveWeaponIconId": 254,
+      "exclusiveWeaponName": "求爱荆棘"
     },
     {
       "id": 18,
@@ -99,7 +107,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/18.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000260.png",
-      "exclusiveWeaponIconId": 260
+      "exclusiveWeaponIconId": 260,
+      "exclusiveWeaponName": "约定的红莲之刃"
     },
     {
       "id": 20,
@@ -110,7 +119,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/20.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000272.png",
-      "exclusiveWeaponIconId": 272
+      "exclusiveWeaponIconId": 272,
+      "exclusiveWeaponName": "天使之咆哮"
     },
     {
       "id": 25,
@@ -121,7 +131,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/25.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000278.png",
-      "exclusiveWeaponIconId": 278
+      "exclusiveWeaponIconId": 278,
+      "exclusiveWeaponName": "艾玛"
     },
     {
       "id": 26,
@@ -132,7 +143,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/26.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000284.png",
-      "exclusiveWeaponIconId": 284
+      "exclusiveWeaponIconId": 284,
+      "exclusiveWeaponName": "丰饶之杖"
     },
     {
       "id": 27,
@@ -143,7 +155,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/27.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000290.png",
-      "exclusiveWeaponIconId": 290
+      "exclusiveWeaponIconId": 290,
+      "exclusiveWeaponName": "Jack & Pot"
     },
     {
       "id": 28,
@@ -154,7 +167,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/28.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000296.png",
-      "exclusiveWeaponIconId": 296
+      "exclusiveWeaponIconId": 296,
+      "exclusiveWeaponName": "迷失之子"
     },
     {
       "id": 29,
@@ -165,7 +179,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/29.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000302.png",
-      "exclusiveWeaponIconId": 302
+      "exclusiveWeaponIconId": 302,
+      "exclusiveWeaponName": "万能溶剂原理"
     },
     {
       "id": 35,
@@ -176,7 +191,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/35.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000314.png",
-      "exclusiveWeaponIconId": 314
+      "exclusiveWeaponIconId": 314,
+      "exclusiveWeaponName": "猫咪的小手"
     },
     {
       "id": 36,
@@ -187,7 +203,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/36.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000320.png",
-      "exclusiveWeaponIconId": 320
+      "exclusiveWeaponIconId": 320,
+      "exclusiveWeaponName": "骗术师的獠牙"
     },
     {
       "id": 37,
@@ -198,7 +215,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/37.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000326.png",
-      "exclusiveWeaponIconId": 326
+      "exclusiveWeaponIconId": 326,
+      "exclusiveWeaponName": "舞娘的小鸟"
     },
     {
       "id": 38,
@@ -209,7 +227,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/38.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000332.png",
-      "exclusiveWeaponIconId": 332
+      "exclusiveWeaponIconId": 332,
+      "exclusiveWeaponName": "独一至圣之枪"
     },
     {
       "id": 39,
@@ -220,7 +239,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/39.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000338.png",
-      "exclusiveWeaponIconId": 338
+      "exclusiveWeaponIconId": 338,
+      "exclusiveWeaponName": "普莉鸟维拉"
     },
     {
       "id": 41,
@@ -231,7 +251,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/41.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000350.png",
-      "exclusiveWeaponIconId": 350
+      "exclusiveWeaponIconId": 350,
+      "exclusiveWeaponName": "葬花之镰"
     },
     {
       "id": 46,
@@ -242,7 +263,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/46.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000380.png",
-      "exclusiveWeaponIconId": 380
+      "exclusiveWeaponIconId": 380,
+      "exclusiveWeaponName": "辉月天球"
     },
     {
       "id": 42,
@@ -253,7 +275,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/42.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000356.png",
-      "exclusiveWeaponIconId": 356
+      "exclusiveWeaponIconId": 356,
+      "exclusiveWeaponName": "圣女十字架"
     },
     {
       "id": 19,
@@ -264,7 +287,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/19.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000266.png",
-      "exclusiveWeaponIconId": 266
+      "exclusiveWeaponIconId": 266,
+      "exclusiveWeaponName": "圣赎的炽炎之杖"
     },
     {
       "id": 47,
@@ -275,7 +299,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/47.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000386.png",
-      "exclusiveWeaponIconId": 386
+      "exclusiveWeaponIconId": 386,
+      "exclusiveWeaponName": "劫火之灭"
     },
     {
       "id": 30,
@@ -286,7 +311,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/30.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000308.png",
-      "exclusiveWeaponIconId": 308
+      "exclusiveWeaponIconId": 308,
+      "exclusiveWeaponName": "引光者的誓言之剑"
     },
     {
       "id": 40,
@@ -297,7 +323,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/40.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000344.png",
-      "exclusiveWeaponIconId": 344
+      "exclusiveWeaponIconId": 344,
+      "exclusiveWeaponName": "勿忘草日记本"
     },
     {
       "id": 9,
@@ -308,7 +335,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/9.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000230.png",
-      "exclusiveWeaponIconId": 230
+      "exclusiveWeaponIconId": 230,
+      "exclusiveWeaponName": "维京战斧"
     },
     {
       "id": 43,
@@ -319,7 +347,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/43.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000362.png",
-      "exclusiveWeaponIconId": 362
+      "exclusiveWeaponIconId": 362,
+      "exclusiveWeaponName": "雷神之锤"
     },
     {
       "id": 51,
@@ -330,7 +359,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/51.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000410.png",
-      "exclusiveWeaponIconId": 410
+      "exclusiveWeaponIconId": 410,
+      "exclusiveWeaponName": "红洁刺剑"
     },
     {
       "id": 48,
@@ -341,7 +371,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/48.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000392.png",
-      "exclusiveWeaponIconId": 392
+      "exclusiveWeaponIconId": 392,
+      "exclusiveWeaponName": "锈铁之翼"
     },
     {
       "id": 49,
@@ -352,7 +383,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/49.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000398.png",
-      "exclusiveWeaponIconId": 398
+      "exclusiveWeaponIconId": 398,
+      "exclusiveWeaponName": "断罪之剑"
     },
     {
       "id": 53,
@@ -363,7 +395,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/53.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000422.png",
-      "exclusiveWeaponIconId": 422
+      "exclusiveWeaponIconId": 422,
+      "exclusiveWeaponName": "鱼鱼"
     },
     {
       "id": 55,
@@ -374,7 +407,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/55.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000434.png",
-      "exclusiveWeaponIconId": 434
+      "exclusiveWeaponIconId": 434,
+      "exclusiveWeaponName": "连环杀机"
     },
     {
       "id": 54,
@@ -385,7 +419,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/54.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000428.png",
-      "exclusiveWeaponIconId": 428
+      "exclusiveWeaponIconId": 428,
+      "exclusiveWeaponName": "智识古杖"
     },
     {
       "id": 44,
@@ -396,7 +431,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/44.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000368.png",
-      "exclusiveWeaponIconId": 368
+      "exclusiveWeaponIconId": 368,
+      "exclusiveWeaponName": "灰姑娘"
     },
     {
       "id": 52,
@@ -407,7 +443,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/52.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000416.png",
-      "exclusiveWeaponIconId": 416
+      "exclusiveWeaponIconId": 416,
+      "exclusiveWeaponName": "日升者"
     },
     {
       "id": 58,
@@ -418,7 +455,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/58.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000452.png",
-      "exclusiveWeaponIconId": 452
+      "exclusiveWeaponIconId": 452,
+      "exclusiveWeaponName": "兀儿肯努斯圆阵"
     },
     {
       "id": 67,
@@ -429,7 +467,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/67.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000506.png",
-      "exclusiveWeaponIconId": 506
+      "exclusiveWeaponIconId": 506,
+      "exclusiveWeaponName": "赫尔墨斯的指引"
     },
     {
       "id": 70,
@@ -440,7 +479,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/70.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000524.png",
-      "exclusiveWeaponIconId": 524
+      "exclusiveWeaponIconId": 524,
+      "exclusiveWeaponName": "瑞瓦日之剑"
     },
     {
       "id": 71,
@@ -451,7 +491,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/71.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000530.png",
-      "exclusiveWeaponIconId": 530
+      "exclusiveWeaponIconId": 530,
+      "exclusiveWeaponName": "热带风情游泳圈"
     },
     {
       "id": 60,
@@ -462,7 +503,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/60.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000464.png",
-      "exclusiveWeaponIconId": 464
+      "exclusiveWeaponIconId": 464,
+      "exclusiveWeaponName": "愚钝的铁块"
     },
     {
       "id": 72,
@@ -473,7 +515,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/72.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000536.png",
-      "exclusiveWeaponIconId": 536
+      "exclusiveWeaponIconId": 536,
+      "exclusiveWeaponName": "夏日狂欢"
     },
     {
       "id": 50,
@@ -484,7 +527,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/50.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000404.png",
-      "exclusiveWeaponIconId": 404
+      "exclusiveWeaponIconId": 404,
+      "exclusiveWeaponName": "1805式魔力型手枪"
     },
     {
       "id": 57,
@@ -495,7 +539,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/57.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000446.png",
-      "exclusiveWeaponIconId": 446
+      "exclusiveWeaponIconId": 446,
+      "exclusiveWeaponName": "混沌霸主"
     },
     {
       "id": 62,
@@ -506,7 +551,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/62.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000476.png",
-      "exclusiveWeaponIconId": 476
+      "exclusiveWeaponIconId": 476,
+      "exclusiveWeaponName": "长发姑娘"
     },
     {
       "id": 45,
@@ -517,7 +563,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/45.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000374.png",
-      "exclusiveWeaponIconId": 374
+      "exclusiveWeaponIconId": 374,
+      "exclusiveWeaponName": "朗基努斯之枪"
     },
     {
       "id": 61,
@@ -528,7 +575,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/61.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000470.png",
-      "exclusiveWeaponIconId": 470
+      "exclusiveWeaponIconId": 470,
+      "exclusiveWeaponName": "封魔黑钥"
     },
     {
       "id": 68,
@@ -539,7 +587,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/68.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000512.png",
-      "exclusiveWeaponIconId": 512
+      "exclusiveWeaponIconId": 512,
+      "exclusiveWeaponName": "M260手持型冲击炮"
     },
     {
       "id": 73,
@@ -550,7 +599,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/73.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000542.png",
-      "exclusiveWeaponIconId": 542
+      "exclusiveWeaponIconId": 542,
+      "exclusiveWeaponName": "爱的礼物"
     },
     {
       "id": 74,
@@ -561,7 +611,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/74.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000548.png",
-      "exclusiveWeaponIconId": 548
+      "exclusiveWeaponIconId": 548,
+      "exclusiveWeaponName": "托小波"
     },
     {
       "id": 66,
@@ -572,7 +623,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/66.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000500.png",
-      "exclusiveWeaponIconId": 500
+      "exclusiveWeaponIconId": 500,
+      "exclusiveWeaponName": "钝铁重剑"
     },
     {
       "id": 64,
@@ -583,7 +635,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/64.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000488.png",
-      "exclusiveWeaponIconId": 488
+      "exclusiveWeaponIconId": 488,
+      "exclusiveWeaponName": "黄昏之星"
     },
     {
       "id": 56,
@@ -594,7 +647,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/56.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000440.png",
-      "exclusiveWeaponIconId": 440
+      "exclusiveWeaponIconId": 440,
+      "exclusiveWeaponName": "双龙宝剑"
     },
     {
       "id": 84,
@@ -605,7 +659,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/84.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000608.png",
-      "exclusiveWeaponIconId": 608
+      "exclusiveWeaponIconId": 608,
+      "exclusiveWeaponName": "苍蓝魔典"
     },
     {
       "id": 85,
@@ -616,7 +671,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/85.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000614.png",
-      "exclusiveWeaponIconId": 614
+      "exclusiveWeaponIconId": 614,
+      "exclusiveWeaponName": "王树权杖"
     },
     {
       "id": 76,
@@ -627,7 +683,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/76.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000560.png",
-      "exclusiveWeaponIconId": 560
+      "exclusiveWeaponIconId": 560,
+      "exclusiveWeaponName": "树影日光瓶"
     },
     {
       "id": 63,
@@ -638,7 +695,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/63.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000482.png",
-      "exclusiveWeaponIconId": 482
+      "exclusiveWeaponIconId": 482,
+      "exclusiveWeaponName": "和平使者"
     },
     {
       "id": 59,
@@ -649,7 +707,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/59.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000458.png",
-      "exclusiveWeaponIconId": 458
+      "exclusiveWeaponIconId": 458,
+      "exclusiveWeaponName": "M28魔力型狙击枪"
     },
     {
       "id": 75,
@@ -660,7 +719,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/75.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000554.png",
-      "exclusiveWeaponIconId": 554
+      "exclusiveWeaponIconId": 554,
+      "exclusiveWeaponName": "天使魔导书"
     },
     {
       "id": 88,
@@ -671,7 +731,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/88.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000632.png",
-      "exclusiveWeaponIconId": 632
+      "exclusiveWeaponIconId": 632,
+      "exclusiveWeaponName": "故主遗杖"
     },
     {
       "id": 78,
@@ -682,7 +743,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/78.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000572.png",
-      "exclusiveWeaponIconId": 572
+      "exclusiveWeaponIconId": 572,
+      "exclusiveWeaponName": "隐密流星"
     },
     {
       "id": 82,
@@ -693,7 +755,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/82.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000596.png",
-      "exclusiveWeaponIconId": 596
+      "exclusiveWeaponIconId": 596,
+      "exclusiveWeaponName": "圣枪守护者之盾"
     },
     {
       "id": 77,
@@ -704,7 +767,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/77.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000566.png",
-      "exclusiveWeaponIconId": 566
+      "exclusiveWeaponIconId": 566,
+      "exclusiveWeaponName": "不共戴天"
     },
     {
       "id": 69,
@@ -715,7 +779,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/69.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000518.png",
-      "exclusiveWeaponIconId": 518
+      "exclusiveWeaponIconId": 518,
+      "exclusiveWeaponName": "月咏画轴"
     },
     {
       "id": 95,
@@ -726,7 +791,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/95.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000674.png",
-      "exclusiveWeaponIconId": 674
+      "exclusiveWeaponIconId": 674,
+      "exclusiveWeaponName": "迷失之子红苹果"
     },
     {
       "id": 96,
@@ -737,7 +803,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/96.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000680.png",
-      "exclusiveWeaponIconId": 680
+      "exclusiveWeaponIconId": 680,
+      "exclusiveWeaponName": "仲夏日之梦"
     },
     {
       "id": 80,
@@ -748,7 +815,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/80.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000584.png",
-      "exclusiveWeaponIconId": 584
+      "exclusiveWeaponIconId": 584,
+      "exclusiveWeaponName": "活泼的快板"
     },
     {
       "id": 65,
@@ -759,7 +827,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/65.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000494.png",
-      "exclusiveWeaponIconId": 494
+      "exclusiveWeaponIconId": 494,
+      "exclusiveWeaponName": "泡沫之歌"
     },
     {
       "id": 79,
@@ -770,7 +839,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/79.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000578.png",
-      "exclusiveWeaponIconId": 578
+      "exclusiveWeaponIconId": 578,
+      "exclusiveWeaponName": "睿智石板"
     },
     {
       "id": 81,
@@ -781,7 +851,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/81.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000590.png",
-      "exclusiveWeaponIconId": 590
+      "exclusiveWeaponIconId": 590,
+      "exclusiveWeaponName": "狐炎咒符"
     },
     {
       "id": 86,
@@ -792,7 +863,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/86.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000620.png",
-      "exclusiveWeaponIconId": 620
+      "exclusiveWeaponIconId": 620,
+      "exclusiveWeaponName": "巨大百合水仙"
     },
     {
       "id": 105,
@@ -803,7 +875,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/105.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000734.png",
-      "exclusiveWeaponIconId": 734
+      "exclusiveWeaponIconId": 734,
+      "exclusiveWeaponName": "祝福花束"
     },
     {
       "id": 106,
@@ -814,7 +887,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/106.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000740.png",
-      "exclusiveWeaponIconId": 740
+      "exclusiveWeaponIconId": 740,
+      "exclusiveWeaponName": "最佳旅伴"
     },
     {
       "id": 107,
@@ -825,7 +899,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/107.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000746.png",
-      "exclusiveWeaponIconId": 746
+      "exclusiveWeaponIconId": 746,
+      "exclusiveWeaponName": "小熊耳罩"
     },
     {
       "id": 108,
@@ -836,7 +911,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/108.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000752.png",
-      "exclusiveWeaponIconId": 752
+      "exclusiveWeaponIconId": 752,
+      "exclusiveWeaponName": "雪白围巾"
     },
     {
       "id": 109,
@@ -847,7 +923,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/109.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000758.png",
-      "exclusiveWeaponIconId": 758
+      "exclusiveWeaponIconId": 758,
+      "exclusiveWeaponName": "转轮手杖枪"
     },
     {
       "id": 93,
@@ -858,7 +935,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/93.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000662.png",
-      "exclusiveWeaponIconId": 662
+      "exclusiveWeaponIconId": 662,
+      "exclusiveWeaponName": "圣剑卡里德福洛斯"
     },
     {
       "id": 111,
@@ -869,7 +947,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/111.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000770.png",
-      "exclusiveWeaponIconId": 770
+      "exclusiveWeaponIconId": 770,
+      "exclusiveWeaponName": "流泪之日"
     },
     {
       "id": 112,
@@ -880,7 +959,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/112.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000776.png",
-      "exclusiveWeaponIconId": 776
+      "exclusiveWeaponIconId": 776,
+      "exclusiveWeaponName": "白雪一点花"
     },
     {
       "id": 113,
@@ -891,7 +971,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/113.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000782.png",
-      "exclusiveWeaponIconId": 782
+      "exclusiveWeaponIconId": 782,
+      "exclusiveWeaponName": "罪人之叹"
     },
     {
       "id": 114,
@@ -902,7 +983,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/114.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000788.png",
-      "exclusiveWeaponIconId": 788
+      "exclusiveWeaponIconId": 788,
+      "exclusiveWeaponName": "自由之声"
     },
     {
       "id": 115,
@@ -913,7 +995,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/115.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000794.png",
-      "exclusiveWeaponIconId": 794
+      "exclusiveWeaponIconId": 794,
+      "exclusiveWeaponName": "勇气的魔法"
     },
     {
       "id": 116,
@@ -924,7 +1007,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/116.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000800.png",
-      "exclusiveWeaponIconId": 800
+      "exclusiveWeaponIconId": 800,
+      "exclusiveWeaponName": "至高女神"
     },
     {
       "id": 117,
@@ -935,7 +1019,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/117.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000806.png",
-      "exclusiveWeaponIconId": 806
+      "exclusiveWeaponIconId": 806,
+      "exclusiveWeaponName": "希望之翼"
     },
     {
       "id": 89,
@@ -946,7 +1031,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/89.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000638.png",
-      "exclusiveWeaponIconId": 638
+      "exclusiveWeaponIconId": 638,
+      "exclusiveWeaponName": "解放之光"
     },
     {
       "id": 100,
@@ -957,7 +1043,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/100.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000704.png",
-      "exclusiveWeaponIconId": 704
+      "exclusiveWeaponIconId": 704,
+      "exclusiveWeaponName": "暗夜翎羽"
     },
     {
       "id": 122,
@@ -968,7 +1055,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/122.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000836.png",
-      "exclusiveWeaponIconId": 836
+      "exclusiveWeaponIconId": 836,
+      "exclusiveWeaponName": "欢乐来福枪"
     },
     {
       "id": 121,
@@ -979,7 +1067,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/121.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000830.png",
-      "exclusiveWeaponIconId": 830
+      "exclusiveWeaponIconId": 830,
+      "exclusiveWeaponName": "余香绽放的花剪"
     },
     {
       "id": 87,
@@ -990,7 +1079,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/87.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000626.png",
-      "exclusiveWeaponIconId": 626
+      "exclusiveWeaponIconId": 626,
+      "exclusiveWeaponName": "悲叹之沫"
     },
     {
       "id": 123,
@@ -1001,7 +1091,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/123.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000842.png",
-      "exclusiveWeaponIconId": 842
+      "exclusiveWeaponIconId": 842,
+      "exclusiveWeaponName": "大欢乐秀"
     },
     {
       "id": 124,
@@ -1012,7 +1103,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/124.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000848.png",
-      "exclusiveWeaponIconId": 848
+      "exclusiveWeaponIconId": 848,
+      "exclusiveWeaponName": "黑色狼牙"
     },
     {
       "id": 125,
@@ -1023,7 +1115,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/125.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000854.png",
-      "exclusiveWeaponIconId": 854
+      "exclusiveWeaponIconId": 854,
+      "exclusiveWeaponName": "蝠形发饰"
     },
     {
       "id": 126,
@@ -1034,7 +1127,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/126.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000860.png",
-      "exclusiveWeaponIconId": 860
+      "exclusiveWeaponIconId": 860,
+      "exclusiveWeaponName": "炎火传承"
     },
     {
       "id": 102,
@@ -1045,7 +1139,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/102.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000716.png",
-      "exclusiveWeaponIconId": 716
+      "exclusiveWeaponIconId": 716,
+      "exclusiveWeaponName": "小巧印章槌"
     },
     {
       "id": 83,
@@ -1056,7 +1151,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/83.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000602.png",
-      "exclusiveWeaponIconId": 602
+      "exclusiveWeaponIconId": 602,
+      "exclusiveWeaponName": "雪柔隔热手套"
     },
     {
       "id": 129,
@@ -1067,7 +1163,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/129.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000878.png",
-      "exclusiveWeaponIconId": 878
+      "exclusiveWeaponIconId": 878,
+      "exclusiveWeaponName": "魔法糖果"
     },
     {
       "id": 130,
@@ -1078,7 +1175,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/130.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000884.png",
-      "exclusiveWeaponIconId": 884
+      "exclusiveWeaponIconId": 884,
+      "exclusiveWeaponName": "贤知仪"
     },
     {
       "id": 131,
@@ -1089,7 +1187,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/131.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000890.png",
-      "exclusiveWeaponIconId": 890
+      "exclusiveWeaponIconId": 890,
+      "exclusiveWeaponName": "贤者之书"
     },
     {
       "id": 132,
@@ -1100,7 +1199,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/132.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000896.png",
-      "exclusiveWeaponIconId": 896
+      "exclusiveWeaponIconId": 896,
+      "exclusiveWeaponName": "圣・混沌霸主"
     },
     {
       "id": 128,
@@ -1111,7 +1211,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/128.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000872.png",
-      "exclusiveWeaponIconId": 872
+      "exclusiveWeaponIconId": 872,
+      "exclusiveWeaponName": "糯糯"
     },
     {
       "id": 101,
@@ -1122,7 +1223,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/101.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000710.png",
-      "exclusiveWeaponIconId": 710
+      "exclusiveWeaponIconId": 710,
+      "exclusiveWeaponName": "心永恒・时永恒"
     },
     {
       "id": 135,
@@ -1133,7 +1235,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/135.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000914.png",
-      "exclusiveWeaponIconId": 914
+      "exclusiveWeaponIconId": 914,
+      "exclusiveWeaponName": "妖精的铃兰小窝"
     },
     {
       "id": 103,
@@ -1144,7 +1247,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/103.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000722.png",
-      "exclusiveWeaponIconId": 722
+      "exclusiveWeaponIconId": 722,
+      "exclusiveWeaponName": "雪鳞露珠"
     },
     {
       "id": 137,
@@ -1155,7 +1259,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/137.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000926.png",
-      "exclusiveWeaponIconId": 926
+      "exclusiveWeaponIconId": 926,
+      "exclusiveWeaponName": "贪婪折扇"
     },
     {
       "id": 99,
@@ -1166,7 +1271,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/99.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000698.png",
-      "exclusiveWeaponIconId": 698
+      "exclusiveWeaponIconId": 698,
+      "exclusiveWeaponName": "亲爱的小淑女"
     },
     {
       "id": 139,
@@ -1177,7 +1283,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/139.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000938.png",
-      "exclusiveWeaponIconId": 938
+      "exclusiveWeaponIconId": 938,
+      "exclusiveWeaponName": "好奇漂流兔"
     },
     {
       "id": 134,
@@ -1188,7 +1295,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/134.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000908.png",
-      "exclusiveWeaponIconId": 908
+      "exclusiveWeaponIconId": 908,
+      "exclusiveWeaponName": "追忆的铁块"
     },
     {
       "id": 141,
@@ -1199,7 +1307,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/141.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000950.png",
-      "exclusiveWeaponIconId": 950
+      "exclusiveWeaponIconId": 950,
+      "exclusiveWeaponName": "赎罪的谎花"
     },
     {
       "id": 92,
@@ -1210,7 +1319,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/92.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000656.png",
-      "exclusiveWeaponIconId": 656
+      "exclusiveWeaponIconId": 656,
+      "exclusiveWeaponName": "生命灯匣"
     },
     {
       "id": 90,
@@ -1221,7 +1331,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/90.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000644.png",
-      "exclusiveWeaponIconId": 644
+      "exclusiveWeaponIconId": 644,
+      "exclusiveWeaponName": "全知之根"
     },
     {
       "id": 148,
@@ -1232,7 +1343,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/148.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000992.png",
-      "exclusiveWeaponIconId": 992
+      "exclusiveWeaponIconId": 992,
+      "exclusiveWeaponName": "慈爱圣餐杯"
     },
     {
       "id": 140,
@@ -1243,7 +1355,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/140.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000944.png",
-      "exclusiveWeaponIconId": 944
+      "exclusiveWeaponIconId": 944,
+      "exclusiveWeaponName": "魂瓮"
     },
     {
       "id": 149,
@@ -1254,7 +1367,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/149.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000998.png",
-      "exclusiveWeaponIconId": 998
+      "exclusiveWeaponIconId": 998,
+      "exclusiveWeaponName": "普莉鸟维拉的暑假"
     },
     {
       "id": 153,
@@ -1265,7 +1379,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/153.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_001022.png",
-      "exclusiveWeaponIconId": 1022
+      "exclusiveWeaponIconId": 1022,
+      "exclusiveWeaponName": "小安"
     },
     {
       "id": 150,
@@ -1276,7 +1391,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/150.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_001004.png",
-      "exclusiveWeaponIconId": 1004
+      "exclusiveWeaponIconId": 1004,
+      "exclusiveWeaponName": "骑士的黄昏"
     },
     {
       "id": 151,
@@ -1287,7 +1403,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/151.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_001010.png",
-      "exclusiveWeaponIconId": 1010
+      "exclusiveWeaponIconId": 1010,
+      "exclusiveWeaponName": "圣女的黄昏"
     },
     {
       "id": 97,
@@ -1298,7 +1415,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/97.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_000686.png",
-      "exclusiveWeaponIconId": 686
+      "exclusiveWeaponIconId": 686,
+      "exclusiveWeaponName": "龙神的只翼"
     },
     {
       "id": 154,
@@ -1309,7 +1427,8 @@
       "baseRarity": 8,
       "portrait": "./assets/characters/154.png",
       "exclusiveWeaponIcon": "./assets/equipment/EQP_001028.png",
-      "exclusiveWeaponIconId": 1028
+      "exclusiveWeaponIconId": 1028,
+      "exclusiveWeaponName": "圣剑艾克斯卡利伯"
     }
   ],
   "runeCategories": [

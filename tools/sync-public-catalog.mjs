@@ -95,6 +95,7 @@ if (arcanaPortraitsOnly) {
   process.exit(0);
 }
 const elements = {1:'blue',2:'red',3:'green',4:'yellow',5:'light',6:'dark'};
+const exclusiveWeaponNames = JSON.parse(await readFile(path.join(root, 'public/data/exclusive-weapon-names.json')));
 const elementEntries = [];
 const elementIcons = {};
 for (const [elementId, element] of Object.entries(elements)) {
@@ -142,7 +143,9 @@ for (const row of index.characters) {
     portrait = `./${target}`;
     entries.push({id,path:target,sha256:asset.sha256,sourcePath:asset.path});
   }
-  characters.push({id,name,subtitle:row.subtitles?.['zh-CN'] || '',element:elements[data.character.element_type],job:data.character.job_flags,baseRarity:8,portrait});
+  const exclusiveWeaponName = exclusiveWeaponNames[String(id)];
+  if (!exclusiveWeaponName) throw new Error(`Public exclusive-weapon name missing: ${id}`);
+  characters.push({id,name,subtitle:row.subtitles?.['zh-CN'] || '',element:elements[data.character.element_type],job:data.character.job_flags,baseRarity:8,portrait,exclusiveWeaponName});
 }
 const levelsSSR = [180,200,220,240,...Array.from({length:21},(_,i)=>250+i*10)];
 const levelsUR = Array.from({length:22},(_,i)=>240+i*10);

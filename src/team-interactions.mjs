@@ -1,4 +1,4 @@
-import { createMember, getBorrowableWeapons, isWeaponOwnerClaimed, selectEquipmentRarity, getArcanaRequiredRarity } from './domain.mjs';
+import { createMember, isWeaponOwnerClaimed, selectEquipmentRarity, getArcanaRequiredRarity } from './domain.mjs';
 
 const validPosition = (team, index) => Number.isInteger(index) && index >= 0 && index < team.members.length;
 
@@ -35,13 +35,11 @@ export function placeRosterCharacter(team, character, targetIndex, { catalog, fr
       members[targetIndex].equipment = previous.equipment.map(gear => gear.slot === 1 ? { ...gear, weaponOwnerCharacterId: nextOwner } : gear);
     } else {
       const ownGift = freeLibrary?.exclusiveWeapons?.find(weapon => weapon.characterId === character.id && !isWeaponOwnerClaimed(team, targetIndex, character.id));
-      const availableGift = getBorrowableWeapons({ ...team, members }, targetIndex, catalog, freeLibrary)[0];
-      const gift = ownGift ?? availableGift;
-      const rarity = gift?.rarity ?? 'SSR';
+      const rarity = ownGift?.rarity ?? 'SSR';
       if (rarity === 'LR') members[targetIndex].rarity = 'LR5';
       members[targetIndex].equipment[0] = {
         ...selectEquipmentRarity(members[targetIndex].equipment[0], rarity),
-        weaponKind: 'exclusive', weaponOwnerCharacterId: gift?.characterId ?? character.id, level: gift?.level ?? 180,
+        weaponKind: 'exclusive', weaponOwnerCharacterId: character.id, level: ownGift?.level ?? 180,
       };
     }
   }

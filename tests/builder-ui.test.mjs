@@ -47,6 +47,37 @@ async function renderStats(result) {
 
 const arcanaCard = (markup, group) => markup.split(`aria-label="${group.name}"`)[1]?.split('</section>')[0];
 
+test('resource price help reflects policy unit prices and exchange rates rather than hardcoded quotes', async () => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
+  try {
+    const { ResourcePriceHelp } = await server.ssrLoadModule('/src/App.jsx');
+    const render = displayedPolicy => renderToStaticMarkup(React.createElement(ResourcePriceHelp, { policy: displayedPolicy }));
+    const current = render(policy);
+    for (const price of [policy.unitPrices.characterCopy, policy.unitPrices.runeTickets, policy.unitPrices.reinforcementMedicine, policy.unitPrices.lifeTreeDew, policy.unitPrices.urLrFragments, policy.unitPrices.exclusiveFragments]) assert.ok(current.includes(`${amount(price)} 钻`));
+    assert.ok(current.includes(`${amount(policy.conversions.relicMaterialPrice)} 钻`));
+    assert.ok(current.includes(`${amount(policy.conversions.magicCrystalPrice)} 钻`));
+    assert.match(current, /本次普通 SSR 制作免费/);
+    const snapshot = JSON.stringify(policy);
+    const changed = structuredClone(policy);
+    changed.unitPrices.characterCopy = 13500;
+    changed.unitPrices.urLrFragments = 125;
+    changed.unitPrices.exclusiveFragments = 36;
+    changed.conversions.relicMaterialsPerExchange = 5;
+    changed.conversions.urLrFragmentsPerExchange = 40;
+    changed.conversions.magicCrystalsPerExclusiveExchange = 4;
+    changed.conversions.exclusiveFragmentsPerExchange = 12;
+    changed.blessings = changed.blessings.filter(item => item.effect !== 'freeEquipmentCrafting');
+    const configured = render(changed);
+    assert.match(configured, /13,500 钻/);
+    assert.match(configured, /圣遗物材料<\/th><td>1,000 钻/);
+    assert.match(configured, /紫水晶<\/th><td>108 钻/);
+    assert.match(configured, /5 个圣遗物材料 = 40 片 UR \/ LR 装备碎片/);
+    assert.match(configured, /4 个紫水晶 = 12 片专武碎片/);
+    assert.doesNotMatch(configured, /本次普通 SSR 制作免费/);
+    assert.equal(JSON.stringify(policy), snapshot);
+  } finally { await server.close(); }
+});
+
 function assertAutomaticControls(markup) {
   assert.doesNotMatch(markup, /aria-label="武器同步配置"|aria-label="武器同步位"|aria-label="队外基准费用"|添加队外基准|将队外专武装备给队员|基准武器等级/);
   assert.doesNotMatch(markup, /NaN|undefined/);
@@ -249,7 +280,8 @@ test('borrowed free UR weapon keeps its ownership warning without manual synchro
   Object.assign(team.members[0].equipment[0], { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', weaponOwnerCharacterId: 27, level: 300 });
   const markup = await renderDraft(cloneTeam(team));
   assert.match(markup, /aria-label="专武所属角色"/);
-  assert.match(markup, /<option value="27" selected="">科迪 · 免费 UR Lv\.300<\/option>/);
+  assert.match(markup, /<option value="153"[^>]*>小安<\/option>/);
+  assert.match(markup, /<option value="27" selected="">科迪 · Jack &amp; Pot · 免费 UR Lv\.300<\/option>/);
   assert.match(markup, /同职业借用/);
   assert.match(markup, /不提供当前角色的专武技能/);
   assert.doesNotMatch(markup, /aria-label="武器类型"/);
@@ -552,9 +584,12 @@ test('exclusive UR240 fabrication baseline and shared leaf budget display actual
     assert.ok(markup.includes(`本体 ${amount(member.characterDiamonds)} · 装备与养成 ${amount(member.equipmentDiamonds)} 钻`));
   }
   assert.match(markup, /50 碎片 = 2 个圣遗物材料/);
-  for (const ordinary of cost.equipmentCosts.filter(item => item.weaponKind === 'normal' && item.rarity !== 'LR')) {
-    assert.ok(markup.includes(`圣遗物等价 ${amount(ordinary.equivalentArtifactMaterials)} 个 · ${amount(ordinary.fragments)} 碎片`));
+  for (const ordinary of cost.equipmentCosts.filter(item => item.weaponKind === 'normal' && item.rarity === 'SSR')) {
+    assert.ok(markup.includes(`SSR 制作碎片 ${amount(ordinary.fragments)} 片`));
     assert.ok(markup.includes(`<strong>${amount(ordinary.craftingDiamonds)} 钻</strong>`));
+  }
+  for (const relic of cost.equipmentCosts.filter(item => item.sourceKind === 'team' && ['UR', 'LR'].includes(item.rarity) && item.fragmentResource === 'urLrFragments')) {
+    assert.ok(markup.includes(`投入 ${amount(relic.fragments)} 片 · 圣遗物等价 ${amount(relic.equivalentArtifactMaterials)} 个`));
   }
   assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`));
   assert.doesNotMatch(markup, /抵扣|紫水晶免费 80,000|额外免费 60,000 叶子|NaN|undefined/);
@@ -848,10 +883,16 @@ test('LR equipment fragments aggregate only ordinary LR armor with allocated net
   assert.match(section, /实际投入 · 已计入总额/);
   assert.doesNotMatch(section, /leaf-cost-row|data-position|data-slot|叶子|专武|紫水晶|\bUR\b|\bSSR\b/);
   for (const member of cost.memberCosts) assert.ok(!section.includes(member.characterName), 'the fragment summary does not list individual characters');
+  const relicSection = markup.match(/<section class="ordinary-crafting-costs relic-crafting-costs" aria-label="UR和LR圣遗物装备明细">([\s\S]*?)<\/section>/)?.[1];
+  assert.ok(relicSection);
+  const relicArmor = cost.equipmentCosts.filter(item => item.sourceKind === 'team' && ['UR', 'LR'].includes(item.rarity) && item.fragmentResource === 'urLrFragments');
+  const relicFragments = relicArmor.reduce((sum, item) => sum + item.fragments, 0);
+  assert.ok(relicSection.includes(`累计投入 ${amount(relicFragments)} 片`));
+  for (const item of relicArmor) assert.ok(relicSection.includes(`投入 ${amount(item.fragments)} 片 · 圣遗物等价 ${amount(item.equivalentArtifactMaterials)} 个`));
   const ordinary = markup.match(/<section class="ordinary-crafting-costs" aria-label="普通装备制作">([\s\S]*?)<\/section>/)?.[1];
   assert.ok(ordinary);
-  assert.equal((ordinary.match(/class="leaf-cost-row"/g) ?? []).length, cost.equipmentCosts.filter(item => item.weaponKind === 'normal' && item.rarity !== 'LR').length);
-  assert.doesNotMatch(ordinary, / LR<small>/);
+  assert.equal((ordinary.match(/class="leaf-cost-row"/g) ?? []).length, cost.equipmentCosts.filter(item => item.weaponKind === 'normal' && item.rarity === 'SSR').length);
+  assert.doesNotMatch(ordinary, / UR<small>| LR<small>/);
   assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`), 'displaying the LR subtotal must not add it to the team quote again');
   assert.equal(JSON.stringify(team), snapshot);
 
