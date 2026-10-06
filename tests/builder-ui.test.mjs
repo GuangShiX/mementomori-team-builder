@@ -569,6 +569,50 @@ test('LR5 to LR changes LR gear to UR and switches the adaptive shortcut without
   assert.doesNotMatch(higherControls, />4UR \+ 2SSR<\/button>/);
 });
 
+test('LR to LR5 updates equipped UR gear, adaptive controls and displayed costs while SSR and empty slots remain unchanged', async () => {
+  const member = applyEquipmentPreset({ ...createMember(124), rarity: 'LR' }, 'lr6', catalog, policy);
+  Object.assign(member.equipment[0], { matchlessSacredTreasureLevel: 17, legendSacredTreasureLevel: 7, polishAttribute: 'muscle' });
+  member.equipment[0].runes[0] = { categoryId: 5, level: 11 };
+  const previous = JSON.stringify(member);
+  const promoted = changeMemberRarity(member, 'LR5', catalog);
+  const team = createTeam();
+  team.members[0] = promoted;
+  const cost = calculateTeam(team, catalog, policy, freeLibrary);
+  const markup = await renderDraft(cloneTeam(team));
+  const controls = markup.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
+  for (const label of ['2LR + 4SSR', '4LR + 2SSR', '6LR']) assert.ok(controls.includes(`title="${label}">${label}</button>`));
+  assert.doesNotMatch(controls, />4UR \+ 2SSR<\/button>|disabled=""/);
+  assert.match(markup, /aria-label="角色稀有度"[\s\S]*?<option value="LR5" selected="">LR5<\/option>/);
+  for (const slotName of ['武器', '项链', '手套', '头盔', '衣服', '脚']) assert.match(markup, new RegExp(`aria-label="${slotName}稀有度"[\\s\\S]*?<option value="LR" selected=""`));
+  assert.match(markup, /aria-label="武器魔装等级"[^>]*value="17"/);
+  assert.match(markup, /aria-label="武器圣装等级"[^>]*value="7"/);
+  assert.match(markup, /aria-label="武器第1孔符石等级"[^>]*value="11"/);
+  assert.match(markup, /aria-label="LR装备碎片成本"/);
+  assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`), 'the total uses the promoted character and LR equipment costs');
+  assert.doesNotMatch(markup, /请修正配置后查看准确费用|已恢复可识别的草稿配置/);
+  for (let index = 0; index < 6; index++) {
+    const before = member.equipment[index];
+    const after = promoted.equipment[index];
+    assert.equal(after.rarity, 'LR');
+    assert.equal(after.seriesId, 14);
+    for (const key of ['level', 'reinforcementLevel', 'legendSacredTreasureLevel', 'matchlessSacredTreasureLevel', 'polishAttribute', 'weaponKind', 'weaponOwnerCharacterId']) assert.equal(after[key], before[key]);
+    assert.deepEqual(after.runes, before.runes);
+  }
+  assert.equal(JSON.stringify(member), previous);
+  const mixed = structuredClone(member);
+  mixed.equipment[4] = selectEquipmentRarity(mixed.equipment[4], 'SSR');
+  mixed.equipment[5] = selectEquipmentRarity(mixed.equipment[5], 'NONE');
+  const mixedTeam = createTeam();
+  mixedTeam.members[0] = changeMemberRarity(mixed, 'LR5', catalog);
+  const mixedMarkup = await renderDraft(cloneTeam(mixedTeam));
+  assert.match(mixedMarkup, /aria-label="衣服稀有度"[\s\S]*?<option value="SSR" selected=""/);
+  assert.match(mixedMarkup, /aria-label="脚稀有度"[\s\S]*?<option value="NONE" selected=""/);
+  assert.deepEqual(mixedTeam.members[0].equipment.slice(4), mixed.equipment.slice(4));
+  const source = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
+  assert.match(source, /aria-label="角色稀有度"[^>]*onChange=\{event => chooseMemberRarity\(event\.target\.value\)\}/);
+  assert.match(source, /function chooseMemberRarity\(rarity\)\s*\{\s*try \{ updateMember\(changeMemberRarity\(selectedMember, rarity, catalog\)\);/);
+});
+
 test('exclusive UR240 fabrication baseline and shared leaf budget display actual allocated investments', async () => {
   const team = createTeam();
   team.members = [54, 85, 124, 96, 100].map(characterId => applyEquipmentPreset({ ...createMember(characterId), rarity: 'LR5' }, 'lr6', catalog, policy));

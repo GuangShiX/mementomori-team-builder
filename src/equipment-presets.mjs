@@ -28,7 +28,9 @@ export function changeMemberRarity(member, rarity, catalog) {
     ...member, rarity,
     equipment: member.equipment.map(gear => {
       const downgraded = rarity !== 'LR5' && gear.rarity === 'LR';
-      const next = downgraded ? selectEquipmentRarity(gear, 'UR') : { ...gear };
+      const upgraded = member.rarity === 'LR' && rarity === 'LR5' && gear.rarity === 'UR';
+      const next = downgraded ? selectEquipmentRarity(gear, 'UR')
+        : upgraded ? selectEquipmentRarity(gear, 'LR') : { ...gear };
       return { ...next, runes: gear.runes.map(rune => ({ ...rune })) };
     }),
   };

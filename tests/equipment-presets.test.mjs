@@ -101,5 +101,36 @@ test('lowering LR5 to LR converts all LR equipment to UR while retaining levels,
   const team = createTeam(); team.members[0] = result;
   assert.equal(validateTeam(team, catalog, policy, { freeLibrary }).valid, true);
   assert.deepEqual(equipped, before);
-  assert.equal(changeMemberRarity(result, 'LR5', catalog).equipment[0].rarity, 'UR');
+  assert.deepEqual(changeMemberRarity(result, 'LR5', catalog), before);
+});
+
+test('raising LR to LR5 upgrades only equipped UR tiers while preserving the build and borrowed weapon ownership', () => {
+  const member = { ...createMember(153), rarity: 'LR' };
+  const equipped = applyEquipmentPreset(member, 'adaptive4', catalog, policy);
+  equipped.equipment[5] = createMember(153).equipment[5];
+  Object.assign(equipped.equipment[0], { weaponOwnerCharacterId: 27, legendSacredTreasureLevel: 13, matchlessSacredTreasureLevel: 17, polishAttribute: 'intelligence' });
+  equipped.equipment[0].runes[0] = { categoryId: 5, level: 14 };
+  const before = structuredClone(equipped);
+  const result = changeMemberRarity(equipped, 'LR5', catalog);
+  assert.equal(result.rarity, 'LR5');
+  assert.deepEqual(result.equipment.map(gear => gear.rarity), ['LR', 'LR', 'SSR', 'LR', 'LR', 'NONE']);
+  assert.deepEqual(result.equipment.map(gear => gear.seriesId), [14, 14, 12, 14, 14, null]);
+  for (const [index, gear] of result.equipment.entries()) {
+    const { rarity, seriesId, ...upgrades } = gear;
+    const { rarity: originalRarity, seriesId: originalSeries, ...originalUpgrades } = before.equipment[index];
+    assert.deepEqual(upgrades, originalUpgrades);
+  }
+  const team = createTeam(); team.members[0] = result;
+  assert.equal(validateTeam(team, catalog, policy, { freeLibrary }).valid, true);
+  assert.deepEqual(equipped, before);
+  result.equipment[0].runes[0].level = 1;
+  assert.equal(equipped.equipment[0].runes[0].level, 14);
+});
+
+test('reselecting LR5 or changing SR rarity does not implicitly upgrade UR equipment', () => {
+  for (const rarity of ['SR', 'LR5']) {
+    const equipped = applyEquipmentPreset({ ...createMember(8), rarity: 'LR' }, 'lr6', catalog, policy);
+    equipped.rarity = rarity;
+    assert.ok(changeMemberRarity(equipped, 'LR5', catalog).equipment.every(gear => gear.rarity === 'UR'));
+  }
 });
