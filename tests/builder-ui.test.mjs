@@ -148,7 +148,9 @@ test('builder displays a nameless framed team to the right of the selected chara
   assert.equal((overview.match(/class="team-equipment-position"/g) ?? []).length, 5);
   assert.equal((overview.match(/class="member-equipment-summary"/g) ?? []).length, 2);
   for (const position of [1, 2]) assert.ok(overview.includes(`aria-label="位置${position}装备与魔装"`));
-  assert.doesNotMatch(selection, /team-panel|我的配队/);
+  assert.doesNotMatch(selection, /team-panel|<h[23]>我的配队/);
+  assert.match(selection, /<section class="plan-panel" aria-label="方案信息">/);
+  assert.ok(selection.indexOf('aria-label="方案信息"') > selection.indexOf('class="catalog-help"'));
   assert.ok(markup.indexOf('aria-label="当前角色装备配置"') < markup.indexOf('aria-label="当前五人配队"'));
   assert.ok(markup.indexOf('class="selected-character-header"') < markup.indexOf('aria-label="当前五人配队"'));
   assert.ok(markup.indexOf('aria-label="当前五人配队"') < markup.indexOf('class="equip-grid"'));
