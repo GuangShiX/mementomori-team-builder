@@ -510,6 +510,13 @@ export function ResourcePriceHelp({ policy }) {
   </details>;
 }
 
+function CostFoldout({ label, ariaLabel = label, className, diamonds, caption, children }) {
+  return <details className={`cost-foldout ${className}`} aria-label={ariaLabel}>
+    <summary><span className="cost-foldout-title">{label}</span><strong>{amount(diamonds)} 钻</strong>{caption && <small>{caption}</small>}</summary>
+    <div className="cost-foldout-content">{children}</div>
+  </details>;
+}
+
 function CostSummary({ cost, errors, policy, catalog, canExport, onExport, memberCount, inventory, arcanaState }) {
   const displayedResources = ['runeTickets', 'reinforcementMedicine', 'holySteel'];
   const steelRatio = policy.holySteelPerExperience || 1;
@@ -519,21 +526,15 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
   };
   const resourceLabel = key => RESOURCE_NAMES[key] ?? key;
   const scaled = (key, value) => key === 'holySteel' ? value / steelRatio : value;
-  const leafCosts = cost?.equipmentCosts?.filter(item => (item.resources?.lifeTreeDew ?? 0) > 0) ?? [];
   const costKey = item => `${item.sourceKind ?? 'team'}-${item.characterId}-${item.sourceIndex ?? item.position}-${item.slot ?? 'weapon'}`;
   const catalogCharacter = id => catalog.characters.find(character => character.id === id);
   const ordinaryCosts = cost?.equipmentCosts?.filter(item => item.weaponKind === 'normal' && item.rarity === 'SSR') ?? [];
-  const lrFragmentCosts = cost?.equipmentCosts?.filter(item => item.sourceKind === 'team' && item.rarity === 'LR' && item.fragmentResource === 'urLrFragments') ?? [];
   const relicFragmentCosts = cost?.equipmentCosts?.filter(item => item.sourceKind === 'team' && ['UR', 'LR'].includes(item.rarity) && item.fragmentResource === 'urLrFragments') ?? [];
-  const lrFragments = lrFragmentCosts.reduce((sum, item) => sum + item.fragments, 0);
-  const lrFragmentDiamonds = lrFragmentCosts.reduce((sum, item) => sum + (item.chargedResourceDiamonds?.urLrFragments ?? 0), 0);
   const relicFragments = relicFragmentCosts.reduce((sum, item) => sum + item.fragments, 0);
   const relicMaterialsPerExchange = policy.conversions?.relicMaterialsPerExchange ?? 2;
   const urLrFragmentsPerExchange = policy.conversions?.urLrFragmentsPerExchange ?? 50;
   const relicMaterials = urLrFragmentsPerExchange > 0 ? relicFragments * relicMaterialsPerExchange / urLrFragmentsPerExchange : 0;
   const relicFragmentDiamonds = relicFragmentCosts.reduce((sum, item) => sum + (item.chargedResourceDiamonds?.urLrFragments ?? 0), 0);
-  const relicFragmentUnitPrice = policy.unitPrices?.urLrFragments ?? 0;
-  const relicMaterialPrice = urLrFragmentsPerExchange > 0 ? relicFragmentUnitPrice * urLrFragmentsPerExchange / relicMaterialsPerExchange : 0;
   const memberRelicCosts = new Map();
   for (const item of relicFragmentCosts) {
     const key = `${item.position ?? ''}:${item.characterId}`;
@@ -584,12 +585,15 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       <div className="price-line"><span>超额材料</span><strong>{amount(cost?.resourceDiamonds)} 钻</strong></div>
     </div>
     {(cost?.characterCosts?.some(item => item.sourceKind === 'arcana') || arcanaState?.groups?.some(group => group.purchased)) && <p className="shared-ownership-note">配队与秘仪按角色最高持有稀有度合并，同一角色只计一次本体费用。</p>}
-    {lrFragmentCosts.length > 0 && <section className="ordinary-crafting-costs lr-crafting-costs" aria-label="LR装备碎片成本"><div className="resource-section-title"><span>LR 装备碎片成本</span><strong>{amount(lrFragmentDiamonds)} 钻</strong></div><p className="inventory-caption">圣遗物碎片（LR装备碎片）合计 {amount(lrFragments)} 片</p><p className="inventory-caption">实际投入 · 已计入总额</p></section>}
-    {relicFragmentCosts.length > 0 && <section className="ordinary-crafting-costs relic-crafting-costs" aria-label="UR和LR圣遗物装备明细"><div className="resource-section-title"><span>UR / LR 圣遗物装备碎片</span><strong>{amount(relicFragmentDiamonds)} 钻</strong></div><p className="inventory-caption">累计投入 {amount(relicFragments)} 片 · 圣遗物等价 {amount(relicMaterials)} 个；实际计价已计入总额。</p><p className="inventory-caption">{amount(urLrFragmentsPerExchange)} 碎片 = {amount(relicMaterialsPerExchange)} 个圣遗物材料；每个圣遗物材料约 {amount(relicMaterialPrice)} 钻。</p>{relicFragmentCosts.map(item => <div className="leaf-cost-row" key={costKey(item)}><span>{characterLabel(catalogCharacter(item.characterId))} · {SLOT_NAMES[item.slot]} {item.rarity}<small>投入 {amount(item.fragments)} 片 · 圣遗物等价 {amount(item.equivalentArtifactMaterials)} 个</small></span><strong>{amount(item.chargedResourceDiamonds?.urLrFragments ?? 0)} 钻</strong></div>)}</section>}
-    {cost?.memberCosts?.length > 0 && <section className="member-investments" aria-label="队员实际投入"><div className="resource-section-title"><span>队员实际投入</span><span>已计入总额</span></div><p className="inventory-caption">共享免费额度按队伍顺序使用；以下投入已计入总额。</p>{cost.memberCosts.map(item => { const memberRelics = memberRelicCosts.get(`${item.position ?? ''}:${item.characterId}`) ?? []; const memberRelicFragments = memberRelics.reduce((sum, relic) => sum + relic.fragments, 0); const memberRelicMaterials = urLrFragmentsPerExchange > 0 ? memberRelicFragments * relicMaterialsPerExchange / urLrFragmentsPerExchange : 0; return <div className="member-investment-row" key={item.characterId}><div><span title={characterLabel(catalogCharacter(item.characterId))}>{item.position}. {characterLabel(catalogCharacter(item.characterId)) || item.characterName}</span><strong>{amount(item.totalDiamonds)} 钻</strong></div><p>本体 {amount(item.characterDiamonds)} · 装备与养成 {amount(item.equipmentDiamonds)} 钻</p>{memberRelics.length > 0 && <p className="member-relic-fragments">圣遗物装备碎片 {amount(memberRelicFragments)} 片 · 圣遗物等价 {amount(memberRelicMaterials)} 个</p>}</div>; })}</section>}
-    {offTeamCosts.length > 0 && <section className="off-team-investments" aria-label="秘仪队外投入"><div className="resource-section-title"><span>秘仪队外投入</span><span>已计入总额</span></div>{offTeamCosts.map(item => <div className="member-investment-row" key={item.characterId}><div><span>{item.characterName}</span><strong>{amount(item.diamonds)} 钻</strong></div></div>)}</section>}
-    {cost?.exclusiveWeaponCosts?.length > 0 && <section className="weapon-costs" aria-label="专武造价">
-      <div className="resource-section-title"><span>专武造价</span><span>已计入总额</span></div>
+    {relicFragmentCosts.length > 0 && <CostFoldout label="UR / LR 圣遗物装备碎片" ariaLabel="UR和LR圣遗物装备明细" className="relic-crafting-costs" diamonds={relicFragmentDiamonds} caption={`累计投入 ${amount(relicFragments)} 片 · 圣遗物等价 ${amount(relicMaterials)} 个`}>
+      <p className="inventory-caption">{amount(urLrFragmentsPerExchange)} 碎片 = {amount(relicMaterialsPerExchange)} 个圣遗物材料；费用已计入总额。</p>
+      {relicFragmentCosts.map(item => <div className="leaf-cost-row" key={costKey(item)}><span>{characterLabel(catalogCharacter(item.characterId))} · {SLOT_NAMES[item.slot]} {item.rarity}<small>投入 {amount(item.fragments)} 片 · 圣遗物等价 {amount(item.equivalentArtifactMaterials)} 个</small></span><strong>{amount(item.chargedResourceDiamonds?.urLrFragments ?? 0)} 钻</strong></div>)}
+    </CostFoldout>}
+    {cost?.memberCosts?.length > 0 && <CostFoldout label="队员实际投入" className="member-investments" diamonds={cost.memberCosts.reduce((sum, item) => sum + item.totalDiamonds, 0)}>
+      <p className="inventory-caption">共享免费额度按队伍顺序使用；各项投入已计入总额。</p>{cost.memberCosts.map(item => { const memberRelics = memberRelicCosts.get(`${item.position ?? ''}:${item.characterId}`) ?? []; const memberRelicFragments = memberRelics.reduce((sum, relic) => sum + relic.fragments, 0); const memberRelicMaterials = urLrFragmentsPerExchange > 0 ? memberRelicFragments * relicMaterialsPerExchange / urLrFragmentsPerExchange : 0; return <div className="member-investment-row" key={item.characterId}><div><span title={characterLabel(catalogCharacter(item.characterId))}>{item.position}. {characterLabel(catalogCharacter(item.characterId)) || item.characterName}</span><strong>{amount(item.totalDiamonds)} 钻</strong></div><p>本体 {amount(item.characterDiamonds)} · 装备与养成 {amount(item.equipmentDiamonds)} 钻</p>{memberRelics.length > 0 && <p className="member-relic-fragments">圣遗物装备碎片 {amount(memberRelicFragments)} 片 · 圣遗物等价 {amount(memberRelicMaterials)} 个</p>}</div>; })}
+    </CostFoldout>}
+    {offTeamCosts.length > 0 && <CostFoldout label="秘仪队外投入" className="off-team-investments" diamonds={offTeamCosts.reduce((sum, item) => sum + item.diamonds, 0)}>{offTeamCosts.map(item => <div className="member-investment-row" key={item.characterId}><div><span>{item.characterName}</span><strong>{amount(item.diamonds)} 钻</strong></div></div>)}</CostFoldout>}
+    {cost?.exclusiveWeaponCosts?.length > 0 && <CostFoldout label="专武造价" className="weapon-costs" diamonds={cost.exclusiveWeaponCosts.reduce((sum, item) => sum + item.diamonds, 0)}>
       {cost.exclusiveWeaponCosts.map(item => { const weaponOwner = catalogCharacter(item.weaponOwnerCharacterId ?? item.characterId); const weaponName = weaponOwner?.exclusiveWeaponName ?? `${weaponOwner?.name ?? item.characterName}专武`; return <div className="weapon-cost-item" key={costKey(item)}>
         <div className="weapon-cost-heading"><span>{item.characterName} · {weaponName} · {item.rarity} Lv.{item.level}</span><strong>{amount(item.diamonds)} 钻</strong></div>
         {item.borrowed && <p className="borrowed-weapon-note">借用 {item.weaponOwnerCharacterName} 的 {weaponName} · 不提供当前角色的专武技能</p>}
@@ -597,17 +601,8 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
         <p>紫水晶等价 {amount(item.magicCrystals)} 个 · 实际投入 {amount(item.chargedFragmentDiamonds ?? item.chargedMagicCrystals * item.magicCrystalUnitPrice)} 钻</p>
         {item.lifeTreeDew > 0 && <p>叶子 {amount(item.lifeTreeDew)} 个 · 实际投入 {amount(item.chargedLifeTreeDewDiamonds ?? item.chargedLifeTreeDew * (policy.unitPrices?.lifeTreeDew ?? 0))} 钻</p>}
       </div>; })}
-    </section>}
-    {leafCosts.length > 0 && <section className="weapon-costs leaf-costs" aria-label="叶子造价">
-      <div className="resource-section-title"><span>叶子造价</span><span>{amount(cost.resources.lifeTreeDew.diamonds)} 钻</span></div>
-      <p className="inventory-caption">UR 专武 15；LR 专武 65（UR 15 ＋ LR 50）；通用 LR 装备每件 50。每个 {amount(policy.unitPrices?.lifeTreeDew)} 钻。</p>
-      {leafCosts.map(item => {
-        const consumed = item.resources.lifeTreeDew;
-        const charged = item.chargedResources?.lifeTreeDew ?? Math.max(0, consumed - (item.freeLibraryCredits?.lifeTreeDew ?? 0));
-        return <div className="leaf-cost-row" key={costKey(item)}><span>{characterLabel(catalogCharacter(item.characterId))} · {item.weaponKind === 'exclusive' ? `${item.rarity} 专武` : `${SLOT_NAMES[item.slot]} ${item.rarity}`}<small>{consumed} 个</small></span><strong>{amount(item.chargedResourceDiamonds?.lifeTreeDew ?? charged * (policy.unitPrices?.lifeTreeDew ?? 0))} 钻</strong></div>;
-      })}
-    </section>}
-    {ordinaryCosts.length > 0 && <section className="ordinary-crafting-costs" aria-label="普通装备制作"><div className="resource-section-title"><span>普通 SSR 装备制作</span><span>已计入总额</span></div>{ordinaryCosts.map(item => <div className="leaf-cost-row" key={costKey(item)}><span>{characterLabel(catalogCharacter(item.characterId))} · {SLOT_NAMES[item.slot]} {item.rarity}<small>SSR 制作碎片 {amount(item.fragments)} 片</small></span><strong>{amount(item.craftingDiamonds)} 钻</strong></div>)}</section>}
+    </CostFoldout>}
+    {ordinaryCosts.length > 0 && <CostFoldout label="普通 SSR 装备制作" ariaLabel="普通装备制作" className="ordinary-crafting-costs" diamonds={ordinaryCosts.reduce((sum, item) => sum + item.craftingDiamonds, 0)}>{ordinaryCosts.map(item => <div className="leaf-cost-row" key={costKey(item)}><span>{characterLabel(catalogCharacter(item.characterId))} · {SLOT_NAMES[item.slot]} {item.rarity}<small>SSR 制作碎片 {amount(item.fragments)} 片</small></span><strong>{amount(item.craftingDiamonds)} 钻</strong></div>)}</CostFoldout>}
     <details className="price-details"><summary>查看费用细目与规则</summary><div className="cost-detail-content">
       <dl>{cost?.characterCosts?.map(item => <React.Fragment key={costKey(item)}><dt>{item.characterName} · {item.rarity} · {item.copies} 本体{item.freeRarity ? `（免费至 ${item.freeRarity}）` : ''}{item.sourceKind === 'arcana' ? ' · 秘仪持有' : ''}</dt><dd>{amount(item.diamonds)} 钻</dd></React.Fragment>)}
         {RESOURCE_KEYS.filter(key => key !== 'unidentifiedRune7').map(key => {

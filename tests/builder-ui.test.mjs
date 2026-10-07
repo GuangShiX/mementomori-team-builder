@@ -98,6 +98,16 @@ function divMarkup(markup, openingMarker) {
   assert.fail(`unclosed ${openingMarker}`);
 }
 
+function costFoldout(markup, label, className) {
+  const match = markup.match(new RegExp(`<details(?=[^>]*class="cost-foldout ${className}")(?=[^>]*aria-label="${label}")([^>]*)>([\\s\\S]*?)<\\/details>`));
+  assert.ok(match, `missing cost foldout ${label}`);
+  assert.doesNotMatch(match[1], /\bopen(?:=|\s|$)/, `${label} starts collapsed`);
+  const summary = match[2].match(/<summary\b[^>]*>([\s\S]*?)<\/summary>/)?.[1];
+  assert.ok(summary, `missing cost summary ${label}`);
+  const content = divMarkup(match[0], '<div class="cost-foldout-content"');
+  return { markup: match[0], summary, content };
+}
+
 test('builder displays a nameless framed team to the right of the selected character in the central header', async () => {
   const displayedCatalog = {
     ...catalog,
@@ -224,10 +234,11 @@ test('automatic third-weapon fabrication discount leaves all actual levels and r
   assert.match(markup, /自动同步 · 制作材料按 Lv\.300 计算；强化与叶子按实际配置计费/);
   assert.match(markup, /aria-label="武器装备等级"[\s\S]*?<option value="450" selected="">Lv\. 450<\/option>/);
   assert.match(markup, /aria-label="武器强化等级"[^>]*max="450"[^>]*value="420"/);
-  assert.match(markup, /aria-label="叶子造价"/);
-  assert.match(markup, /衣服 LR/);
+  assert.doesNotMatch(markup, /aria-label="叶子造价"/);
+  const relics = costFoldout(markup, 'UR和LR圣遗物装备明细', 'relic-crafting-costs');
+  assert.match(relics.content, /衣服 LR/);
   const armor = cost.equipmentCosts.find(item => item.position === 1 && item.slot === 5);
-  assert.ok(markup.includes(`<strong>${amount(armor.chargedResources.lifeTreeDew * policy.unitPrices.lifeTreeDew)} 钻</strong>`));
+  assert.ok(relics.content.includes(`<strong>${amount(armor.chargedResourceDiamonds.urLrFragments)} 钻</strong>`));
   assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`));
   assertAutomaticControls(markup);
 });
@@ -587,7 +598,7 @@ test('LR to LR5 updates equipped UR gear, adaptive controls and displayed costs 
   assert.match(markup, /aria-label="武器魔装等级"[^>]*value="17"/);
   assert.match(markup, /aria-label="武器圣装等级"[^>]*value="7"/);
   assert.match(markup, /aria-label="武器第1孔符石等级"[^>]*value="11"/);
-  assert.match(markup, /aria-label="LR装备碎片成本"/);
+  costFoldout(markup, 'UR和LR圣遗物装备明细', 'relic-crafting-costs');
   assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`), 'the total uses the promoted character and LR equipment costs');
   assert.doesNotMatch(markup, /请修正配置后查看准确费用|已恢复可识别的草稿配置/);
   for (let index = 0; index < 6; index++) {
@@ -628,14 +639,20 @@ test('exclusive UR240 fabrication baseline and shared leaf budget display actual
   assert.ok(markup.includes(`已使用 ${amount(leaf.diamondAllowanceCredit)} 钻`));
   assert.ok(markup.includes(`剩余 ${amount(leaf.remainingDiamondAllowance)} 钻`));
   assert.equal(cost.resources.exclusiveFragments.diamondAllowance, 0);
+  const weapons = costFoldout(markup, '专武造价', 'weapon-costs');
+  const weaponDiamonds = cost.exclusiveWeaponCosts.reduce((sum, item) => sum + item.diamonds, 0);
+  assert.ok(weapons.summary.includes(`<strong>${amount(weaponDiamonds)} 钻</strong>`));
   for (const exclusive of cost.exclusiveWeaponCosts) {
-    assert.ok(markup.includes(`紫水晶等价 ${amount(exclusive.magicCrystals)} 个 · 实际投入 ${amount(exclusive.chargedFragmentDiamonds)} 钻`));
-    assert.ok(markup.includes(`叶子 ${amount(exclusive.lifeTreeDew)} 个 · 实际投入 ${amount(exclusive.chargedLifeTreeDewDiamonds)} 钻`));
+    assert.ok(weapons.content.includes(`紫水晶等价 ${amount(exclusive.magicCrystals)} 个 · 实际投入 ${amount(exclusive.chargedFragmentDiamonds)} 钻`));
+    assert.ok(weapons.content.includes(`叶子 ${amount(exclusive.lifeTreeDew)} 个 · 实际投入 ${amount(exclusive.chargedLifeTreeDewDiamonds)} 钻`));
   }
-  assert.match(markup, /共享免费额度按队伍顺序使用；以下投入已计入总额/);
+  const members = costFoldout(markup, '队员实际投入', 'member-investments');
+  const memberDiamonds = cost.memberCosts.reduce((sum, item) => sum + item.totalDiamonds, 0);
+  assert.ok(members.summary.includes(`<strong>${amount(memberDiamonds)} 钻</strong>`));
+  assert.match(members.content, /共享免费额度按队伍顺序使用；各项投入已计入总额/);
   for (const member of cost.memberCosts) {
-    assert.ok(markup.includes(`<strong>${amount(member.totalDiamonds)} 钻</strong>`));
-    assert.ok(markup.includes(`本体 ${amount(member.characterDiamonds)} · 装备与养成 ${amount(member.equipmentDiamonds)} 钻`));
+    assert.ok(members.content.includes(`<strong>${amount(member.totalDiamonds)} 钻</strong>`));
+    assert.ok(members.content.includes(`本体 ${amount(member.characterDiamonds)} · 装备与养成 ${amount(member.equipmentDiamonds)} 钻`));
   }
   assert.match(markup, /50 碎片 = 2 个圣遗物材料/);
   for (const ordinary of cost.equipmentCosts.filter(item => item.weaponKind === 'normal' && item.rarity === 'SSR')) {
@@ -646,7 +663,7 @@ test('exclusive UR240 fabrication baseline and shared leaf budget display actual
     assert.ok(markup.includes(`投入 ${amount(relic.fragments)} 片 · 圣遗物等价 ${amount(relic.equivalentArtifactMaterials)} 个`));
   }
   assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`));
-  assert.doesNotMatch(markup, /抵扣|紫水晶免费 80,000|额外免费 60,000 叶子|NaN|undefined/);
+  assert.doesNotMatch(markup, /aria-label="叶子造价"|抵扣|紫水晶免费 80,000|额外免费 60,000 叶子|NaN|undefined/);
   const configuredPolicy = { ...policy, conversions: { ...policy.conversions, urLrFragmentsPerExchange: 25, relicMaterialsPerExchange: 1 }, blessings: policy.blessings.map(blessing => blessing.effect === 'resourceDiamondAllowance' ? { ...blessing, amount: 1234 } : blessing.effect === 'freeExclusiveFragmentBaseline' ? { ...blessing, level: 300 } : blessing) };
   const configuredCost = calculateTeam(team, catalog, configuredPolicy, freeLibrary);
   const configured = await renderDraft(cloneTeam(team), catalog, configuredPolicy);
@@ -855,9 +872,13 @@ test('team actual investments and off-team arcana characters remain separate and
   assert.match(markup, /aria-label="队员实际投入"/);
   assert.match(markup, /aria-label="秘仪队外投入"/);
   assert.match(markup, /配队与秘仪按角色最高持有稀有度合并，同一角色只计一次本体费用/);
-  assert.match(markup, /共享免费额度按队伍顺序使用；以下投入已计入总额/);
-  const offTeamSection = markup.split('aria-label="秘仪队外投入"')[1].split('</section>')[0];
-  for (const item of cost.offTeamCharacterCosts.filter(row => row.diamonds > 0)) assert.ok(offTeamSection.includes(`<span>${item.characterName}</span><strong>${amount(item.diamonds)} 钻</strong>`));
+  assert.match(markup, /共享免费额度按队伍顺序使用；各项投入已计入总额/);
+  const members = costFoldout(markup, '队员实际投入', 'member-investments');
+  assert.ok(members.summary.includes(`<strong>${amount(cost.memberCosts.reduce((sum, item) => sum + item.totalDiamonds, 0))} 钻</strong>`));
+  const offTeam = costFoldout(markup, '秘仪队外投入', 'off-team-investments');
+  const chargedOffTeam = cost.offTeamCharacterCosts.filter(row => row.diamonds > 0);
+  assert.ok(offTeam.summary.includes(`<strong>${amount(chargedOffTeam.reduce((sum, item) => sum + item.diamonds, 0))} 钻</strong>`));
+  for (const item of chargedOffTeam) assert.ok(offTeam.content.includes(`<span>${item.characterName}</span><strong>${amount(item.diamonds)} 钻</strong>`));
   assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`));
   assert.doesNotMatch(markup, /抵扣|NaN|undefined/);
 });
@@ -916,38 +937,44 @@ test('the curse shows dynamic original and current copy prices without applying 
   assert.ok(legacy.includes(`<strong>${amount(calculateTeam(team, catalog, legacyPolicy, freeLibrary).totalDiamonds)}</strong>`));
 });
 
-test('LR equipment fragments aggregate only ordinary LR armor with allocated net prices already included in the team quote', async () => {
+test('collapsed UR and LR relic costs merge their net subtotal while retaining equipment details and excluding weapons, SSR and leaves', async () => {
   const team = createTeam();
   team.members[0] = applyEquipmentPreset({ ...createMember(54), rarity: 'LR5' }, 'lr6', catalog, policy);
   team.members[1] = applyEquipmentPreset({ ...createMember(85), rarity: 'LR5' }, 'lr6', catalog, policy);
   team.members[2] = applyEquipmentPreset(createMember(124), 'ur2-ssr4', catalog, policy);
   const snapshot = JSON.stringify(team);
   const cost = calculateTeam(team, catalog, policy, freeLibrary);
-  const lrArmor = cost.equipmentCosts.filter(item => item.sourceKind === 'team' && item.rarity === 'LR' && item.fragmentResource === 'urLrFragments');
-  assert.equal(lrArmor.length, 10);
+  const relicArmor = cost.equipmentCosts.filter(item => item.sourceKind === 'team' && ['UR', 'LR'].includes(item.rarity) && item.fragmentResource === 'urLrFragments');
+  assert.equal(relicArmor.filter(item => item.rarity === 'LR').length, 10);
+  assert.ok(relicArmor.some(item => item.rarity === 'UR'), 'the merged subtotal also includes ordinary UR armor');
   assert.ok(cost.equipmentCosts.some(item => item.rarity === 'LR' && item.fragmentResource === 'exclusiveFragments'), 'the fixture includes LR exclusive weapons that must be excluded');
   assert.ok(cost.equipmentCosts.some(item => item.rarity === 'LR' && item.chargedResourceDiamonds.lifeTreeDew > 0), 'the fixture includes paid leaves that must be excluded');
   const markup = await renderDraft(team);
-  const section = markup.match(/<section class="ordinary-crafting-costs lr-crafting-costs" aria-label="LR装备碎片成本">([\s\S]*?)<\/section>/)?.[1];
-  assert.ok(section);
-  const fragmentTotal = lrArmor.reduce((sum, item) => sum + item.fragments, 0);
-  const diamondTotal = lrArmor.reduce((sum, item) => sum + item.chargedResourceDiamonds.urLrFragments, 0);
-  assert.ok(section.includes(`<span>LR 装备碎片成本</span><strong>${amount(diamondTotal)} 钻</strong>`));
-  assert.ok(section.includes(`圣遗物碎片（LR装备碎片）合计 ${amount(fragmentTotal)} 片`));
-  assert.match(section, /实际投入 · 已计入总额/);
-  assert.doesNotMatch(section, /leaf-cost-row|data-position|data-slot|叶子|专武|紫水晶|\bUR\b|\bSSR\b/);
-  for (const member of cost.memberCosts) assert.ok(!section.includes(member.characterName), 'the fragment summary does not list individual characters');
-  const relicSection = markup.match(/<section class="ordinary-crafting-costs relic-crafting-costs" aria-label="UR和LR圣遗物装备明细">([\s\S]*?)<\/section>/)?.[1];
-  assert.ok(relicSection);
-  const relicArmor = cost.equipmentCosts.filter(item => item.sourceKind === 'team' && ['UR', 'LR'].includes(item.rarity) && item.fragmentResource === 'urLrFragments');
-  const relicFragments = relicArmor.reduce((sum, item) => sum + item.fragments, 0);
-  assert.ok(relicSection.includes(`累计投入 ${amount(relicFragments)} 片`));
-  for (const item of relicArmor) assert.ok(relicSection.includes(`投入 ${amount(item.fragments)} 片 · 圣遗物等价 ${amount(item.equivalentArtifactMaterials)} 个`));
-  const ordinary = markup.match(/<section class="ordinary-crafting-costs" aria-label="普通装备制作">([\s\S]*?)<\/section>/)?.[1];
-  assert.ok(ordinary);
-  assert.equal((ordinary.match(/class="leaf-cost-row"/g) ?? []).length, cost.equipmentCosts.filter(item => item.weaponKind === 'normal' && item.rarity === 'SSR').length);
-  assert.doesNotMatch(ordinary, / UR<small>| LR<small>/);
-  assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`), 'displaying the LR subtotal must not add it to the team quote again');
+  const relics = costFoldout(markup, 'UR和LR圣遗物装备明细', 'relic-crafting-costs');
+  assert.equal((markup.match(/aria-label="UR和LR圣遗物装备明细"/g) ?? []).length, 1);
+  assert.doesNotMatch(markup, /aria-label="LR装备碎片成本"|class="[^\"]*lr-crafting-costs|aria-label="叶子造价"/);
+  const fragmentTotal = relicArmor.reduce((sum, item) => sum + item.fragments, 0);
+  const materialTotal = fragmentTotal * policy.conversions.relicMaterialsPerExchange / policy.conversions.urLrFragmentsPerExchange;
+  const diamondTotal = relicArmor.reduce((sum, item) => sum + item.chargedResourceDiamonds.urLrFragments, 0);
+  assert.match(relics.summary, /UR \/ LR 圣遗物装备碎片/);
+  assert.ok(relics.summary.includes(`<strong>${amount(diamondTotal)} 钻</strong>`));
+  assert.ok(relics.summary.includes(`累计投入 ${amount(fragmentTotal)} 片 · 圣遗物等价 ${amount(materialTotal)} 个`));
+  assert.doesNotMatch(relics.summary, /leaf-cost-row|data-position|data-slot|叶子|专武|紫水晶|\bSSR\b/);
+  for (const member of cost.memberCosts) assert.ok(!relics.summary.includes(member.characterName), 'individual equipment stays hidden inside the disclosure');
+  assert.equal((relics.content.match(/class="leaf-cost-row"/g) ?? []).length, relicArmor.length);
+  for (const item of relicArmor) {
+    assert.ok(relics.content.includes(`投入 ${amount(item.fragments)} 片 · 圣遗物等价 ${amount(item.equivalentArtifactMaterials)} 个`));
+    assert.ok(relics.content.includes(`<strong>${amount(item.chargedResourceDiamonds.urLrFragments)} 钻</strong>`));
+  }
+  assert.doesNotMatch(relics.content, /叶子|专武|紫水晶| SSR<small>|武器 LR/);
+  const ordinary = costFoldout(markup, '普通装备制作', 'ordinary-crafting-costs');
+  const ssrCosts = cost.equipmentCosts.filter(item => item.weaponKind === 'normal' && item.rarity === 'SSR');
+  assert.match(ordinary.summary, /普通 SSR 装备制作/);
+  assert.ok(ordinary.summary.includes(`<strong>${amount(ssrCosts.reduce((sum, item) => sum + item.craftingDiamonds, 0))} 钻</strong>`));
+  assert.equal((ordinary.content.match(/class="leaf-cost-row"/g) ?? []).length, ssrCosts.length);
+  for (const item of ssrCosts) assert.ok(ordinary.content.includes(`SSR 制作碎片 ${amount(item.fragments)} 片`));
+  assert.doesNotMatch(ordinary.content, / UR<small>| LR<small>/);
+  assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`), 'disclosure subtotals must not add any cost to the team quote again');
   assert.equal(JSON.stringify(team), snapshot);
 
   const urFirst = cloneTeam(team);
@@ -957,23 +984,25 @@ test('LR equipment fragments aggregate only ordinary LR armor with allocated net
   const firstLR = orderedCost.equipmentCosts.find(item => item.rarity === 'LR' && item.fragmentResource === 'urLrFragments');
   const configuredPolicy = { ...policy, allowances: { ...policy.allowances, urLrFragments: urFragments + firstLR.fragments / 2 } };
   const allocatedCost = calculateTeam(urFirst, catalog, configuredPolicy, freeLibrary);
-  const allocatedArmor = allocatedCost.equipmentCosts.filter(item => item.sourceKind === 'team' && item.rarity === 'LR' && item.fragmentResource === 'urLrFragments');
+  const allocatedArmor = allocatedCost.equipmentCosts.filter(item => item.sourceKind === 'team' && ['UR', 'LR'].includes(item.rarity) && item.fragmentResource === 'urLrFragments');
   assert.ok(allocatedCost.equipmentCosts.filter(item => item.rarity === 'UR' && item.fragmentResource === 'urLrFragments').every(item => item.chargedResourceDiamonds.urLrFragments === 0), 'earlier UR armor consumes the shared fragment allowance first');
   assert.ok(allocatedArmor.some(item => item.chargedResourceDiamonds.urLrFragments > 0 && item.chargedResourceDiamonds.urLrFragments < item.fragments * configuredPolicy.unitPrices.urLrFragments));
   const allocated = await renderDraft(urFirst, catalog, configuredPolicy);
-  const allocatedSection = allocated.match(/aria-label="LR装备碎片成本">([\s\S]*?)<\/section>/)?.[1];
+  const allocatedSection = costFoldout(allocated, 'UR和LR圣遗物装备明细', 'relic-crafting-costs');
   const allocatedDiamonds = allocatedArmor.reduce((sum, item) => sum + item.chargedResourceDiamonds.urLrFragments, 0);
-  assert.ok(allocatedSection.includes(`圣遗物碎片（LR装备碎片）合计 ${amount(fragmentTotal)} 片`));
-  assert.ok(allocatedSection.includes(`<strong>${amount(allocatedDiamonds)} 钻</strong>`), 'the subtotal uses domain allocations rather than deducting the entire pool from LR fragments again');
+  assert.ok(allocatedSection.summary.includes(`累计投入 ${amount(fragmentTotal)} 片 · 圣遗物等价 ${amount(materialTotal)} 个`));
+  assert.ok(allocatedSection.summary.includes(`<strong>${amount(allocatedDiamonds)} 钻</strong>`), 'the subtotal uses domain allocations rather than deducting the fragment allowance twice');
   assert.ok(allocated.includes(`<strong>${amount(allocatedCost.totalDiamonds)}</strong>`));
 
   const lower = createTeam();
   lower.members[0] = applyEquipmentPreset(createMember(54), 'lr6', catalog, policy);
-  assert.doesNotMatch(await renderDraft(lower), /aria-label="LR装备碎片成本"|class="ordinary-crafting-costs lr-crafting-costs"/);
+  const lowerMarkup = await renderDraft(lower);
+  costFoldout(lowerMarkup, 'UR和LR圣遗物装备明细', 'relic-crafting-costs');
+  assert.doesNotMatch(lowerMarkup, /aria-label="LR装备碎片成本"|class="[^\"]*lr-crafting-costs/);
   const exclusiveOnly = createTeam();
   exclusiveOnly.members[0] = applyEquipmentPreset({ ...createMember(54), rarity: 'LR5' }, 'lr6', catalog, policy);
   exclusiveOnly.members[0].equipment = [exclusiveOnly.members[0].equipment[0], ...createMember(54).equipment.slice(1)];
   const exclusiveMarkup = await renderDraft(exclusiveOnly);
   assert.match(exclusiveMarkup, /aria-label="专武造价"/);
-  assert.doesNotMatch(exclusiveMarkup, /aria-label="LR装备碎片成本"|class="ordinary-crafting-costs lr-crafting-costs"/);
+  assert.doesNotMatch(exclusiveMarkup, /aria-label="LR装备碎片成本"|aria-label="UR和LR圣遗物装备明细"|class="[^\"]*lr-crafting-costs/);
 });
