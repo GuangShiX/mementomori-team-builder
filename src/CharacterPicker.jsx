@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { filterRosterCharacters } from './character-search.mjs';
+import { characterSourceLabel, filterRosterCharacters } from './character-search.mjs';
 
 export function CharacterPickerContents({ catalog, team, targetIndex, aliases, elements, freeCharacters, search, element, onSearch, onElement, onChoose, onClose, renderPortrait, closeIcon, searchIcon }) {
   const filtered = filterRosterCharacters(catalog.characters, aliases, search, element);
@@ -13,10 +13,12 @@ export function CharacterPickerContents({ catalog, team, targetIndex, aliases, e
       const isCurrent = position === targetIndex;
       const positionLabel = isCurrent ? '当前角色' : position >= 0 ? `第 ${position + 1} 位 · ${replacing ? '点击互换' : '点击移入'}` : '';
       const entitlement = freeCharacters.get(character.id);
-      return <button type="button" className={`character-picker-tile${isCurrent ? ' is-current' : ''}`} key={character.id} disabled={isCurrent} aria-label={`${character.name}${character.subtitle ? ` · ${character.subtitle}` : ''}${positionLabel ? `，${positionLabel}` : ''}`} onClick={() => onChoose(character.id)}>
-        {renderPortrait(character, position >= 0 ? team.members[position].rarity : 'SR')}
+      const sourceLabel = characterSourceLabel(character);
+      const ownershipLabel = [sourceLabel, entitlement ? `${entitlement.rarity} 免费` : character.baseRarity === 2 ? `默认 ${character.defaultRarity ?? 'LR5'}` : ''].filter(Boolean).join(' · ');
+      return <button type="button" className={`character-picker-tile${isCurrent ? ' is-current' : ''}`} key={character.id} disabled={isCurrent} aria-label={`${character.name}${character.subtitle ? ` · ${character.subtitle}` : ''}${sourceLabel ? ` · ${sourceLabel}` : ''}${positionLabel ? `，${positionLabel}` : ''}`} onClick={() => onChoose(character.id)}>
+        {renderPortrait(character, position >= 0 ? team.members[position].rarity : character.defaultRarity ?? 'SR')}
         <span className="tile-name">{character.name}</span><span className="tile-subtitle">{character.subtitle || '\u00a0'}</span>
-        <span className="picker-position">{positionLabel || (entitlement ? `${entitlement.rarity} 免费` : '\u00a0')}</span>
+        <span className="picker-position">{positionLabel || ownershipLabel || '\u00a0'}</span>
       </button>;
     })}{filtered.length === 0 && <p className="no-results">没有找到角色，试试正式名称、简称或其它属性。</p>}</div>
     <footer className="character-picker-footer"><span role="status">{filtered.length} 位角色</span><button type="button" className="button" onClick={onClose}>取消</button></footer>

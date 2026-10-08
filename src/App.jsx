@@ -11,7 +11,7 @@ import { calculateCharacterStats } from './character-stats.mjs';
 import { updateColumnRune, chooseInitialColumnRuneLevel } from './rune-interactions.mjs';
 import teamSeat from './assets/team-seat.svg';
 import CharacterPicker from './CharacterPicker.jsx';
-import { filterRosterCharacters } from './character-search.mjs';
+import { characterSourceLabel, filterRosterCharacters } from './character-search.mjs';
 
 const DRAFT_KEY = 'mementomori-team-builder:draft:v1';
 const ELEMENTS = {
@@ -89,7 +89,7 @@ function restoreDraft(catalog, policy, freeLibrary) {
         if (!character || seen.has(source.characterId)) { repaired = true; return null; }
         seen.add(source.characterId);
         const member = createMember(character);
-        if (['SR', 'LR', 'LR5'].includes(source.rarity)) member.rarity = source.rarity;
+        if ((character.allowedRarities ?? ['SR', 'LR', 'LR5']).includes(source.rarity)) member.rarity = source.rarity;
         else repaired = true;
         if (!Array.isArray(source.equipment)) { repaired = true; return member; }
         member.equipment = member.equipment.map((emptyGear, gearIndex) => {
@@ -314,28 +314,37 @@ export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibr
   const ownerId = gear.weaponOwnerCharacterId ?? member.characterId;
   const ownerCharacter = catalog.characters.find(character => character.id === ownerId);
   const actor = catalog.characters.find(character => character.id === member.characterId);
+  const hasOwnExclusiveWeapon = actor?.hasExclusiveWeapon !== false && ![1, 2].includes(actor?.baseRarity);
   const ownWeaponName = actor?.exclusiveWeaponName ?? `${actor?.name ?? '角色'}专武`;
   const ownerWeaponName = ownerCharacter?.exclusiveWeaponName ?? `${ownerCharacter?.name ?? '角色'}专武`;
   const borrowed = ownerId !== member.characterId;
   const compatibleOwners = (freeLibrary?.exclusiveWeapons ?? []).filter(weapon => weapon.rarity === 'UR' && weapon.characterId !== member.characterId && catalog.characters.find(character => character.id === weapon.characterId)?.job === actor?.job);
+  const availableOwners = compatibleOwners.filter(weapon => borrowableWeapons.some(item => item.characterId === weapon.characterId) || gear.weaponKind === 'exclusive' && ownerId === weapon.characterId).sort((a, b) => b.level - a.level || a.characterId - b.characterId);
+  const canEquipExclusive = hasOwnExclusiveWeapon || availableOwners.length > 0;
   function updateGearLevel(level) {
     onChange({ ...gear, level, reinforcementLevel: Math.min(Number(gear.reinforcementLevel) || 0, level) });
   }
   function selectRarity(rarity) {
     if (rarity === 'NONE') { onChange(selectEquipmentRarity(gear, rarity)); return; }
+    if (gear.slot === 1 && !hasOwnExclusiveWeapon && rarity !== 'SSR' && !canEquipExclusive) return;
+    const nextBorrowedOwner = availableOwners.find(weapon => weapon.characterId === ownerId) ?? availableOwners[0];
+    const weaponKind = gear.slot === 1 ? !hasOwnExclusiveWeapon && rarity === 'SSR' ? 'normal' : 'exclusive' : gear.weaponKind;
+    const nextOwnerId = gear.slot !== 1 ? null : !hasOwnExclusiveWeapon && rarity !== 'SSR' ? nextBorrowedOwner?.characterId : gear.rarity === 'NONE' || rarity === 'SSR' ? member.characterId : ownerId;
     const updated = {
-      ...selectEquipmentRarity(gear, rarity), weaponKind: gear.slot === 1 ? 'exclusive' : gear.weaponKind,
-      weaponOwnerCharacterId: gear.slot === 1 ? (gear.rarity === 'NONE' || rarity === 'SSR' ? member.characterId : ownerId) : null,
+      ...selectEquipmentRarity(gear, rarity), weaponKind,
+      weaponOwnerCharacterId: nextOwnerId,
       runes: gear.runes.map((rune, index) => rune.level === 0
         ? { ...rune, categoryId: availableRunes[index]?.id ?? availableRunes[0]?.id ?? rune.categoryId }
         : rune),
     };
+    if (gear.slot === 1 && !hasOwnExclusiveWeapon && rarity !== 'SSR' && (gear.weaponKind !== 'exclusive' || ownerId !== nextOwnerId)) updated.level = nextBorrowedOwner.level;
     const allowed = equipmentLevels(catalog, rarity, updated.weaponKind).filter(level => level <= policy.characterLevel);
     if (!allowed.includes(updated.level)) updated.level = gear.slot === 1 && gear.rarity === 'NONE' ? allowed[0] ?? 180 : allowed.at(-1) ?? policy.characterLevel;
     if (Number.isFinite(updated.reinforcementLevel)) updated.reinforcementLevel = Math.min(updated.reinforcementLevel, updated.level);
     onChange(updated);
   }
   function setWeaponKind(weaponKind) {
+    if (weaponKind === 'exclusive' && !hasOwnExclusiveWeapon) { selectRarity(gear.rarity === 'LR' ? 'LR' : 'UR'); return; }
     const updated = { ...gear, weaponKind, weaponOwnerCharacterId: weaponKind === 'normal' ? member.characterId : ownerId };
     const allowed = equipmentLevels(catalog, gear.rarity, weaponKind).filter(level => level <= policy.characterLevel);
     if (!allowed.includes(updated.level)) updated.level = allowed.at(-1) ?? policy.characterLevel;
@@ -357,30 +366,31 @@ export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibr
     <div className="equipment-card-header">
       <h3 className="equipment-name"><Icon name={gear.slot <= 3 ? 'sword' : 'shield'} size={15} />{SLOT_NAMES[gear.slot]}</h3>
       <select className="equipment-rarity" aria-label={`${SLOT_NAMES[gear.slot]}稀有度`} value={gear.rarity} onChange={event => selectRarity(event.target.value)}>
-        <option value="NONE">未装备</option><option value="SSR">SSR</option><option value="UR">UR</option>
-        <option value="LR" disabled={member.rarity !== 'LR5'}>LR{member.rarity !== 'LR5' ? ' · 需 LR5' : ''}</option>
+        <option value="NONE">未装备</option><option value="SSR">SSR</option><option value="UR" disabled={gear.slot === 1 && !canEquipExclusive}>UR</option>
+        <option value="LR" disabled={member.rarity !== 'LR5' || gear.slot === 1 && !canEquipExclusive}>LR{member.rarity !== 'LR5' ? ' · 需 LR5' : ''}</option>
       </select>
     </div>
     <div className="equipment-tier-options" role="group" aria-label={`${SLOT_NAMES[gear.slot]}装备档位`}>
-      {['SSR', 'UR', 'LR'].map(rarity => <button key={rarity} className={`equipment-tier-button${gear.rarity === rarity ? ' active' : ''}`} type="button" aria-label={`${SLOT_NAMES[gear.slot]}切换${rarity}${rarity === 'LR' && member.rarity !== 'LR5' ? '，需要LR5角色' : ''}`} aria-pressed={gear.rarity === rarity} disabled={rarity === 'LR' && member.rarity !== 'LR5'} onClick={() => selectRarity(rarity)}>
-        <EquipmentArt gear={{ ...gear, weaponKind: gear.slot === 1 ? 'exclusive' : gear.weaponKind, weaponOwnerCharacterId: rarity === 'SSR' ? member.characterId : ownerId }} member={member} catalog={catalog} rarity={rarity} />
+      {['SSR', 'UR', 'LR'].map(rarity => <button key={rarity} className={`equipment-tier-button${gear.rarity === rarity ? ' active' : ''}`} type="button" aria-label={`${SLOT_NAMES[gear.slot]}切换${rarity}${rarity === 'LR' && member.rarity !== 'LR5' ? '，需要LR5角色' : ''}`} aria-pressed={gear.rarity === rarity} disabled={rarity === 'LR' && member.rarity !== 'LR5' || gear.slot === 1 && rarity !== 'SSR' && !canEquipExclusive} onClick={() => selectRarity(rarity)}>
+        <EquipmentArt gear={{ ...gear, weaponKind: gear.slot === 1 ? !hasOwnExclusiveWeapon && rarity === 'SSR' ? 'normal' : 'exclusive' : gear.weaponKind, weaponOwnerCharacterId: rarity === 'SSR' ? member.characterId : hasOwnExclusiveWeapon ? ownerId : availableOwners.find(weapon => weapon.characterId === ownerId)?.characterId ?? availableOwners[0]?.characterId ?? ownerId }} member={member} catalog={catalog} rarity={rarity} />
         <span>{rarity}</span>
       </button>)}
     </div>
     {gear.rarity === 'NONE' ? <p className="empty-equipment-note">选择装备后设置养成与符石</p> : <>
+      {gear.slot === 1 && !hasOwnExclusiveWeapon && <p className="borrowed-weapon-note">此角色没有专武，可借用同职业的免费 UR 专武{!canEquipExclusive ? '；当前可借专武均已使用' : ''}。</p>}
       <div className="fixed-series">{gear.weaponKind === 'exclusive' ? `${borrowed ? '借用 ' : ''}${ownerWeaponName}` : series?.name ?? gear.rarity}{gear.rarity === 'LR' ? ' · 需 LR5 角色' : ''}</div>
       {gear.slot === 1 && gear.weaponKind === 'normal' && ['UR', 'LR'].includes(gear.rarity) && <p className="input-error">UR / LR 武器需使用专武。<button className="rune-repair" onClick={() => setWeaponKind('exclusive')}>改为专属武器</button></p>}
       <div className="equipment-fields">
         {gear.slot === 1 && gear.weaponKind === 'exclusive' && <Field label="专武来源" path={`${prefix}.weaponOwnerCharacterId`} errors={errors} full>
           <select aria-label="专武所属角色" value={ownerId} onChange={event => chooseWeaponOwner(Number(event.target.value))}>
-            <option value={member.characterId} disabled={ownWeaponClaimed && ownerId !== member.characterId}>{ownWeaponName}{ownWeaponClaimed ? ' · 已使用' : ''}</option>
+            {hasOwnExclusiveWeapon && <option value={member.characterId} disabled={ownWeaponClaimed && ownerId !== member.characterId}>{ownWeaponName}{ownWeaponClaimed ? ' · 已使用' : ''}</option>}
             {borrowed && !compatibleOwners.some(weapon => weapon.characterId === ownerId) && <option value={ownerId}>{ownerCharacter?.name} · {ownerWeaponName} · 不可借用</option>}
             {compatibleOwners.map(weapon => { const character = catalog.characters.find(item => item.id === weapon.characterId); const weaponName = character?.exclusiveWeaponName ?? `${character?.name ?? '角色'}专武`; return <option key={weapon.characterId} value={weapon.characterId} disabled={ownerId !== weapon.characterId && !borrowableWeapons.some(item => item.characterId === weapon.characterId)}>{character?.name} · {weaponName} · 免费 UR Lv.{weapon.level}{!borrowableWeapons.some(item => item.characterId === weapon.characterId) && ownerId !== weapon.characterId ? ' · 已使用' : ''}</option>; })}
           </select>
           {borrowed && <span className="borrowed-weapon-note">同职业借用 · 此武器不提供当前角色的专武技能，每把免费专武仅能装备给一人。</span>}
         </Field>}
         {gear.slot === 1 && gear.rarity === 'SSR' && <Field label="武器类型" path={`${prefix}.weaponKind`} errors={errors} full>
-          <select aria-label="武器类型" value={gear.weaponKind} onChange={event => setWeaponKind(event.target.value)}><option value="exclusive">专属武器</option><option value="normal">SSR 通用武器</option></select>
+          <select aria-label="武器类型" value={gear.weaponKind} onChange={event => setWeaponKind(event.target.value)}>{hasOwnExclusiveWeapon && <option value="exclusive">专属武器</option>}<option value="normal">SSR 通用武器</option></select>
         </Field>}
         <Field label="装备等级" path={`${prefix}.level`} errors={errors}>
           <select aria-label={`${SLOT_NAMES[gear.slot]}装备等级`} value={gear.level} onChange={event => updateGearLevel(Number(event.target.value))}>
@@ -460,7 +470,7 @@ export function ArcanaEditor({ state, catalog, onPurchase }) {
   const sourceNames = { team: '配队', arcana: '秘仪购买', freeLibrary: '免费库', permanent: '常驻免费' };
   return <div className="arcana-page" id="arcana-page" role="tabpanel" aria-labelledby="arcana-tab">
     {state.errors.length > 0 && <div className="notice error" role="alert">{state.errors.map((issue, index) => <p key={index}>{issue.message}</p>)}</div>}
-    <div className="arcana-intro"><h2>秘仪 · LR 档</h2><p>购买后获得全部关联角色的 LR 持有资格。配队与多个秘仪共享角色，同一角色按最高稀有度计费。</p><p>加成随关联角色实际持有档位自动解锁，购买只补齐 LR 档。卡片价格是当前补齐差额，不能直接相加；总费用请以右侧预算为准。</p></div>
+    <div className="arcana-intro"><h2>秘仪 · LR 档</h2><p>购买后获得全部关联角色的 LR 持有资格。配队与多个秘仪共享角色，同一角色按最高稀有度计费。</p><p>加成随关联角色实际持有档位自动解锁，购买只补齐 LR 档。卡片价格为补齐参考价，未应用整队通用免费额度，不能直接相加；实际费用请以右侧预算为准。</p></div>
     <section className="arcana-bonus-summary" aria-label="秘仪加成汇总"><h3>当前秘仪加成汇总</h3><div className="arcana-bonus-list">{bonuses.length ? bonuses.map((bonus, index) => <span key={index}>{bonus.label}<strong>{bonusValue(bonus)}</strong></span>) : <p>当前尚无已解锁加成。</p>}</div><p>此处汇总构筑加成；5830 中的战斗属性接入将在后续完成。</p></section>
     <details className="arcana-held"><summary>持有 LR 及以上角色 <span>{held.length} 位</span></summary><p>只读持有表。免费库、配队和秘仪合并计算，取消购买不会降低已配置队员的稀有度。</p><div>{held.map(item => <span key={item.characterId}><strong>{characterLabel(characters.get(item.characterId))}</strong><small>{item.rarity} · {(item.sourceKinds ?? []).map(source => sourceNames[source] ?? '共享持有').join('、')}</small></span>)}</div></details>
     <div className="arcana-toolbar"><label className="search"><Icon name="search" size={14} /><input aria-label="搜索秘仪或关联角色" placeholder="搜索秘仪或关联角色" value={search} onChange={event => setSearch(event.target.value)} /></label><div className="filter-row" role="group" aria-label="秘仪状态筛选">{[['all', '全部'], ['unlocked', '已解锁'], ['available', '待补齐']].map(([id, label]) => <button key={id} className={`filter-button${filter === id ? ' active' : ''}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}</div></div>
@@ -559,6 +569,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
   const offTeamCosts = cost?.offTeamCharacterCosts?.filter(item => item.diamonds > 0) ?? [];
   const diamondResourceNames = DIAMOND_RESOURCE_NAMES;
   const diamondBudgetResources = Object.keys(diamondResourceNames).filter(key => policy.blessings?.some(blessing => blessing.effect === 'resourceDiamondAllowance' && blessing.resource === key));
+  const teamDiamondGrace = policy.blessings?.find(blessing => blessing.teamDiamondAllowance?.amount > 0);
   return <aside className="panel summary-panel" aria-label="资源与费用摘要">
     <div className="panel-header"><div className="panel-heading"><span className="section-index">03</span><h2>资源预算</h2></div><ResourcePriceHelp policy={policy} /></div>
     <p className="summary-top-note">全队统一额度 · 即时计算等价钻石</p>
@@ -567,6 +578,7 @@ function CostSummary({ cost, errors, policy, catalog, canExport, onExport, membe
       <div className="total-value"><strong>{amount(cost?.totalDiamonds)}</strong><span>钻石</span></div>
       <p className="total-caption">{errors.length ? '请修正配置后查看准确费用' : `${memberCount} / 5 名角色 · 包含本体与超额材料`}</p>
     </div>
+    {teamDiamondGrace && <div className="resource-item" aria-label="R和N卡整队免费钻石额度"><div className="resource-item-top"><span>{teamDiamondGrace.name} · R / N 卡</span><strong>{amount(cost?.teamDiamondAllowance ?? 0)} 钻免费</strong></div><div className="resource-caption"><span>{cost?.teamDiamondAllowanceTriggerCharacterIds?.length ? `已使用 ${amount(cost.teamDiamondAllowanceCredit)} 钻` : `携带 R / N 卡解锁 ${amount(teamDiamondGrace.teamDiamondAllowance.amount)} 钻`}</span><span>{cost?.teamDiamondAllowanceTriggerCharacterIds?.length ? `剩余 ${amount(cost.remainingTeamDiamondAllowance)} 钻` : '整队仅一份'}</span></div><p className="inventory-caption">适用于整队全部费用，已计入当前实际费用。</p></div>}
     <div className="resource-section-title"><span>已投入等价量</span><span>免费额度</span></div>
     <div className="resource-list">{displayedResources.map(key => {
       const resource = cost?.resources?.[key];
@@ -658,7 +670,7 @@ export function CharacterStatsPanel({ result, policy }) {
 function BlessingCard({ blessing, policy }) {
   const resourceName = RESOURCE_NAMES[blessing.resource]?.split(' · ')[0] ?? '';
   const baseAllowance = policy.allowances?.[blessing.resource] ?? 0;
-  return <aside className="intro-note blessing-note" aria-label="恩泽机制"><strong>{blessing.name}</strong>{blessing.effect === 'freeEquipmentCrafting' ? <><p>普通 {blessing.rarity} 装备制作免费</p><span>{blessing.rarity} 专武按原规则计价；强化与养成按实际配置计算</span></> : blessing.effect === 'freeExclusiveFragmentBaseline' ? <><p>每把专武紫水晶制作免费至 {blessing.rarity} Lv.{blessing.level}</p><span>更高等级只收基础以上差额</span></> : blessing.effect === 'resourceDiamondAllowance' ? <><p>{DIAMOND_RESOURCE_NAMES[blessing.resource]}免费 {amount(blessing.amount)} 钻</p><span>独立材料预算 · 整队共享</span></> : baseAllowance > 0 ? <><p>额外免费 {amount(blessing.amount)} {resourceName}</p><span>基础免费 {amount(baseAllowance)} · 合计免费 {amount(getResourceAllowance(policy, blessing.resource))}</span></> : <><p>整队免费总额度 {amount(getResourceAllowance(policy, blessing.resource))} {resourceName}</p><span>超过总额度后按超额计价</span></>}</aside>;
+  return <aside className="intro-note blessing-note" aria-label="恩泽机制"><strong>{blessing.name}</strong>{blessing.effect === 'freeEquipmentCrafting' ? <><p>普通 {blessing.rarity} 装备制作免费</p><span>{blessing.rarity} 专武按原规则计价；强化与养成按实际配置计算</span></> : blessing.effect === 'freeExclusiveFragmentBaseline' ? <><p>每把专武紫水晶制作免费至 {blessing.rarity} Lv.{blessing.level}</p><span>更高等级只收基础以上差额</span></> : blessing.effect === 'resourceDiamondAllowance' ? <><p>{DIAMOND_RESOURCE_NAMES[blessing.resource]}免费 {amount(blessing.amount)} 钻</p><span>独立材料预算 · 整队共享</span></> : baseAllowance > 0 ? <><p>额外免费 {amount(blessing.amount)} {resourceName}</p><span>基础免费 {amount(baseAllowance)} · 合计免费 {amount(getResourceAllowance(policy, blessing.resource))}</span></> : <><p>整队免费总额度 {amount(getResourceAllowance(policy, blessing.resource))} {resourceName}</p><span>超过总额度后按超额计价</span></>}{blessing.teamDiamondAllowance?.amount > 0 && <><p>携带 R / N 卡：整队额外 {amount(blessing.teamDiamondAllowance.amount)} 钻免费</p><span>可用于任何费用 · 不随人数叠加</span></>}</aside>;
 }
 
 export default function App({ catalog, policy, freeLibrary, nameAliases }) {
@@ -883,8 +895,10 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
         <div className="catalog-grid" role="list" aria-label="可拖入配队的角色">{filtered.map(character => {
           const inTeam = team.members.some(member => member?.characterId === character.id);
           const entitlement = freeCharacters.get(character.id);
-          return <div className={`character-tile${inTeam ? ' in-team' : ''}`} role="listitem" key={character.id} title={`${characterLabel(character)} · 拖到站位${inTeam ? '调整位置' : '加入或替换'}${entitlement ? ` · 免费库 ${entitlement.rarity}` : ''}`} aria-label={`拖入${characterLabel(character)}`} draggable={!touchMode} onDragStart={event => startDrag(event, { kind: 'character', characterId: character.id })} onDragEnd={endDrag}>
-            <div style={{ position: 'relative' }}><Portrait character={character} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity="SR" />{inTeam && <span className="selected-check"><Icon name="check" size={10} /></span>}</div><span className="tile-name">{character.name}</span><span className="tile-subtitle" aria-hidden={!character.subtitle}>{character.subtitle || '\u00a0'}</span><span className="tile-free-cap" aria-hidden={!entitlement}>{entitlement ? `${entitlement.rarity} 免费` : '\u00a0'}</span>
+          const sourceLabel = characterSourceLabel(character);
+          const ownershipLabel = [sourceLabel, entitlement ? `${entitlement.rarity} 免费` : character.baseRarity === 2 ? `默认 ${character.defaultRarity ?? 'LR5'}` : ''].filter(Boolean).join(' · ');
+          return <div className={`character-tile${inTeam ? ' in-team' : ''}`} role="listitem" key={character.id} title={`${characterLabel(character)}${sourceLabel ? ` · ${sourceLabel}` : ''} · 拖到站位${inTeam ? '调整位置' : '加入或替换'}${entitlement ? ` · 免费库 ${entitlement.rarity}` : ''}`} aria-label={`拖入${characterLabel(character)}${sourceLabel ? ` · ${sourceLabel}` : ''}`} draggable={!touchMode} onDragStart={event => startDrag(event, { kind: 'character', characterId: character.id })} onDragEnd={endDrag}>
+            <div style={{ position: 'relative' }}><Portrait character={character} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity={character.defaultRarity ?? 'SR'} />{inTeam && <span className="selected-check"><Icon name="check" size={10} /></span>}</div><span className="tile-name">{character.name}</span><span className="tile-subtitle" aria-hidden={!character.subtitle}>{character.subtitle || '\u00a0'}</span><span className="tile-free-cap" aria-hidden={!ownershipLabel}>{ownershipLabel || '\u00a0'}</span>
           </div>;
         })}{filtered.length === 0 && <p className="no-results">没有找到符合条件的角色</p>}</div>
         <p className="catalog-help">{touchMode ? <>点击队伍空位选择角色；替换、换位和移出可使用队伍下方按钮。</> : <>拖动目录角色到站位加入或替换。<br />将队员拖回此目录可移出配队。</>}</p>
@@ -904,7 +918,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
               <div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity={selectedMember.rarity} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div>
             ) : <div className="character-overview-empty"><Icon name="gear" size={20} /><p>点击队伍空位选择角色<br />即可编辑装备</p></div>}
               <div className="character-overview-controls">
-                {selectedMember && selectedCharacter && <label className="rarity-control"><span className="field-label">角色稀有度</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => chooseMemberRarity(event.target.value)}><option value="SR" disabled={arcanaRequiresLR}>SR</option><option value="LR">LR</option><option value="LR5">LR5</option></select>{arcanaRequiresLR && <span className="arcana-rarity-note">已购秘仪至少需 LR</span>}</label>}
+                {selectedMember && selectedCharacter && <label className="rarity-control"><span className="field-label">角色稀有度{characterSourceLabel(selectedCharacter) ? ` · ${characterSourceLabel(selectedCharacter)}` : ''}</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => chooseMemberRarity(event.target.value)}>{(selectedCharacter.allowedRarities ?? ['SR', 'LR', 'LR5']).map(rarity => <option key={rarity} value={rarity} disabled={rarity === 'SR' && arcanaRequiresLR}>{rarity}</option>)}</select>{arcanaRequiresLR && <span className="arcana-rarity-note">已购秘仪至少需 LR</span>}</label>}
                 <button type="button" className="quiet-button workbench-toggle" aria-expanded={!headerCollapsed} aria-controls="team-equipment-overview" onClick={() => setHeaderCollapsed(value => !value)}>{headerCollapsed ? '展开概览' : '折叠概览'}</button>
               </div>
             </div></div>

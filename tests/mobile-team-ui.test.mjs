@@ -44,17 +44,19 @@ function elements(tree) {
   return [tree, ...React.Children.toArray(tree.props.children).flatMap(elements)];
 }
 
-test('mobile character search accepts formal names, aliases, variants and element filters while excluding R characters', () => {
+test('mobile character search accepts formal names, aliases, variants and includes playable N, R and SR characters', () => {
   const characters = [
     { id: 101, name: '阿姆雷特', subtitle: '仲夏夜之梦', variant: 'SP', element: 'green', baseRarity: 8 },
     { id: 102, name: '梅莉亚', element: 'red', baseRarity: 8, aliases: ['灾芽'] },
     { id: 103, name: '伊利亚', element: 'red', baseRarity: 2 },
+    { id: 104, name: '弓箭手', element: 'red', baseRarity: 1 },
+    { id: 105, name: '无效角色', element: 'red', baseRarity: 4 },
   ];
   const aliases = new Map([[101, '夏姆']]);
   for (const query of ['阿姆', '仲夏', 'sp', ' 夏姆 ', '101']) assert.deepEqual(filterRosterCharacters(characters, aliases, query).map(character => character.id), [101]);
   assert.deepEqual(filterRosterCharacters(characters, aliases, '灾芽', 'red').map(character => character.id), [102]);
   assert.deepEqual(filterRosterCharacters(characters, aliases, '夏姆', 'red'), []);
-  assert.deepEqual(filterRosterCharacters(characters, aliases, '', 'red').map(character => character.id), [102]);
+  assert.deepEqual(filterRosterCharacters(characters, aliases, '', 'red').map(character => character.id), [102, 103, 104]);
 });
 
 test('character picker labels replacement and move actions, disables the current member and exposes touch button callbacks', async () => {

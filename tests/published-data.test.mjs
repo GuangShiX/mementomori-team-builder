@@ -12,8 +12,9 @@ const manualPolicy = () => ({...materialOnlyPolicy(),weaponSync:{minimumLevel:30
 const five = () => {const team=createTeam();team.members=catalog.characters.slice(0,5).map(createMember);return team;};
 
 test('all shipped portraits match the canonical public asset manifest',async()=>{
-  assert.equal(catalog.characters.length,lock.portraits.length);
-  for(const asset of lock.portraits){
+  const portraits=[...lock.portraits,...lock.lowRarityPortraits];
+  assert.equal(catalog.characters.length,portraits.length);
+  for(const asset of portraits){
     const bytes=await readFile(new URL(`../public/${asset.path}`,import.meta.url));
     assert.equal(createHash('sha256').update(bytes).digest('hex'),asset.sha256);
   }
@@ -75,8 +76,8 @@ test('actual gear data computes full reinforcement investment and team-wide free
   assert.equal(calculateTeam(team,catalog,next).resources.reinforcementMedicine.diamonds,0);
 });
 test('current red blessing shares exactly88888 across members and only the first excess medicine costs ten diamonds',()=>{
-  assert.equal(policy.id,'owner-450-v10');
-  assert.equal(policy.ruleSetId,'mementomori-investment-equivalent-v10');
+  assert.equal(policy.id,'owner-450-v11');
+  assert.equal(policy.ruleSetId,'mementomori-investment-equivalent-v11');
   assert.equal(getResourceAllowance(policy,'reinforcementMedicine'),88888);
   assert.equal(getResourceAllowance(policy,'runeTickets'),100000);
   assert.equal(policy.unitPrices.reinforcementMedicine,10);
@@ -113,7 +114,7 @@ test('v7 exports with a hundred-thousand red allowance are repriced under the cu
   assert.equal(old.costBreakdown.resources.reinforcementMedicine.diamonds,473150);
   const imported=parseImport(old,catalog,policy,freeLibrary);
   assert.deepEqual(imported.team,old.team);
-  assert.equal(imported.costBreakdown.policyVersion,10);
+  assert.equal(imported.costBreakdown.policyVersion,11);
   assert.equal(imported.costBreakdown.resources.reinforcementMedicine.freeAllowance,88888);
   assert.equal(imported.costBreakdown.resources.reinforcementMedicine.diamonds,584270);
   assert.equal(imported.costBreakdown.totalDiamonds-old.costBreakdown.totalDiamonds,111120);
@@ -121,7 +122,7 @@ test('v7 exports with a hundred-thousand red allowance are repriced under the cu
   assert.deepEqual(imported.costBreakdown.resources.exclusiveFragments,old.costBreakdown.resources.exclusiveFragments);
   assert.equal(imported.costBreakdown.characterDiamonds,old.costBreakdown.characterDiamonds);
   const current=createExport(imported.team,catalog,policy,freeLibrary);
-  assert.equal(current.policySnapshot.id,'owner-450-v10');
+  assert.equal(current.policySnapshot.id,'owner-450-v11');
   assert.equal(current.policySnapshot.allowances.reinforcementMedicine,0);
   assert.equal(current.policySnapshot.blessings.find(blessing=>blessing.id==='crimson-grace').amount,88888);
 });
@@ -153,7 +154,7 @@ test('forge grace applies only to ordinary SSR and an SSR exclusive retains its 
 });
 test('actual per-weapon UR240 crystal baselines take the larger free entitlement after automatic fabrication and keep the leaf budget unchanged',()=>{
   const grace=policy.blessings.find(blessing=>blessing.resource==='exclusiveFragments');
-  assert.deepEqual(grace,{id:'crystal-diamond-grace',name:'恩泽·紫晶',effect:'freeExclusiveFragmentBaseline',resource:'exclusiveFragments',rarity:'UR',level:240});
+  assert.deepEqual(grace,{id:'crystal-diamond-grace',name:'恩泽·紫晶',effect:'freeExclusiveFragmentBaseline',resource:'exclusiveFragments',rarity:'UR',level:240,teamDiamondAllowance:{amount:100000,triggerBaseRarities:[1,2]}});
   const team=createTeam();team.members=[85,100,107,8,27].map(createMember);
   for(const member of team.members) Object.assign(member.equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:450});
   const cost=calculateTeam(team,catalog,policy,freeLibrary);
@@ -327,7 +328,7 @@ test('legacy manual borrowed UR gift uses its physical owner and can serve as an
   assert.equal(validateTeam(team,catalog,policy,{freeLibrary}).errors.some(item=>item.code==='DUPLICATE_WEAPON_SOURCE'),true);
 });
 test('automatic policy discounts the third450 fabrication before applying diamond budgets, with actual levels450',()=>{
-  assert.equal(policy.version,10);
+  assert.equal(policy.version,11);
   assert.deepEqual(policy.weaponSync,{mode:'automatic',targetLevel:450,billedLevel:300,discountedOrdinals:[3,6]});
   const team=createTeam();team.members=[124,96,86,85,100].map(createMember);
   for(const member of team.members)Object.assign(member.equipment[0],{rarity:'UR',seriesId:13,weaponKind:'exclusive',level:450,reinforcementLevel:450});

@@ -1,5 +1,5 @@
 {
-  "version": "450-public-v1",
+  "version": "450-public-v2",
   "characterAssetRef": "440e579724fa1fa11c737c308ef59266d41f0453",
   "characters": [
     {
@@ -1429,6 +1429,254 @@
       "exclusiveWeaponIcon": "./assets/equipment/EQP_001028.png",
       "exclusiveWeaponIconId": 1028,
       "exclusiveWeaponName": "圣剑艾克斯卡利伯"
+    },
+    {
+      "id": 1,
+      "name": "莫妮卡",
+      "subtitle": "",
+      "element": "blue",
+      "job": 2,
+      "baseRarity": 1,
+      "portrait": "./assets/characters/1.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "N",
+      "allowedRarities": [
+        "N"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "伊利亚",
+      "subtitle": "",
+      "element": "blue",
+      "job": 1,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/2.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "艾莉丝",
+      "subtitle": "",
+      "element": "blue",
+      "job": 1,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/3.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "洛基",
+      "subtitle": "",
+      "element": "blue",
+      "job": 2,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/4.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "夏乐",
+      "subtitle": "",
+      "element": "red",
+      "job": 1,
+      "baseRarity": 1,
+      "portrait": "./assets/characters/11.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "N",
+      "allowedRarities": [
+        "N"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "阿丽安萝德",
+      "subtitle": "",
+      "element": "red",
+      "job": 1,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/12.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "狄奥多拉",
+      "subtitle": "",
+      "element": "red",
+      "job": 4,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/13.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "佩特拉",
+      "subtitle": "",
+      "element": "red",
+      "job": 2,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/14.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "静",
+      "subtitle": "",
+      "element": "green",
+      "job": 1,
+      "baseRarity": 1,
+      "portrait": "./assets/characters/21.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "N",
+      "allowedRarities": [
+        "N"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "萨拉",
+      "subtitle": "",
+      "element": "green",
+      "job": 1,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/22.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "罗莎莉",
+      "subtitle": "",
+      "element": "green",
+      "job": 4,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/23.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "莉布拉",
+      "subtitle": "",
+      "element": "green",
+      "job": 2,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/24.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 31,
+      "name": "加姆",
+      "subtitle": "",
+      "element": "yellow",
+      "job": 2,
+      "baseRarity": 1,
+      "portrait": "./assets/characters/31.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "N",
+      "allowedRarities": [
+        "N"
+      ]
+    },
+    {
+      "id": 32,
+      "name": "诗寇蒂",
+      "subtitle": "",
+      "element": "yellow",
+      "job": 4,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/32.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 33,
+      "name": "切尔娜",
+      "subtitle": "",
+      "element": "yellow",
+      "job": 4,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/33.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
+    },
+    {
+      "id": 34,
+      "name": "索缇莉亚",
+      "subtitle": "",
+      "element": "yellow",
+      "job": 4,
+      "baseRarity": 2,
+      "portrait": "./assets/arcana-characters/34.png",
+      "hasExclusiveWeapon": false,
+      "defaultRarity": "LR5",
+      "allowedRarities": [
+        "SR",
+        "LR",
+        "LR5"
+      ]
     }
   ],
   "runeCategories": [
@@ -2811,6 +3059,11 @@
         "frame": "lr",
         "tintMatrix": null,
         "starCount": 5
+      },
+      "N": {
+        "tintMatrix": null,
+        "frame": "common",
+        "starCount": 0
       }
     },
     "equipmentRarities": {

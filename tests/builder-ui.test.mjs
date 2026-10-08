@@ -187,7 +187,7 @@ test('builder displays a nameless framed team to the right of the selected chara
   }
   assert.equal((markup.match(/class="job-badge"/g) ?? []).length, catalog.characters.length + 3, 'profession icons follow the catalog in roster, seats and selected portrait');
   assert.match(lineup, /class="game-icon-frame" data-rarity="LR5" data-frame="lr"/);
-  assert.equal((markup.match(/class="rarity-stars"/g) ?? []).length, 2, 'the team and selected portrait use current LR5, while catalog portraits remain SR');
+  assert.equal((markup.match(/class="rarity-stars"/g) ?? []).length, 2 + catalog.characters.filter(character => character.defaultRarity === 'LR5').length, 'the team and selected portrait use current LR5, and R catalog portraits use their default LR5');
   assert.match(selection, /class="game-icon-frame" data-rarity="SR" data-frame="common"/);
   assert.match(markup, /border-image-source:url\(&quot;\.\/custom-elements\/frame-lr\.png&quot;\)/);
   assert.match(markup, /border-image-slice:26 25 25 25/);
@@ -339,7 +339,7 @@ test('equipment composition displays the verified normal, holy, dark and combine
   assert.match(css, /\.game-icon-frame\{[^}]*z-index:3/);
 });
 
-test('arcana shows actual owned LR5 bonuses, free R portraits and disabled unpublished groups without adding R to the team roster', async () => {
+test('arcana shows actual owned LR5 bonuses, free R portraits and disabled unpublished groups while R cards can also enter the roster', async () => {
   const team = createTeam();
   const state = getArcanaState(team, catalog, policy, freeLibrary);
   const markup = await renderArcana(team);
@@ -351,7 +351,7 @@ test('arcana shows actual owned LR5 bonuses, free R portraits and disabled unpub
   for (const bonus of lr5.bonuses) assert.ok(activeCard.includes(bonus.displayValue));
   assert.match(markup, /只读持有表/);
   assert.match(markup, /5830 中的战斗属性接入将在后续完成/);
-  assert.match(markup, /卡片价格是当前补齐差额，不能直接相加/);
+  assert.match(markup, /卡片价格为补齐参考价，未应用整队通用免费额度，不能直接相加/);
   assert.doesNotMatch(markup, /赠最高档|全阶赠送|购买 LR5|购买 SSR|NaN|undefined/);
   for (const support of catalog.arcana.supportCharacters) assert.ok(markup.includes(`src="${support.portrait}"`), `R support ${support.id} retains its verified portrait`);
   const unpublished = state.groups.find(group => group.published === false);
@@ -362,7 +362,7 @@ test('arcana shows actual owned LR5 bonuses, free R portraits and disabled unpub
   const app = await renderDraft(cloneTeam(team));
   const roster = app.match(/<aside class="panel catalog-panel left-column" aria-label="选择角色">([\s\S]*?)<\/aside>/)[1];
   assert.equal((roster.match(/class="tile-name"/g) ?? []).length, catalog.characters.length);
-  for (const support of catalog.arcana.supportCharacters) assert.ok(!roster.includes(`src="${support.portrait}"`), 'R holdings stay outside the selectable SR team catalog');
+  for (const support of catalog.arcana.supportCharacters) assert.ok(roster.includes(`src="${support.portrait}"`), 'R cards use the same verified portraits in the selectable roster');
 });
 
 test('arcana purchases render marginal LR prices, one shared character fee and cancellation that preserves the configured team', async () => {

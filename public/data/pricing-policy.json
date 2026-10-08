@@ -1,7 +1,7 @@
 {
-  "id": "owner-450-v10",
-  "version": 10,
-  "ruleSetId": "mementomori-investment-equivalent-v10",
+  "id": "owner-450-v11",
+  "version": 11,
+  "ruleSetId": "mementomori-investment-equivalent-v11",
   "title": "诅咒·时之枷锁配队预算规则",
   "characterLevel": 450,
   "baseline": {
@@ -59,7 +59,11 @@
       "effect": "freeExclusiveFragmentBaseline",
       "resource": "exclusiveFragments",
       "rarity": "UR",
-      "level": 240
+      "level": 240,
+      "teamDiamondAllowance": {
+        "amount": 100000,
+        "triggerBaseRarities": [1, 2]
+      }
     }
   ],
   "arcana": {
@@ -77,6 +81,10 @@
     "lifeTreeDew": 400
   },
   "copies": {
+    "N": {
+      "normal": 1,
+      "lightDark": 1
+    },
     "SR": {
       "normal": 1,
       "lightDark": 1

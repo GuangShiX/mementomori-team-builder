@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { createTeam, getArcanaState, calculateTeam } from '../src/domain.mjs';
+import { createTeam, createMember, getArcanaState, calculateTeam } from '../src/domain.mjs';
 
 const readData = async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)));
 const [roster, arcana, policy, freeLibrary] = await Promise.all(['catalog', 'arcana-catalog', 'pricing-policy', 'free-library'].map(readData));
@@ -50,7 +50,9 @@ test('actual free roster naturally unlocks eligible arcana without buying extra 
   assert.equal(arcana.supportCharacters.length, 12);
   for (const character of arcana.supportCharacters) {
     assert.equal(character.freeRarity, 'LR');
-    assert.equal(roster.characters.some(member => member.id === character.id), false);
+    const playable = roster.characters.find(member => member.id === character.id);
+    assert.equal(playable.baseRarity, 2);
+    assert.deepEqual([playable.name, playable.job, playable.element], [character.name, character.job, character.element]);
     assert.equal(state.ledger.find(member => member.characterId === character.id).rarity, 'LR');
   }
   for (const id of [58, 71, 88]) {
@@ -59,4 +61,15 @@ test('actual free roster naturally unlocks eligible arcana without buying extra 
     assert.equal(group.bonusTierLabel, 'LR');
   }
   assert.equal(state.groups.find(group => group.id === 101).unlocked, false);
+});
+
+test('a playable R LR5 elevates only its owned ledger entry while other free R supports remain LR', () => {
+  const team = createTeam();
+  team.members[0] = { ...createMember(roster.characters.find(character => character.id === 2)), rarity: 'LR5' };
+  const state = getArcanaState(team, catalog, policy, freeLibrary);
+  assert.deepEqual(state.errors, []);
+  assert.equal(state.ledger.find(character => character.characterId === 2).rarity, 'LR5');
+  assert.equal(state.ledger.find(character => character.characterId === 2).teamRarity, 'LR5');
+  for (const id of [3,4,12,13,14,22,23,24,32,33,34]) assert.equal(state.ledger.find(character => character.characterId === id).rarity, 'LR');
+  assert.equal(state.groups.find(group => group.id === 58).bonusTierLabel, 'LR');
 });

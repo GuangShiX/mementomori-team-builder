@@ -73,6 +73,11 @@ test('equipment pictures resolve actual owner weapons and deduplicate shared arm
     assert.equal(bytes.readUInt32BE(20),128);
   }
   for (const character of catalog.characters) {
+    if (character.hasExclusiveWeapon === false) {
+      assert.equal(character.exclusiveWeaponIconId, undefined);
+      assert.equal(character.exclusiveWeaponIcon, undefined);
+      continue;
+    }
     const asset=lock.equipmentAssets.find(item=>item.iconId===character.exclusiveWeaponIconId);
     assert.ok(asset,`missing real exclusive-weapon art for ${character.id}`);
     assert.equal(character.exclusiveWeaponIcon,`./${asset.path}`);
@@ -89,19 +94,47 @@ test('equipment pictures resolve actual owner weapons and deduplicate shared arm
   }
 });
 
-test('arcana-only R portraits retain canonical hashes without entering the SR team roster',async()=>{
+test('R roster portraits reuse the canonical arcana images without duplicating files',async()=>{
   const catalog=JSON.parse(await readFile(new URL('../public/data/catalog.json',import.meta.url)));
   const lock=JSON.parse(await readFile(new URL('../public/data/asset-lock.json',import.meta.url)));
   const expectedIds=[2,3,4,12,13,14,22,23,24,32,33,34];
   assert.deepEqual(lock.arcanaPortraits.map(asset=>asset.id),expectedIds);
-  assert.equal(catalog.characters.length,119);
+  assert.equal(catalog.characters.length,135);
   for (const asset of lock.arcanaPortraits) {
-    assert.ok(!catalog.characters.some(character=>character.id===asset.id));
+    const character=catalog.characters.find(character=>character.id===asset.id);
+    assert.equal(character.baseRarity,2);
+    assert.equal(character.portrait,`./${asset.path}`);
     const stem=`CHR_${String(asset.id).padStart(6,'0')}`;
     const name=`${stem}_00_s.png`;
     assert.equal(asset.path,`assets/arcana-characters/${asset.id}.png`);
     assert.equal(asset.sourcePath,`assets/characters/${name}`);
     assert.ok(asset.sourceResourceKey.endsWith(`/CharacterIcon/${stem}/${name}`));
+    const bytes=await readFile(new URL(`../public/${asset.path}`,import.meta.url));
+    assert.equal(createHash('sha256').update(bytes).digest('hex'),asset.sha256);
+    assert.deepEqual([...bytes.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+    assert.equal(bytes.readUInt32BE(16),128);
+    assert.equal(bytes.readUInt32BE(20),128);
+  }
+});
+
+test('the twelve R and four N identities lock exact original portraits and public profile hashes',async()=>{
+  const catalog=JSON.parse(await readFile(new URL('../public/data/catalog.json',import.meta.url)));
+  const lock=JSON.parse(await readFile(new URL('../public/data/asset-lock.json',import.meta.url)));
+  const ids=[1,2,3,4,11,12,13,14,21,22,23,24,31,32,33,34];
+  assert.deepEqual(lock.lowRarityPortraits.map(asset=>asset.id),ids);
+  assert.equal(catalog.characters.filter(character=>character.baseRarity===8).length,119);
+  for(const asset of lock.lowRarityPortraits){
+    const character=catalog.characters.find(actor=>actor.id===asset.id);
+    assert.ok([1,2].includes(character.baseRarity));
+    assert.equal(character.hasExclusiveWeapon,false);
+    assert.equal(character.portrait,`./${asset.path}`);
+    assert.equal(character.defaultRarity,character.baseRarity===2?'LR5':'N');
+    assert.deepEqual(character.allowedRarities,character.baseRarity===2?['SR','LR','LR5']:['N']);
+    const stem=`CHR_${String(asset.id).padStart(6,'0')}`;
+    assert.equal(asset.sourcePath,`assets/characters/${stem}_00_s.png`);
+    assert.ok(asset.sourceResourceKey.endsWith(`/CharacterIcon/${stem}/${stem}_00_s.png`));
+    assert.equal(asset.profilePath,`skills/characters/${String(asset.id).padStart(6,'0')}.json`);
+    assert.match(asset.profileSha256,/^[a-f0-9]{64}$/);
     const bytes=await readFile(new URL(`../public/${asset.path}`,import.meta.url));
     assert.equal(createHash('sha256').update(bytes).digest('hex'),asset.sha256);
     assert.deepEqual([...bytes.subarray(0,8)],[137,80,78,71,13,10,26,10]);

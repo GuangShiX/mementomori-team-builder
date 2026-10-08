@@ -34,9 +34,10 @@ if (process.argv.includes('--display-only')) {
 const elementsOnly = process.argv.includes('--elements-only') || process.argv.includes('--ui-only');
 const arcanaPortraitsOnly = process.argv.includes('--arcana-portraits-only');
 const jobsOnly = process.argv.includes('--jobs-only');
+const lowRarityOnly = process.argv.includes('--low-rarity-only');
 const previousLock = JSON.parse(await readFile(path.join(root, 'public/data/asset-lock.json')));
 const ref = process.env.ASSET_REF || previousLock?.ref || '440e579724fa1fa11c737c308ef59266d41f0453';
-if ((elementsOnly || arcanaPortraitsOnly) && ref !== previousLock.ref) throw new Error('Partial synchronization must use the existing locked asset ref.');
+if ((elementsOnly || arcanaPortraitsOnly || lowRarityOnly) && ref !== previousLock.ref) throw new Error('Partial synchronization must use the existing locked asset ref.');
 // Profession art may be added at a newer public ref without upgrading the existing art lock.
 const sourceRef = jobsOnly ? process.env.JOB_ASSET_REF || process.env.ASSET_REF || previousLock.jobAssetRef || previousLock.ref : ref;
 if (jobsOnly && !/^[a-f0-9]{40}$/.test(sourceRef)) throw new Error('Profession synchronization requires an exact published commit SHA.');
@@ -115,6 +116,53 @@ async function syncArcanaPortraits() {
   }
   return portraits;
 }
+const LOW_RARITY_IDS = [1,2,3,4,11,12,13,14,21,22,23,24,31,32,33,34];
+async function syncLowRarityCharacters() {
+  const elements = {1:'blue',2:'red',3:'green',4:'yellow',5:'light',6:'dark'};
+  const characters = [];
+  const portraits = [];
+  for (const id of LOW_RARITY_IDS) {
+    const row = index.characters.find(character => character.id === id);
+    if (!row?.sha256) throw new Error(`Locked public low-rarity profile missing: ${id}`);
+    const data = JSON.parse(await fetchBytes(row.path,row.sha256));
+    const baseRarity = data.character?.master_record?.RarityFlags;
+    if (data.character?.id !== id || ![1,2].includes(baseRarity) || ![1,2,4].includes(data.character.job_flags)
+      || !elements[data.character.element_type] || data.exclusive_weapon != null || !row.display_name) throw new Error(`Unexpected public low-rarity identity: ${id}`);
+    const stem = `CHR_${String(id).padStart(6,'0')}`;
+    const name = `${stem}_00_s.png`;
+    const asset = manifest.assets.find(item => item.category === 'characters' && item.name === name);
+    if (!asset?.sha256 || asset.path !== `assets/characters/${name}`
+      || !asset.source_resource_key?.endsWith(`/CharacterIcon/${stem}/${name}`)) throw new Error(`Canonical published low-rarity portrait missing: ${name}`);
+    const existing = previousLock.arcanaPortraits?.find(item => item.id === id);
+    const target = existing?.path ?? `assets/characters/${id}.png`;
+    let bytes;
+    try { const local = await readFile(path.join(root,'public',target)); if (sha(local) === asset.sha256) bytes = local; } catch {}
+    bytes ??= await fetchBytes(asset.path,asset.sha256);
+    const dimensions = pngSize(bytes,name);
+    if (dimensions.width !== 128 || dimensions.height !== 128) throw new Error(`Invalid original low-rarity portrait size: ${name}`);
+    await mkdir(path.dirname(path.join(root,'public',target)),{recursive:true});
+    await writeFile(path.join(root,'public',target),bytes);
+    portraits.push({id,path:target,sha256:asset.sha256,sourcePath:asset.path,sourceResourceKey:asset.source_resource_key,
+      profilePath:row.path,profileSha256:row.sha256});
+    characters.push({id,name:row.display_name,subtitle:row.subtitles?.['zh-CN'] || '',element:elements[data.character.element_type],
+      job:data.character.job_flags,baseRarity,portrait:`./${target}`,hasExclusiveWeapon:false,
+      defaultRarity:baseRarity === 2 ? 'LR5' : 'N',allowedRarities:baseRarity === 2 ? ['SR','LR','LR5'] : ['N']});
+  }
+  return {characters,portraits};
+}
+if (lowRarityOnly) {
+  const lowRarity = await syncLowRarityCharacters();
+  const catalogPath = path.join(root,'public/data/catalog.json');
+  const catalog = JSON.parse(await readFile(catalogPath));
+  const lowIds = new Set(LOW_RARITY_IDS);
+  catalog.characters = [...catalog.characters.filter(character => !lowIds.has(character.id)),...lowRarity.characters];
+  catalog.version = '450-public-v2';
+  if (catalog.iconArt?.characterRarities) catalog.iconArt.characterRarities.N = {frame:'common',tintMatrix:null,starCount:0};
+  await writeFile(catalogPath,JSON.stringify(catalog,null,2)+'\n');
+  await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify({...previousLock,lowRarityPortraits:lowRarity.portraits},null,2)+'\n');
+  console.log(`Synced ${lowRarity.characters.length} public low-rarity identities and original portraits; existing SR catalog and all art refs preserved.`);
+  process.exit(0);
+}
 const arcanaPortraits = await syncArcanaPortraits();
 if (arcanaPortraitsOnly) {
   await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify({...previousLock,arcanaPortraits},null,2)+'\n');
@@ -180,7 +228,7 @@ const curve = (levels, costs) => Object.fromEntries(levels.map((level,i)=>[level
 const thresholds = [[61,20],[81,25],[101,33],[121,42],[141,54],[161,69],[181,89],[201,115],[221,150],...Array.from({length:21},(_,i)=>[241+10*i,152+2*i])];
 const medicine = Array.from({length:451},(_,level)=>thresholds.reduce((total,[threshold,cost])=>total+(level>=threshold?cost:0),0));
 const catalog = elementsOnly ? JSON.parse(await readFile(path.join(root, 'public/data/catalog.json'))) : {
-  version: '450-public-v1', characterAssetRef:ref, characters,
+  version: '450-public-v2', characterAssetRef:ref, characters,
   runeCategories: ['力量','战技','魔力','攻击','物魔防御穿透','命中','暴击','弱化效果命中','速度','耐力','生命','物理防御','魔法防御','闪避','暴击抗性','弱化效果抗性'].map((name,index)=>({id:index+1,name,ticketBased:[5,9].includes(index+1),slots:index<9?[1,2,3]:[4,5,6]})),
   equipmentSeries:[{id:12,name:'撒旦',rarities:['SSR'],costResource:'ssrFragments'},{id:13,name:'米迦勒',rarities:['UR'],costResource:'urLrFragments'},{id:14,name:'梅塔特隆',rarities:['LR'],costResource:'urLrFragments'}],
   equipmentCosts:{
@@ -213,6 +261,7 @@ async function equipmentIcon(iconId) {
 }
 const representatives = {};
 for (const character of catalog.characters) {
+  if (character.hasExclusiveWeapon === false) continue;
   const profile = publicProfiles.get(character.id);
   if (!profile || profile.data.character.job_flags !== character.job) throw new Error(`Locked public character profile missing: ${character.id}`);
   const iconId = profile.data.exclusive_weapon?.icon_id;
@@ -238,7 +287,7 @@ catalog.iconArt = {
   schemaVersion:1,
   frames:{common:`./${commonFrame.path}`,lr:`./${lrFrame.path}`},
   goldStar:`./${goldStar.path}`,
-  characterRarities:{SR:{frame:'common',tintMatrix:diagonalTint('0.977','0.863','0.587'),starCount:0},LR:{frame:'lr',tintMatrix:null,starCount:0},LR5:{frame:'lr',tintMatrix:null,starCount:5}},
+  characterRarities:{N:{frame:'common',tintMatrix:null,starCount:0},SR:{frame:'common',tintMatrix:diagonalTint('0.977','0.863','0.587'),starCount:0},LR:{frame:'lr',tintMatrix:null,starCount:0},LR5:{frame:'lr',tintMatrix:null,starCount:5}},
   equipmentRarities:{SSR:{frame:'common',tintMatrix:diagonalTint('0.682353','0.407843','0.929412'),starCount:0},UR:{frame:'common',tintMatrix:diagonalTint('0.890196','0.333333','0.4'),starCount:0},LR:{frame:'lr',tintMatrix:null,starCount:0}},
   characterGeometry:{canvasSize:154,sourceSize:62,sourceInsets:{left:25,top:26,right:25,bottom:25},targetInsets:{left:28,top:29,right:28,bottom:28},outward:3},
   equipmentGeometry:{canvasSize:128,sourceSize:62,sourceInsets:{left:20,top:20,right:20,bottom:20},targetInsets:{left:20,top:20,right:20,bottom:20},outward:0},
@@ -247,6 +296,9 @@ catalog.iconArt = {
   equipmentIcons,
   representativeExclusiveWeapons:representatives,
 };
+// A full catalog maintenance run must retain the newly playable low-rarity set.
+const lowRarity = elementsOnly ? null : await syncLowRarityCharacters();
+if (lowRarity) catalog.characters.push(...lowRarity.characters);
 await writeFile(path.join(root,'public/data/catalog.json'),JSON.stringify(catalog,null,2)+'\n');
-await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify(elementsOnly ? {...previousLock,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits} : {ref,source:base,portraits:entries,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits,...(previousLock.jobIcons?{jobAssetRef:previousLock.jobAssetRef,jobIcons:previousLock.jobIcons}:{})},null,2)+'\n');
+await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify(elementsOnly ? {...previousLock,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits} : {ref,source:base,portraits:entries,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits,lowRarityPortraits:lowRarity.portraits,...(previousLock.jobIcons?{jobAssetRef:previousLock.jobAssetRef,jobIcons:previousLock.jobIcons}:{})},null,2)+'\n');
 console.log(`Synced ${elementEntries.length} original element icons, ${uiAssets.length} UI Sprites, ${equipmentAssets.length} unique equipment icons and ${arcanaPortraits.length} arcana portraits; ${elementsOnly ? 'existing' : characters.length + ' public SR'} character catalog preserved.`);

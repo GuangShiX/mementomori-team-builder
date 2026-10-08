@@ -116,7 +116,7 @@ test('actual public data calculates every selectable character and rarity while 
   const names = ['catalog', 'pricing-policy', 'free-library', 'arcana-catalog', 'equipment-bonuses', 'character-stats'];
   const [catalog, policy, library, arcana, equipmentBonuses, characterStats] = await Promise.all(names.map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
   Object.assign(catalog, { arcana, equipmentBonuses, characterStats });
-  for (const character of catalog.characters) for (const rarity of ['SR', 'LR', 'LR5']) {
+  for (const character of catalog.characters) for (const rarity of character.allowedRarities ?? ['SR', 'LR', 'LR5']) {
     const team = createTeam(); team.members[0] = { ...createMember(character.id), rarity };
     const state = getArcanaState(team, catalog, policy, library);
     const result = calculateCharacterStats(team.members[0], catalog, policy, state);
@@ -129,6 +129,29 @@ test('actual public data calculates every selectable character and rarity while 
   assert.equal(withGear.valid, true);
   assert.equal(after.valid, true);
   assert.ok(withGear.battle.AttackPower > after.battle.AttackPower);
+});
+
+test('R LR5 and natural N panels support real borrowed UR weapons without inventing their own exclusive effects', async () => {
+  const [catalog, policy, characterStats, equipmentBonuses] = await Promise.all(['catalog', 'pricing-policy', 'character-stats', 'equipment-bonuses'].map(async name => JSON.parse(await readFile(new URL(`../public/data/${name}.json`, import.meta.url)))));
+  Object.assign(catalog, { characterStats, equipmentBonuses });
+  for (const [id, rarity, owner, speed, naturalAttack, borrowedAttack] of [
+    [1, 'N', 27, 2600, 1450379, 1721509],
+    [2, 'LR5', 8, 2733, 3997737, 4268867],
+    [32, 'LR5', 46, 2590, 3997732, 4268862],
+  ]) {
+    const member = { ...createMember(id), rarity };
+    const natural = calculateCharacterStats(member, catalog, policy);
+    assert.equal(natural.valid, true);
+    assert.equal(natural.battle.AttackPower, naturalAttack);
+    assert.equal(natural.battle.Speed, speed);
+    Object.assign(member.equipment[0], { rarity: 'UR', seriesId: 13, weaponKind: 'exclusive', weaponOwnerCharacterId: owner,
+      level: 240, reinforcementLevel: 0, legendSacredTreasureLevel: 0, matchlessSacredTreasureLevel: 0 });
+    const borrowed = calculateCharacterStats(member, catalog, policy);
+    assert.equal(borrowed.valid, true, JSON.stringify(borrowed.errors));
+    assert.equal(borrowed.battle.AttackPower, borrowedAttack);
+    assert.equal(borrowed.battle.Speed, speed);
+    assert.ok(borrowed.battle.AttackPower > natural.battle.AttackPower);
+  }
 });
 
 test('three real full builds retain their independently calibrated rank560 panels', async () => {

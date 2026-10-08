@@ -20,9 +20,11 @@ export function getEquipmentPresetOptions(member) {
 }
 
 export function changeMemberRarity(member, rarity, catalog) {
-  if (!['SR', 'LR', 'LR5'].includes(rarity) || !member || !Array.isArray(member.equipment)
-    || !catalog.characters.some(character => character.id === member.characterId)) {
-    throw issue('member.rarity', 'INVALID_RARITY', '请为合法角色选择SR、LR或LR5。');
+  const character = catalog.characters.find(item => item.id === member?.characterId);
+  const allowedRarities = character?.allowedRarities ?? (character?.baseRarity === 1 ? ['N'] : ['SR', 'LR', 'LR5']);
+  if (!['N', 'SR', 'LR', 'LR5'].includes(rarity) || !member || !Array.isArray(member.equipment)
+    || !character || !allowedRarities.includes(rarity)) {
+    throw issue('member.rarity', 'INVALID_RARITY', '请选择此角色允许使用的稀有度。');
   }
   return {
     ...member, rarity,
@@ -44,6 +46,11 @@ export function applyEquipmentPreset(member, presetId, catalog, policy) {
     throw issue('member', 'INVALID_PRESET_MEMBER', '请先选择一名合法配队角色。');
   }
   if (preset.requiresLR5 && member.rarity !== 'LR5') throw issue('member.rarity', 'LR_REQUIRES_LR5', 'LR装备方案需要LR5角色，请先调整角色稀有度。');
+  const character = catalog.characters.find(item => item.id === member.characterId);
+  if ((character.hasExclusiveWeapon === false || [1, 2].includes(character.baseRarity))
+    && (member.equipment[0].rarity === 'NONE' || member.equipment[0].weaponKind !== 'exclusive')) {
+    throw issue('member.equipment[0]', 'BORROWED_WEAPON_REQUIRED', '此角色没有专武，请先选择一把同职业可借用的免费UR专武，再使用快捷配装。');
+  }
   const equipment = member.equipment.map((gear, index) => {
     const slot = index + 1;
     if (gear.slot !== slot || !Array.isArray(gear.runes)) throw issue('member.equipment', 'INVALID_PRESET_EQUIPMENT', '快捷配装需要六个固定装备槽。');

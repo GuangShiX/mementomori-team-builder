@@ -2132,5 +2132,151 @@
       "width": 50,
       "height": 50
     }
+  ],
+  "lowRarityPortraits": [
+    {
+      "id": 1,
+      "path": "assets/characters/1.png",
+      "sha256": "5e28e2a06dba5eee6d632d1d372edc64f95703f685c4c946c69701c67bdc8a1f",
+      "sourcePath": "assets/characters/CHR_000001_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000001/CHR_000001_00_s.png",
+      "profilePath": "skills/characters/000001.json",
+      "profileSha256": "74a0cb7733d213a573e97804bf8f2adcb14f1786ff21a946a6349bac1212cd1f"
+    },
+    {
+      "id": 2,
+      "path": "assets/arcana-characters/2.png",
+      "sha256": "099cf3c245795954870e5d9f35fa373f38ed72ab5ba60d5c3cd1e6f3fe7861a7",
+      "sourcePath": "assets/characters/CHR_000002_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000002/CHR_000002_00_s.png",
+      "profilePath": "skills/characters/000002.json",
+      "profileSha256": "44448b8ac63a6d75a3b1897713e5c2e8222f5658cbb1b48026c6821418ef7fa0"
+    },
+    {
+      "id": 3,
+      "path": "assets/arcana-characters/3.png",
+      "sha256": "25af105593b03ebd4a60b9ea432839372485d17542812c33d62348bda9a51f3c",
+      "sourcePath": "assets/characters/CHR_000003_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000003/CHR_000003_00_s.png",
+      "profilePath": "skills/characters/000003.json",
+      "profileSha256": "23dc804ab66316c7f124f442e0be12722a16f214cec6a2f859b5392276873a4c"
+    },
+    {
+      "id": 4,
+      "path": "assets/arcana-characters/4.png",
+      "sha256": "412ea2e66407e040539b4b41462d030747a71f34dbb506c56f4ca690c2f47241",
+      "sourcePath": "assets/characters/CHR_000004_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000004/CHR_000004_00_s.png",
+      "profilePath": "skills/characters/000004.json",
+      "profileSha256": "01315682c0389b58da11bf5855614d622791eccd796c2de455a8ceedc26e7121"
+    },
+    {
+      "id": 11,
+      "path": "assets/characters/11.png",
+      "sha256": "ae537c3e1bc225d125765289edfa6b66414df15ab10f811361345406f0a0cc61",
+      "sourcePath": "assets/characters/CHR_000011_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000011/CHR_000011_00_s.png",
+      "profilePath": "skills/characters/000011.json",
+      "profileSha256": "41ac0ed3af3653b09592704709b35bf7ab83905fe872ca78f7324ec4a9e5d3d6"
+    },
+    {
+      "id": 12,
+      "path": "assets/arcana-characters/12.png",
+      "sha256": "5d887b10ecbcd729304863c3e19d011999f2381a48d33b7d6c231a557c0de5c2",
+      "sourcePath": "assets/characters/CHR_000012_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000012/CHR_000012_00_s.png",
+      "profilePath": "skills/characters/000012.json",
+      "profileSha256": "eda788b8e94a6b7b9114e55ec2b1be928e20673a2d8b6e86bca92f5f067f7a8d"
+    },
+    {
+      "id": 13,
+      "path": "assets/arcana-characters/13.png",
+      "sha256": "4b6ecaaef8615463efb4d6c3a5afd0c426e1cc2ec0adb0d1eea29954443ce3eb",
+      "sourcePath": "assets/characters/CHR_000013_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000013/CHR_000013_00_s.png",
+      "profilePath": "skills/characters/000013.json",
+      "profileSha256": "c1606236f654caa388121dc54582593d181b4dbcd9b2e126b75bf4381c21343e"
+    },
+    {
+      "id": 14,
+      "path": "assets/arcana-characters/14.png",
+      "sha256": "eb2837739ab3b55baa0bac04d79c7d8da95fe67f9628abbd43478ea9d1a1e442",
+      "sourcePath": "assets/characters/CHR_000014_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000014/CHR_000014_00_s.png",
+      "profilePath": "skills/characters/000014.json",
+      "profileSha256": "419a36aeb32d88487e7e71bcb70d70d4810b1974a18ddfd2845afff29049ef47"
+    },
+    {
+      "id": 21,
+      "path": "assets/characters/21.png",
+      "sha256": "498cac5fce9b69de32770ddf7dea5597d57be29145936a019ea6d4c65908c5bf",
+      "sourcePath": "assets/characters/CHR_000021_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000021/CHR_000021_00_s.png",
+      "profilePath": "skills/characters/000021.json",
+      "profileSha256": "63799c1aef3058a629105a5469fe3cfa274e4936d1fcaab8fac23f53c3169577"
+    },
+    {
+      "id": 22,
+      "path": "assets/arcana-characters/22.png",
+      "sha256": "0016542c22bcdfa9a84dd26b37daf3d1536a56a0845bd48f08a4f60abc7240aa",
+      "sourcePath": "assets/characters/CHR_000022_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000022/CHR_000022_00_s.png",
+      "profilePath": "skills/characters/000022.json",
+      "profileSha256": "51c389158c4532530ee63293d2e58b0e4c3498e53460c9669a43a5513ac0e8df"
+    },
+    {
+      "id": 23,
+      "path": "assets/arcana-characters/23.png",
+      "sha256": "c21b3c131c92ee206232c6b21f63e359d4fad775f5b880c79e22f828f226913e",
+      "sourcePath": "assets/characters/CHR_000023_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000023/CHR_000023_00_s.png",
+      "profilePath": "skills/characters/000023.json",
+      "profileSha256": "169c74bb1b044b0d925dbd6afdd33eb15b5bd8afdf170f0765696509bac02942"
+    },
+    {
+      "id": 24,
+      "path": "assets/arcana-characters/24.png",
+      "sha256": "b22c7d6f826621b6281c62739dc3a5b82fe141f705eef928a2b934a78f8d469d",
+      "sourcePath": "assets/characters/CHR_000024_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000024/CHR_000024_00_s.png",
+      "profilePath": "skills/characters/000024.json",
+      "profileSha256": "1647499b87cc6bc887a074288edb4393ad81a11c42642491c8ac361388083b21"
+    },
+    {
+      "id": 31,
+      "path": "assets/characters/31.png",
+      "sha256": "3356358986d931397074568a8db67894c9f2a2cdfc80a904dad6ad66daa59999",
+      "sourcePath": "assets/characters/CHR_000031_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000031/CHR_000031_00_s.png",
+      "profilePath": "skills/characters/000031.json",
+      "profileSha256": "d346e84db4e4998af566d63e16d927a65188ecea4c2b786bd59c2dbcdb3f083d"
+    },
+    {
+      "id": 32,
+      "path": "assets/arcana-characters/32.png",
+      "sha256": "60fb870c817332b48af5da149d7f328752aed87437ee183727e3793f0c01bf88",
+      "sourcePath": "assets/characters/CHR_000032_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000032/CHR_000032_00_s.png",
+      "profilePath": "skills/characters/000032.json",
+      "profileSha256": "a0526902dee2455717c1d42bcde950ea3589bcd9eea732079ceab26bee7350d8"
+    },
+    {
+      "id": 33,
+      "path": "assets/arcana-characters/33.png",
+      "sha256": "b85f6295fb593b241877f164a28faad1b071ddc8adb062d99de757cfc7b6df92",
+      "sourcePath": "assets/characters/CHR_000033_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000033/CHR_000033_00_s.png",
+      "profilePath": "skills/characters/000033.json",
+      "profileSha256": "245d91d284ae3cdc1f2726fd242d5e651afaa85f858f053be423bd80670ae425"
+    },
+    {
+      "id": 34,
+      "path": "assets/arcana-characters/34.png",
+      "sha256": "4231ff69dd8ce2f370098fd5640207f5842c0f317200ce2226a50d9639f9fa22",
+      "sourcePath": "assets/characters/CHR_000034_00_s.png",
+      "sourceResourceKey": "Assets/AddressableConvertAssets/CharacterIcon/CHR_000034/CHR_000034_00_s.png",
+      "profilePath": "skills/characters/000034.json",
+      "profileSha256": "795a690b443ea19e12b209bb3f16b408147550d968d0a120ed814fbad3476281"
+    }
   ]
 }

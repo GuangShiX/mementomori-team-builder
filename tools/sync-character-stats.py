@@ -97,16 +97,18 @@ def project(master_root: Path) -> dict:
     characters = {}
     for character_id in sorted(selected):
         source = characters_by_id[character_id]
-        if source["RarityFlags"] != 8 or source["JobFlags"] != selected[character_id]["job"]:
+        initial_rarity = source["RarityFlags"]
+        if initial_rarity not in (1, 2, 8) or initial_rarity != selected[character_id].get("baseRarity", 8) or source["JobFlags"] != selected[character_id]["job"]:
             raise ValueError(f"Unexpected roster identity: {character_id}")
         coefficient = source["BaseParameterCoefficient"]
         gross = source["BaseParameterGrossCoefficient"] or sum(coefficient.values())
         if gross <= 0:
             raise ValueError(f"Invalid character coefficient: {character_id}")
         base_by_rarity = {}
-        for label, rarity in CHARACTER_RARITIES.items():
-            rarity_info = one(tables["CharacterPotentialCoefficientMB"], f"SR-origin {label} coefficient",
-                              lambda row: row["InitialRarityFlags"] == 8 and row["RarityFlags"] == rarity)["RarityCoefficientInfo"]
+        projected_rarities = {"N": 1, "LR": 512, "LR5": 16384} if initial_rarity == 1 else CHARACTER_RARITIES
+        for label, rarity in projected_rarities.items():
+            rarity_info = one(tables["CharacterPotentialCoefficientMB"], f"origin {initial_rarity}/{label} coefficient",
+                              lambda row: row["InitialRarityFlags"] == initial_rarity and row["RarityFlags"] == rarity)["RarityCoefficientInfo"]
             total = potential * rarity_info["m"] + rarity_info["b"]
             base_by_rarity[label] = {key: int(total * coefficient[key] / gross) for key in BASE.values()}
         initial = source["InitialBattleParameter"]
@@ -121,6 +123,8 @@ def project(master_root: Path) -> dict:
     equipment = {}
     exclusive_effects = {}
     owner_coverage = {}
+    exclusive_owner_ids = {character_id for character_id, character in selected.items()
+                           if character.get("hasExclusiveWeapon", True)}
     for row in tables["EquipmentMB"]:
         rarity = EQUIPMENT_RARITIES.get(row["RarityFlags"])
         if rarity is None:
@@ -136,7 +140,7 @@ def project(master_root: Path) -> dict:
         if kind == "exclusive":
             exclusive = exclusive_by_id[exclusive_id]
             owner = exclusive["CharacterId"]
-            if owner not in selected:
+            if owner not in exclusive_owner_ids:
                 continue
             if slot != 1 or row["EquippedJobFlags"] != selected[owner]["job"]:
                 raise ValueError(f"Unexpected exclusive weapon identity: {owner}")
@@ -162,7 +166,7 @@ def project(master_root: Path) -> dict:
                 for slot in slots:
                     if f"{kind}:{slot}:{rarity}:{level}" not in equipment:
                         raise ValueError(f"Missing supported gear template: {kind}/{slot}/{rarity}/{level}")
-                if kind == "exclusive" and owner_coverage.get((rarity, level)) != set(selected):
+                if kind == "exclusive" and owner_coverage.get((rarity, level)) != exclusive_owner_ids:
                     raise ValueError(f"Incomplete exclusive ownership coverage: {rarity}/{level}")
 
     set_ids = {row["setId"] for row in equipment.values()} - {0}

@@ -22,11 +22,12 @@ test('static stats project only the selected roster, with explicit scope and tra
   assert.equal(data.characterLevel, 450);
   assert.equal(data.characterSubLevel, 0);
   assert.deepEqual(Object.keys(data.characters).map(Number).sort((a, b) => a - b), catalog.characters.map(character => character.id).sort((a, b) => a - b));
-  assert.equal(Object.keys(data.characters).length, 119);
-  for (const character of Object.values(data.characters)) {
+  assert.equal(Object.keys(data.characters).length, 135);
+  for (const [id, character] of Object.entries(data.characters)) {
     assert.deepEqual(Object.keys(character), ['job', 'baseByRarity', 'initialBattle']);
     assert.ok([1, 2, 4].includes(character.job));
-    assert.deepEqual(Object.keys(character.baseByRarity), ['SR', 'LR', 'LR5']);
+    const identity = catalog.characters.find(actor => actor.id === Number(id));
+    assert.deepEqual(Object.keys(character.baseByRarity), identity.baseRarity === 1 ? ['N', 'LR', 'LR5'] : ['SR', 'LR', 'LR5']);
     for (const base of Object.values(character.baseByRarity)) {
       assert.deepEqual(Object.keys(base), baseKeys);
       assert.ok(Object.values(base).every(value => Number.isSafeInteger(value) && value > 0));
@@ -63,6 +64,27 @@ test('fixed 450 growth retains exact rarity-dependent values and initial constan
   assert.equal(data.characters[26].initialBattle.Speed, 2888);
 });
 
+test('R and N growth use their native-origin master coefficients at 450 rather than an SR-origin substitute', () => {
+  assert.deepEqual(data.characters[2].baseByRarity, {
+    SR: { Muscle: 1530653, Energy: 1360580, Intelligence: 1343573, Health: 1547660 },
+    LR: { Muscle: 3062418, Energy: 2722150, Intelligence: 2688123, Health: 3096445 },
+    LR5: { Muscle: 3519023, Energy: 3128020, Intelligence: 3088920, Health: 3558123 },
+  });
+  assert.deepEqual(data.characters[1].baseByRarity, {
+    N: { Muscle: 873412, Energy: 971670, Intelligence: 873412, Health: 1004423 },
+    LR: { Muscle: 2714167, Energy: 3019511, Intelligence: 2714167, Health: 3121292 },
+    LR5: { Muscle: 3118847, Energy: 3469718, Intelligence: 3118847, Health: 3586674 },
+  });
+  assert.deepEqual(data.characters[32].baseByRarity.LR5, { Muscle: 3088920, Energy: 3088920, Intelligence: 3519023, Health: 3597223 });
+  assert.equal(data.characters[1].initialBattle.Speed, 2600);
+  assert.equal(data.characters[2].initialBattle.Speed, 2733);
+  assert.equal(data.characters[11].initialBattle.Speed, 2716);
+  assert.equal(data.characters[32].initialBattle.Speed, 2590);
+  for (const character of catalog.characters.filter(actor => actor.hasExclusiveWeapon === false)) {
+    assert.ok(!Object.keys(data.exclusiveEffects).some(key => key.startsWith(`${character.id}:`)));
+  }
+});
+
 test('every supported gear level has one shared template, real set IDs and grade-specific own-weapon effects', () => {
   assert.equal(Object.keys(data.equipment).length, 418);
   assert.equal(Object.keys(data.exclusiveEffects).length, 714);
@@ -78,7 +100,7 @@ test('every supported gear level has one shared template, real set IDs and grade
         assert.ok(data.sets[template.setId]);
         if (template.battleChange) validEffect(template.battleChange);
       }
-      if (kind === 'exclusive') for (const character of catalog.characters) for (const level of levels) {
+      if (kind === 'exclusive') for (const character of catalog.characters.filter(actor => actor.hasExclusiveWeapon !== false)) for (const level of levels) {
         const key = rarity === 'SSR' ? `${character.id}:SSR:${level}` : `${character.id}:${rarity}`;
         const own = data.exclusiveEffects[key];
         assert.ok(own);

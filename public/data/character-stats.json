@@ -5,6 +5,182 @@
   "characterLevel": 450,
   "characterSubLevel": 0,
   "characters": {
+    "1": {
+      "job": 2,
+      "baseByRarity": {
+        "N": {
+          "Muscle": 873412,
+          "Energy": 971670,
+          "Intelligence": 873412,
+          "Health": 1004423
+        },
+        "LR": {
+          "Muscle": 2714167,
+          "Energy": 3019511,
+          "Intelligence": 2714167,
+          "Health": 3121292
+        },
+        "LR5": {
+          "Muscle": 3118847,
+          "Energy": 3469718,
+          "Intelligence": 3118847,
+          "Health": 3586674
+        }
+      },
+      "initialBattle": {
+        "Hp": -2,
+        "AttackPower": -4,
+        "PhysicalDamageRelax": 2,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 4,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 10,
+        "DamageEnhance": 0,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2600
+      }
+    },
+    "2": {
+      "job": 1,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1530653,
+          "Energy": 1360580,
+          "Intelligence": 1343573,
+          "Health": 1547660
+        },
+        "LR": {
+          "Muscle": 3062418,
+          "Energy": 2722150,
+          "Intelligence": 2688123,
+          "Health": 3096445
+        },
+        "LR5": {
+          "Muscle": 3519023,
+          "Energy": 3128020,
+          "Intelligence": 3088920,
+          "Health": 3558123
+        }
+      },
+      "initialBattle": {
+        "Hp": -1,
+        "AttackPower": 1,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": -2,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 12,
+        "DamageEnhance": 0,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2733
+      }
+    },
+    "3": {
+      "job": 1,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1693681,
+          "Energy": 1454171,
+          "Intelligence": 1454171,
+          "Health": 1180444
+        },
+        "LR": {
+          "Muscle": 3388593,
+          "Energy": 2909398,
+          "Intelligence": 2909398,
+          "Health": 2361747
+        },
+        "LR5": {
+          "Muscle": 3893830,
+          "Energy": 3343187,
+          "Intelligence": 3343187,
+          "Health": 2713881
+        }
+      },
+      "initialBattle": {
+        "Hp": -3,
+        "AttackPower": 3,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": -3,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 10,
+        "DamageEnhance": 3,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 3133
+      }
+    },
+    "4": {
+      "job": 2,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1458486,
+          "Energy": 1715866,
+          "Intelligence": 1441327,
+          "Health": 1166788
+        },
+        "LR": {
+          "Muscle": 2918031,
+          "Energy": 3432978,
+          "Intelligence": 2883702,
+          "Health": 2334425
+        },
+        "LR5": {
+          "Muscle": 3353108,
+          "Energy": 3944833,
+          "Intelligence": 3313660,
+          "Health": 2682486
+        }
+      },
+      "initialBattle": {
+        "Hp": 3,
+        "AttackPower": 0,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": 3,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 6,
+        "DamageEnhance": 0,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 3066
+      }
+    },
     "5": {
       "job": 4,
       "baseByRarity": {
@@ -267,6 +443,182 @@
         "DamageReflect": 0,
         "HpDrain": 0,
         "Speed": 2826
+      }
+    },
+    "11": {
+      "job": 1,
+      "baseByRarity": {
+        "N": {
+          "Muscle": 1101455,
+          "Energy": 936237,
+          "Intelligence": 925222,
+          "Health": 760004
+        },
+        "LR": {
+          "Muscle": 3422821,
+          "Energy": 2909398,
+          "Intelligence": 2875170,
+          "Health": 2361747
+        },
+        "LR5": {
+          "Muscle": 3933162,
+          "Energy": 3343187,
+          "Intelligence": 3303856,
+          "Health": 2713881
+        }
+      },
+      "initialBattle": {
+        "Hp": -3,
+        "AttackPower": 2,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 3,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": -3,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 10,
+        "DamageEnhance": 2,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2716
+      }
+    },
+    "12": {
+      "job": 1,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1700726,
+          "Energy": 1428609,
+          "Intelligence": 1445617,
+          "Health": 1207515
+        },
+        "LR": {
+          "Muscle": 3402687,
+          "Energy": 2858257,
+          "Intelligence": 2892284,
+          "Health": 2415908
+        },
+        "LR5": {
+          "Muscle": 3910025,
+          "Energy": 3284421,
+          "Intelligence": 3323522,
+          "Health": 2776118
+        }
+      },
+      "initialBattle": {
+        "Hp": -3,
+        "AttackPower": 2,
+        "PhysicalDamageRelax": 3,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": -3,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 10,
+        "DamageEnhance": 2,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2921
+      }
+    },
+    "13": {
+      "job": 4,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1449881,
+          "Energy": 1364594,
+          "Intelligence": 1603398,
+          "Health": 1364594
+        },
+        "LR": {
+          "Muscle": 2900816,
+          "Energy": 2730180,
+          "Intelligence": 3207961,
+          "Health": 2730180
+        },
+        "LR5": {
+          "Muscle": 3333325,
+          "Energy": 3137247,
+          "Intelligence": 3686266,
+          "Health": 3137247
+        }
+      },
+      "initialBattle": {
+        "Hp": -3,
+        "AttackPower": 4,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 7,
+        "DamageEnhance": 0,
+        "DebuffHit": 2,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2866
+      }
+    },
+    "14": {
+      "job": 2,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1535168,
+          "Energy": 1705743,
+          "Intelligence": 1347537,
+          "Health": 1194020
+        },
+        "LR": {
+          "Muscle": 3071452,
+          "Energy": 3412725,
+          "Intelligence": 2696052,
+          "Health": 2388907
+        },
+        "LR5": {
+          "Muscle": 3529403,
+          "Energy": 3921559,
+          "Intelligence": 3098032,
+          "Health": 2745091
+        }
+      },
+      "initialBattle": {
+        "Hp": -2,
+        "AttackPower": 5,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 7,
+        "DamageEnhance": 0,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 3166
       }
     },
     "15": {
@@ -533,6 +885,182 @@
         "Speed": 3080
       }
     },
+    "21": {
+      "job": 1,
+      "baseByRarity": {
+        "N": {
+          "Muscle": 1098206,
+          "Energy": 922493,
+          "Intelligence": 933475,
+          "Health": 768744
+        },
+        "LR": {
+          "Muscle": 3412725,
+          "Energy": 2866689,
+          "Intelligence": 2900816,
+          "Health": 2388907
+        },
+        "LR5": {
+          "Muscle": 3921559,
+          "Energy": 3294110,
+          "Intelligence": 3333325,
+          "Health": 2745091
+        }
+      },
+      "initialBattle": {
+        "Hp": -2,
+        "AttackPower": 3,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": -3,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 10,
+        "DamageEnhance": 2,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2520
+      }
+    },
+    "22": {
+      "job": 1,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1526164,
+          "Energy": 1339633,
+          "Intelligence": 1356590,
+          "Health": 1560079
+        },
+        "LR": {
+          "Muscle": 3053438,
+          "Energy": 2680240,
+          "Intelligence": 2714167,
+          "Health": 3121292
+        },
+        "LR5": {
+          "Muscle": 3508703,
+          "Energy": 3079862,
+          "Intelligence": 3118847,
+          "Health": 3586674
+        }
+      },
+      "initialBattle": {
+        "Hp": 2,
+        "AttackPower": -2,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": -2,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 12,
+        "DamageEnhance": 0,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2766
+      }
+    },
+    "23": {
+      "job": 4,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1428609,
+          "Energy": 1360580,
+          "Intelligence": 1615689,
+          "Health": 1377588
+        },
+        "LR": {
+          "Muscle": 2858257,
+          "Energy": 2722150,
+          "Intelligence": 3232553,
+          "Health": 2756176
+        },
+        "LR5": {
+          "Muscle": 3284421,
+          "Energy": 3128020,
+          "Intelligence": 3714524,
+          "Health": 3167121
+        }
+      },
+      "initialBattle": {
+        "Hp": -3,
+        "AttackPower": 2,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 7,
+        "DamageEnhance": 0,
+        "DebuffHit": 2,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2800
+      }
+    },
+    "24": {
+      "job": 2,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1458486,
+          "Energy": 1698707,
+          "Intelligence": 1458486,
+          "Health": 1166788
+        },
+        "LR": {
+          "Muscle": 2918031,
+          "Energy": 3398648,
+          "Intelligence": 2918031,
+          "Health": 2334425
+        },
+        "LR5": {
+          "Muscle": 3353108,
+          "Energy": 3905385,
+          "Intelligence": 3353108,
+          "Health": 2682486
+        }
+      },
+      "initialBattle": {
+        "Hp": 2,
+        "AttackPower": 3,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": -1,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 6,
+        "DamageEnhance": 0,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 3066
+      }
+    },
     "25": {
       "job": 2,
       "baseByRarity": {
@@ -795,6 +1323,182 @@
         "DamageReflect": 0,
         "HpDrain": 0,
         "Speed": 3093
+      }
+    },
+    "31": {
+      "job": 2,
+      "baseByRarity": {
+        "N": {
+          "Muscle": 991309,
+          "Energy": 1090440,
+          "Intelligence": 881164,
+          "Health": 760004
+        },
+        "LR": {
+          "Muscle": 3080539,
+          "Energy": 3388593,
+          "Intelligence": 2738257,
+          "Health": 2361747
+        },
+        "LR5": {
+          "Muscle": 3539846,
+          "Energy": 3893830,
+          "Intelligence": 3146529,
+          "Health": 2713881
+        }
+      },
+      "initialBattle": {
+        "Hp": -1,
+        "AttackPower": 2,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 0,
+        "Hit": 2,
+        "Avoidance": 0,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 7,
+        "DamageEnhance": 0,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2880
+      }
+    },
+    "32": {
+      "job": 4,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1343573,
+          "Energy": 1343573,
+          "Intelligence": 1530653,
+          "Health": 1564668
+        },
+        "LR": {
+          "Muscle": 2688123,
+          "Energy": 2688123,
+          "Intelligence": 3062418,
+          "Health": 3130472
+        },
+        "LR5": {
+          "Muscle": 3088920,
+          "Energy": 3088920,
+          "Intelligence": 3519023,
+          "Health": 3597223
+        }
+      },
+      "initialBattle": {
+        "Hp": -2,
+        "AttackPower": -4,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 4,
+        "Hit": 0,
+        "Avoidance": 2,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 10,
+        "DamageEnhance": 0,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2590
+      }
+    },
+    "33": {
+      "job": 4,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1428609,
+          "Energy": 1360580,
+          "Intelligence": 1615689,
+          "Health": 1377588
+        },
+        "LR": {
+          "Muscle": 2858257,
+          "Energy": 2722150,
+          "Intelligence": 3232553,
+          "Health": 2756176
+        },
+        "LR5": {
+          "Muscle": 3284421,
+          "Energy": 3128020,
+          "Intelligence": 3714524,
+          "Health": 3167121
+        }
+      },
+      "initialBattle": {
+        "Hp": -1,
+        "AttackPower": 3,
+        "PhysicalDamageRelax": 0,
+        "MagicDamageRelax": 0,
+        "Hit": 0,
+        "Avoidance": 0,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 7,
+        "DamageEnhance": 0,
+        "DebuffHit": 1,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 2809
+      }
+    },
+    "34": {
+      "job": 4,
+      "baseByRarity": {
+        "SR": {
+          "Muscle": 1539710,
+          "Energy": 1351523,
+          "Intelligence": 1693681,
+          "Health": 1197552
+        },
+        "LR": {
+          "Muscle": 3080539,
+          "Energy": 2704029,
+          "Intelligence": 3388593,
+          "Health": 2395975
+        },
+        "LR5": {
+          "Muscle": 3539846,
+          "Energy": 3107198,
+          "Intelligence": 3893830,
+          "Health": 2753213
+        }
+      },
+      "initialBattle": {
+        "Hp": -3,
+        "AttackPower": 4,
+        "PhysicalDamageRelax": -3,
+        "MagicDamageRelax": 0,
+        "Hit": 2,
+        "Avoidance": 0,
+        "Critical": 0,
+        "CriticalResist": 0,
+        "CriticalDamageEnhance": 0,
+        "PhysicalCriticalDamageRelax": 0,
+        "MagicCriticalDamageRelax": 0,
+        "DefensePenetration": 0,
+        "Defense": 10,
+        "DamageEnhance": 0,
+        "DebuffHit": 0,
+        "DebuffResist": 0,
+        "DamageReflect": 0,
+        "HpDrain": 0,
+        "Speed": 3019
       }
     },
     "35": {
