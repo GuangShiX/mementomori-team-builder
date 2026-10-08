@@ -670,7 +670,15 @@ export function CharacterStatsPanel({ result, policy }) {
 function BlessingCard({ blessing, policy }) {
   const resourceName = RESOURCE_NAMES[blessing.resource]?.split(' · ')[0] ?? '';
   const baseAllowance = policy.allowances?.[blessing.resource] ?? 0;
-  return <aside className="intro-note blessing-note" aria-label="恩泽机制"><strong>{blessing.name}</strong>{blessing.effect === 'freeEquipmentCrafting' ? <><p>普通 {blessing.rarity} 装备制作免费</p><span>{blessing.rarity} 专武按原规则计价；强化与养成按实际配置计算</span></> : blessing.effect === 'freeExclusiveFragmentBaseline' ? <><p>每把专武紫水晶制作免费至 {blessing.rarity} Lv.{blessing.level}</p><span>更高等级只收基础以上差额</span></> : blessing.effect === 'resourceDiamondAllowance' ? <><p>{DIAMOND_RESOURCE_NAMES[blessing.resource]}免费 {amount(blessing.amount)} 钻</p><span>独立材料预算 · 整队共享</span></> : baseAllowance > 0 ? <><p>额外免费 {amount(blessing.amount)} {resourceName}</p><span>基础免费 {amount(baseAllowance)} · 合计免费 {amount(getResourceAllowance(policy, blessing.resource))}</span></> : <><p>整队免费总额度 {amount(getResourceAllowance(policy, blessing.resource))} {resourceName}</p><span>超过总额度后按超额计价</span></>}{blessing.teamDiamondAllowance?.amount > 0 && <><p>携带 R / N 卡：整队额外 {amount(blessing.teamDiamondAllowance.amount)} 钻免费</p><span>可用于任何费用 · 不随人数叠加</span></>}</aside>;
+  return <aside className="intro-note blessing-note" aria-label="恩泽机制">
+    <strong>{blessing.name}</strong>
+    {blessing.effect === 'freeEquipmentCrafting' ? <p>普通 {blessing.rarity} 装备制作免费</p>
+      : blessing.effect === 'freeExclusiveFragmentBaseline' ? <p>每把专武紫水晶制作免费至 {blessing.rarity} Lv.{blessing.level}</p>
+        : blessing.effect === 'resourceDiamondAllowance' ? <p>{DIAMOND_RESOURCE_NAMES[blessing.resource]}免费 {amount(blessing.amount)} 钻</p>
+          : baseAllowance > 0 ? <><p>额外免费 {amount(blessing.amount)} {resourceName}</p><span>基础免费 {amount(baseAllowance)} · 合计免费 {amount(getResourceAllowance(policy, blessing.resource))}</span></>
+            : <p>整队免费总额度 {amount(getResourceAllowance(policy, blessing.resource))} {resourceName}</p>}
+    {blessing.teamDiamondAllowance?.amount > 0 && <p>携带 R / N 卡：整队额外 {amount(blessing.teamDiamondAllowance.amount)} 钻免费</p>}
+  </aside>;
 }
 
 export default function App({ catalog, policy, freeLibrary, nameAliases }) {

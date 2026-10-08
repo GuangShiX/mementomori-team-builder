@@ -455,7 +455,7 @@ test('SSR crafting blessing shows free ordinary fabrication while exclusive SSR 
   const blessing = policy.blessings.find(item => item.effect === 'freeEquipmentCrafting');
   assert.ok(markup.includes(blessing.name));
   assert.match(markup, /普通 SSR 装备制作免费/);
-  assert.match(markup, /SSR 专武按原规则计价/);
+  assert.doesNotMatch(markup, /SSR 专武按原规则计价；强化与养成按实际配置计算/);
   const credit = cost.resources.ssrFragments;
   assert.ok(credit.craftingBlessingCredit > 0);
   assert.match(markup, /aria-label="普通装备制作"/);
@@ -634,7 +634,7 @@ test('exclusive UR240 fabrication baseline and shared leaf budget display actual
   const markup = await renderDraft(cloneTeam(team));
   assert.match(markup, /叶子免费 60,000 钻/);
   assert.match(markup, /每把专武紫水晶制作免费至 UR Lv\.240/);
-  assert.match(markup, /更高等级只收基础以上差额/);
+  assert.doesNotMatch(markup, /更高等级只收基础以上差额/);
   assert.match(markup, /aria-label="材料免费钻石预算"/);
   const leaf = cost.resources.lifeTreeDew;
   assert.ok(markup.includes(`${amount(leaf.diamondAllowance)} 钻免费`));

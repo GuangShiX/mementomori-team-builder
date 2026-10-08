@@ -50,7 +50,7 @@ test('R card draft renders its allowed rarity list and one configured whole-team
     assert.match(rarityControl, /value="LR5" selected=""/);
     const configured = policy.blessings.find(blessing => blessing.teamDiamondAllowance)?.teamDiamondAllowance.amount;
     assert.ok(markup.includes(`整队额外 ${format(configured)} 钻免费`));
-    assert.ok(markup.includes('可用于任何费用 · 不随人数叠加'));
+    assert.doesNotMatch(markup, /可用于任何费用 · 不随人数叠加/);
     assert.equal((markup.match(/aria-label="R和N卡整队免费钻石额度"/g) ?? []).length, 1);
     assert.ok(markup.includes(`已使用 ${format(cost.teamDiamondAllowanceCredit)} 钻`));
     assert.ok(markup.includes(`<strong>${format(cost.totalDiamonds)}</strong>`));
