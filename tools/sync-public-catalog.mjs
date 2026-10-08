@@ -34,12 +34,16 @@ if (process.argv.includes('--display-only')) {
 const elementsOnly = process.argv.includes('--elements-only') || process.argv.includes('--ui-only');
 const arcanaPortraitsOnly = process.argv.includes('--arcana-portraits-only');
 const jobsOnly = process.argv.includes('--jobs-only');
+const runesOnly = process.argv.includes('--runes-only');
+if (runesOnly && (elementsOnly || arcanaPortraitsOnly || jobsOnly)) throw new Error('Rune synchronization must run independently of other partial modes.');
 const previousLock = JSON.parse(await readFile(path.join(root, 'public/data/asset-lock.json')));
 const ref = process.env.ASSET_REF || previousLock?.ref || '440e579724fa1fa11c737c308ef59266d41f0453';
 if ((elementsOnly || arcanaPortraitsOnly) && ref !== previousLock.ref) throw new Error('Partial synchronization must use the existing locked asset ref.');
-// Profession art may be added at a newer public ref without upgrading the existing art lock.
-const sourceRef = jobsOnly ? process.env.JOB_ASSET_REF || process.env.ASSET_REF || previousLock.jobAssetRef || previousLock.ref : ref;
+// Profession and rune art may use independent public refs without upgrading the existing art lock.
+const sourceRef = jobsOnly ? process.env.JOB_ASSET_REF || process.env.ASSET_REF || previousLock.jobAssetRef || previousLock.ref
+  : runesOnly ? process.env.SPHERE_ASSET_REF || process.env.ASSET_REF || previousLock.sphereAssetRef || previousLock.ref : ref;
 if (jobsOnly && !/^[a-f0-9]{40}$/.test(sourceRef)) throw new Error('Profession synchronization requires an exact published commit SHA.');
+if (runesOnly && !/^[a-f0-9]{40}$/.test(sourceRef)) throw new Error('Rune synchronization requires an exact published commit SHA.');
 const base = `https://raw.githubusercontent.com/GuangShiX/mmtm-assets-fallback/${sourceRef}`;
 const cache = process.env.PUBLIC_ASSET_CACHE;
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -53,7 +57,7 @@ async function fetchBytes(relative, hash) {
   if (hash && sha(bytes) !== hash) throw new Error(`${relative}: canonical SHA-256 mismatch`);
   return bytes;
 }
-const index = arcanaPortraitsOnly || jobsOnly ? {characters:[]} : JSON.parse(await fetchBytes('skills/index.json'));
+const index = arcanaPortraitsOnly || jobsOnly || runesOnly ? {characters:[]} : JSON.parse(await fetchBytes('skills/index.json'));
 const manifest = JSON.parse(await fetchBytes('manifest.json'));
 function pngSize(bytes, name) {
   if (bytes.length < 24 || !bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) throw new Error(`Invalid original PNG: ${name}`);
@@ -63,7 +67,8 @@ async function syncArt(category, name, expectedSize, identity = {}) {
   const asset = manifest.assets.find(item => item.category === category && item.name === name);
   const canonicalIdentity = category === 'ui'
     ? asset?.source_resource_key?.includes('#Sprite:')
-    : asset?.source_resource_key?.endsWith(`/Icon/Equipment/${name}`);
+    : category === 'spheres' ? asset?.source_resource_key?.endsWith(`/Icon/Sphere/${name}`)
+      : asset?.source_resource_key?.endsWith(`/Icon/Equipment/${name}`);
   if (!asset?.sha256 || !canonicalIdentity) throw new Error(`Canonical original art missing: ${name}`);
   const bytes = await fetchBytes(asset.path, asset.sha256);
   const dimensions = pngSize(bytes, name);
@@ -94,6 +99,29 @@ if (jobsOnly) {
   await writeFile(catalogPath,JSON.stringify(catalog,null,2)+'\n');
   await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify({...previousLock,jobAssetRef:sourceRef,jobIcons:jobEntries},null,2)+'\n');
   console.log(`Synced ${jobEntries.length} original profession Sprites from ${sourceRef}; existing character catalog and art refs preserved.`);
+  process.exit(0);
+}
+if (runesOnly) {
+  const catalogPath = path.join(root,'public/data/catalog.json');
+  const catalog = JSON.parse(await readFile(catalogPath));
+  const categoryIds = Array.from({length:16},(_,index)=>index+1);
+  if (catalog.runeCategories?.length !== categoryIds.length || categoryIds.some(id=>!catalog.runeCategories.some(category=>category.id===id))) throw new Error('Rune synchronization requires the complete 16-category public catalog.');
+  for (const categoryId of categoryIds) {
+    const name = `SPH_${String(categoryId).padStart(2,'0')}00.png`;
+    const asset = manifest.assets.find(item=>item.category==='spheres' && item.name===name);
+    if (!asset?.sha256 || asset.path!==`assets/spheres/${name}` || !asset.source_resource_key?.endsWith(`/Icon/Sphere/${name}`)) throw new Error(`Canonical original equipment rune missing: ${name}`);
+  }
+  const runeIcons = {};
+  const runeEntries = [];
+  for (const categoryId of categoryIds) {
+    const asset = await syncArt('spheres',`SPH_${String(categoryId).padStart(2,'0')}00.png`,{width:19,height:19},{categoryId,sourceRef});
+    runeIcons[categoryId] = `./${asset.path}`;
+    runeEntries.push(asset);
+  }
+  catalog.runeIcons = runeIcons;
+  await writeFile(catalogPath,JSON.stringify(catalog,null,2)+'\n');
+  await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify({...previousLock,sphereAssetRef:sourceRef,runeIcons:runeEntries},null,2)+'\n');
+  console.log(`Synced ${runeEntries.length} original equipment rune Sprites from ${sourceRef}; existing character catalog and art refs preserved.`);
   process.exit(0);
 }
 async function syncArcanaPortraits() {
@@ -199,6 +227,7 @@ const catalog = elementsOnly ? JSON.parse(await readFile(path.join(root, 'public
 };
 catalog.elementIcons = elementIcons;
 if (previousLock.jobIcons) catalog.jobIcons = Object.fromEntries(previousLock.jobIcons.map(asset=>[asset.jobId,`./${asset.path}`]));
+if (previousLock.runeIcons) catalog.runeIcons = Object.fromEntries(previousLock.runeIcons.map(asset=>[asset.categoryId,`./${asset.path}`]));
 catalog.teamFrame = `./${framePath}`;
 const equipmentAssets = [];
 const equipmentAssetByIconId = new Map();
@@ -248,5 +277,5 @@ catalog.iconArt = {
   representativeExclusiveWeapons:representatives,
 };
 await writeFile(path.join(root,'public/data/catalog.json'),JSON.stringify(catalog,null,2)+'\n');
-await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify(elementsOnly ? {...previousLock,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits} : {ref,source:base,portraits:entries,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits,...(previousLock.jobIcons?{jobAssetRef:previousLock.jobAssetRef,jobIcons:previousLock.jobIcons}:{})},null,2)+'\n');
+await writeFile(path.join(root,'public/data/asset-lock.json'),JSON.stringify(elementsOnly ? {...previousLock,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits} : {ref,source:base,portraits:entries,elementIcons:elementEntries,uiAssets,equipmentAssets,arcanaPortraits,...(previousLock.jobIcons?{jobAssetRef:previousLock.jobAssetRef,jobIcons:previousLock.jobIcons}:{}),...(previousLock.runeIcons?{sphereAssetRef:previousLock.sphereAssetRef,runeIcons:previousLock.runeIcons}:{})},null,2)+'\n');
 console.log(`Synced ${elementEntries.length} original element icons, ${uiAssets.length} UI Sprites, ${equipmentAssets.length} unique equipment icons and ${arcanaPortraits.length} arcana portraits; ${elementsOnly ? 'existing' : characters.length + ' public SR'} character catalog preserved.`);

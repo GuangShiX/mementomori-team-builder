@@ -3058,5 +3058,23 @@
     "1": "./assets/ui/icon_job_warrior.png",
     "2": "./assets/ui/icon_job_sniper.png",
     "4": "./assets/ui/icon_job_sorcerer.png"
+  },
+  "runeIcons": {
+    "1": "./assets/spheres/SPH_0100.png",
+    "2": "./assets/spheres/SPH_0200.png",
+    "3": "./assets/spheres/SPH_0300.png",
+    "4": "./assets/spheres/SPH_0400.png",
+    "5": "./assets/spheres/SPH_0500.png",
+    "6": "./assets/spheres/SPH_0600.png",
+    "7": "./assets/spheres/SPH_0700.png",
+    "8": "./assets/spheres/SPH_0800.png",
+    "9": "./assets/spheres/SPH_0900.png",
+    "10": "./assets/spheres/SPH_1000.png",
+    "11": "./assets/spheres/SPH_1100.png",
+    "12": "./assets/spheres/SPH_1200.png",
+    "13": "./assets/spheres/SPH_1300.png",
+    "14": "./assets/spheres/SPH_1400.png",
+    "15": "./assets/spheres/SPH_1500.png",
+    "16": "./assets/spheres/SPH_1600.png"
   }
 }
