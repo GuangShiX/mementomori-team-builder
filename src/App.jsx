@@ -10,6 +10,8 @@ import { getEquipmentPresetOptions, applyEquipmentPreset, changeMemberRarity } f
 import { calculateCharacterStats } from './character-stats.mjs';
 import { updateColumnRune, chooseInitialColumnRuneLevel } from './rune-interactions.mjs';
 import teamSeat from './assets/team-seat.svg';
+import CharacterPicker from './CharacterPicker.jsx';
+import { filterRosterCharacters } from './character-search.mjs';
 
 const DRAFT_KEY = 'mementomori-team-builder:draft:v1';
 const ELEMENTS = {
@@ -40,6 +42,18 @@ const fixedRuneTiers = policy => policy.runes?.fixedStock?.tiers ?? (policy.rune
 const fixedRuneCaption = policy => fixedRuneTiers(policy).map(tier => `Lv.${tier.level} × ${tier.perCategory}`).join('、');
 const TEAM_DRAG_TYPE = 'application/x-mementomori-team';
 const POLISH_ATTRIBUTES = [['main', '主属性'], ['muscle', '力量'], ['energy', '战技'], ['health', '耐力'], ['intelligence', '魔力'], ['none', '四维均分']];
+
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.(query).matches));
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, [query]);
+  return matches;
+}
 
 function restoreDraft(catalog, policy, freeLibrary) {
   const empty = { ...createTeam(), level: policy.characterLevel };
@@ -630,7 +644,7 @@ export function getCharacterStatsResult(member, catalog, policy, arcanaState, va
 }
 
 export function CharacterStatsPanel({ result, policy }) {
-  if (!result) return <div className="empty-detail" id="stats-page" role="tabpanel" aria-labelledby="stats-tab"><h2>先选择一名队员</h2><p>将角色拖入队伍位置，再查看角色属性。</p></div>;
+  if (!result) return <div className="empty-detail" id="stats-page" role="tabpanel" aria-labelledby="stats-tab"><h2>先选择一名队员</h2><p>点击队伍空位或拖入角色，再查看角色属性。</p></div>;
   const groups = new Map();
   const groupLabels = { main: '主要属性', base: '四维属性', advanced: '进阶属性' };
   for (const row of result.rows ?? []) {
@@ -665,6 +679,14 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   const [rosterDropActive, setRosterDropActive] = useState(false);
   const [runeBatch, setRuneBatch] = useState(null);
   const [runeFillReport, setRuneFillReport] = useState(null);
+  const compactLayout = useMediaQuery('(max-width: 720px)');
+  const coarsePointer = useMediaQuery('(pointer: coarse)');
+  const touchMode = compactLayout || coarsePointer;
+  const [pickerIndex, setPickerIndex] = useState(null);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [swapFrom, setSwapFrom] = useState(null);
+  const [removedMember, setRemovedMember] = useState(null);
+  const [teamActionStatus, setTeamActionStatus] = useState('');
   const importInput = useRef(null);
   const editorRef = useRef(null);
   const draftBackupDone = useRef(!restoredDraft.needsBackup);
@@ -690,10 +712,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   const inventory = useMemo(() => fixedRuneInventory(team, catalog, policy, valuation.cost), [team, catalog, policy, valuation.cost]);
   const borrowableWeapons = useMemo(() => selectedMember ? getBorrowableWeapons(team, selectedIndex, catalog, freeLibrary) : [], [team, selectedMember, selectedIndex, catalog, freeLibrary]);
   const ownWeaponClaimed = selectedMember ? isWeaponOwnerClaimed(team, selectedIndex, selectedMember.characterId) : false;
-  const filtered = catalog.characters.filter(character =>
-    (character.baseRarity == null || character.baseRarity === 8)
-    && (element === 'all' || character.element === element)
-    && `${character.name} ${character.subtitle ?? ''} ${character.variant ?? ''} ${character.aliases?.join?.(' ') ?? ''} ${aliases.get(character.id) ?? ''} ${character.id}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+  const filtered = filterRosterCharacters(catalog.characters, aliases, search, element);
   useEffect(() => { setRuneBatch(null); setRuneFillReport(null); }, [selectedIndex, activePage]);
   useEffect(() => {
     try {
@@ -710,6 +729,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   }, [team, catalog.version, restoredDraft]);
   function changeTeam(update, { keepRuneBatch = false } = {}) {
     if (!keepRuneBatch) { setRuneBatch(null); setRuneFillReport(null); }
+    setReorderMode(false); setSwapFrom(null); setRemovedMember(null); setTeamActionStatus('');
     setNotice(null);
     setTeam(current => typeof update === 'function' ? update(current) : update);
   }
@@ -720,6 +740,37 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
   function selectMember(index) {
     setSelectedIndex(index);
   }
+  function openCharacterPicker(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= team.members.length) return;
+    setReorderMode(false); setSwapFrom(null); setPickerIndex(index);
+  }
+  function chooseRosterCharacter(characterId) {
+    const character = characters.get(characterId);
+    if (!character || pickerIndex === null) return;
+    applyPlacement(placeRosterCharacter(team, character, pickerIndex, { catalog, freeLibrary }));
+    setPickerIndex(null);
+    setTeamActionStatus(`已将${characterLabel(character)}配置到第 ${pickerIndex + 1} 位。`);
+  }
+  function chooseTeamPosition(index) {
+    if (!reorderMode) {
+      if (team.members[index]) selectMember(index);
+      else openCharacterPicker(index);
+      return;
+    }
+    if (swapFrom === null) {
+      if (team.members[index]) setSwapFrom(index);
+      return;
+    }
+    if (swapFrom === index) { setSwapFrom(null); return; }
+    applyPlacement(swapTeamPositions(team, swapFrom, index, selectedIndex));
+    setTeamActionStatus(team.members[index] ? `已交换第 ${swapFrom + 1} 位与第 ${index + 1} 位。` : `已将第 ${swapFrom + 1} 位角色移到第 ${index + 1} 位。`);
+  }
+  function undoRemoveMember() {
+    if (!removedMember) return;
+    changeTeam(removedMember.team);
+    setSelectedIndex(removedMember.selectedIndex);
+    setTeamActionStatus('已恢复移出的角色与装备。');
+  }
   function purchaseArcana(id, purchased) {
     try {
       changeTeam(setArcanaPurchased(team, id, purchased, catalog, policy, freeLibrary));
@@ -727,6 +778,8 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     } catch (error) { setNotice({ kind: 'error', text: error.message }); }
   }
   function startDrag(event, payload) {
+    if (touchMode) { event.preventDefault(); return; }
+    setReorderMode(false); setSwapFrom(null);
     dragPayload.current = payload;
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData(TEAM_DRAG_TYPE, JSON.stringify(payload));
@@ -781,8 +834,11 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
     } catch (error) { setNotice({ kind: 'error', text: error.message }); }
   }
   function removeMember(index) {
+    if (!team.members[index]) return;
     changeTeam(current => ({ ...current, members: current.members.map((member, i) => i === index ? null : member) }));
     if (selectedIndex === index) setSelectedIndex(team.members.findIndex((member, i) => member && i !== index));
+    setRemovedMember({ team, selectedIndex });
+    setTeamActionStatus(`已移出第 ${index + 1} 位角色，可撤销此次操作。`);
   }
   function exportTeam() {
     try {
@@ -813,10 +869,11 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
       <div className="topbar-right"><span className="local-note"><span className="status-dot" />{draftStatus}</span><button className="button" onClick={() => importInput.current?.click()}><Icon name="upload" size={14} />导入方案</button><button className="button primary" disabled={!canExport} onClick={exportTeam}><Icon name="download" size={14} />导出方案</button></div>
       <input ref={importInput} type="file" accept="application/json,.json" aria-label="导入配队 JSON 文件" onChange={importTeam} />
     </header>
-    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成<span className="intro-heading-suffix">· 简易杯初筛</span></h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><div className="intro-mechanisms"><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><p className="curse-character-price">每个角色本体 {characterCopySaving > 0 && <>{amount(originalCharacterCopyPrice)} → </>}{amount(characterCopyPrice)} 钻</p>{characterCopySaving > 0 && <span className="curse-character-saving">受诅咒影响，每个本体减少 {amount(characterCopySaving)} 钻</span>}<span>秘仪加成随角色实际持有汇总</span></aside>{(policy.blessings ?? []).map(blessing => <BlessingCard blessing={blessing} policy={policy} key={blessing.id} />)}</div></div>
+    <div className="intro"><div><div className="eyebrow">BUILD YOUR OWN STORY</div><h1>身为剑所天成<span className="intro-heading-suffix">· 简易杯初筛</span></h1><p>挑选角色，调整装备，掌握资源预算。完成后导出你的专属方案。</p></div><details className="mobile-mechanism-details" open={!compactLayout}><summary>构筑规则与免费额度</summary><div className="intro-mechanisms"><aside className="intro-note curse-note" aria-label="诅咒机制"><strong>{curseName}</strong><p>等级固定为{policy.characterLevel}级</p><p className="curse-character-price">每个角色本体 {characterCopySaving > 0 && <>{amount(originalCharacterCopyPrice)} → </>}{amount(characterCopyPrice)} 钻</p>{characterCopySaving > 0 && <span className="curse-character-saving">受诅咒影响，每个本体减少 {amount(characterCopySaving)} 钻</span>}<span>秘仪加成随角色实际持有汇总</span></aside>{(policy.blessings ?? []).map(blessing => <BlessingCard blessing={blessing} policy={policy} key={blessing.id} />)}</div></details></div>
     {notice && <div className={`notice ${notice.kind}`} role="status" style={{ marginBottom: 16 }}>{notice.text}</div>}
     <main className="workspace">
       <aside className="panel catalog-panel left-column" aria-label="选择角色">
+        <details className="mobile-roster-details" open={!compactLayout}><summary>查看角色目录</summary>
         <div className="panel-header"><div className="panel-heading"><span className="section-index">01</span><h2>选择角色</h2></div><span className="count">{filtered.length} 位</span></div>
       <div className={`catalog-roster${rosterDropActive ? ' remove-drop-target' : ''}`} role="region" aria-label="角色目录"
         onDragOver={event => { if (dragPayload.current?.kind !== 'member') return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setRosterDropActive(true); }}
@@ -826,12 +883,13 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
         <div className="catalog-grid" role="list" aria-label="可拖入配队的角色">{filtered.map(character => {
           const inTeam = team.members.some(member => member?.characterId === character.id);
           const entitlement = freeCharacters.get(character.id);
-          return <div className={`character-tile${inTeam ? ' in-team' : ''}`} role="listitem" key={character.id} title={`${characterLabel(character)} · 拖到站位${inTeam ? '调整位置' : '加入或替换'}${entitlement ? ` · 免费库 ${entitlement.rarity}` : ''}`} aria-label={`拖入${characterLabel(character)}`} draggable onDragStart={event => startDrag(event, { kind: 'character', characterId: character.id })} onDragEnd={endDrag}>
+          return <div className={`character-tile${inTeam ? ' in-team' : ''}`} role="listitem" key={character.id} title={`${characterLabel(character)} · 拖到站位${inTeam ? '调整位置' : '加入或替换'}${entitlement ? ` · 免费库 ${entitlement.rarity}` : ''}`} aria-label={`拖入${characterLabel(character)}`} draggable={!touchMode} onDragStart={event => startDrag(event, { kind: 'character', characterId: character.id })} onDragEnd={endDrag}>
             <div style={{ position: 'relative' }}><Portrait character={character} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity="SR" />{inTeam && <span className="selected-check"><Icon name="check" size={10} /></span>}</div><span className="tile-name">{character.name}</span><span className="tile-subtitle" aria-hidden={!character.subtitle}>{character.subtitle || '\u00a0'}</span><span className="tile-free-cap" aria-hidden={!entitlement}>{entitlement ? `${entitlement.rarity} 免费` : '\u00a0'}</span>
           </div>;
         })}{filtered.length === 0 && <p className="no-results">没有找到符合条件的角色</p>}</div>
-        <p className="catalog-help">拖动目录角色到站位加入或替换。<br />将队员拖回此目录可移出配队。</p>
+        <p className="catalog-help">{touchMode ? <>点击队伍空位选择角色；替换、换位和移出可使用队伍下方按钮。</> : <>拖动目录角色到站位加入或替换。<br />将队员拖回此目录可移出配队。</>}</p>
       </div>
+        </details>
         <section className="plan-panel" aria-label="方案信息"><div className="panel-header"><h2>为方案留下一些说明</h2><span className="count">自动保存草稿</span></div><div className="plan-fields"><Field label="配队名称" path="name" errors={valuation.errors}><input aria-label="配队名称" maxLength={120} value={team.name} onChange={event => changeTeam(current => ({ ...current, name: event.target.value }))} /></Field><Field label="作者 / 昵称（可选）" path="author" errors={valuation.errors}><input aria-label="作者昵称" maxLength={120} placeholder="你的昵称" value={team.author} onChange={event => changeTeam(current => ({ ...current, author: event.target.value }))} /></Field><Field label="备注（可选）" path="notes" errors={valuation.errors} full><textarea aria-label="方案备注" rows={3} maxLength={4000} placeholder="例如：配队思路、主力角色或希望测试的对手……" value={team.notes} onChange={event => changeTeam(current => ({ ...current, notes: event.target.value }))} /></Field></div></section>
       </aside>
       <div className="center-column">
@@ -844,7 +902,7 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
           <div className="character-workbench-header">
             <div className="character-overview"><div className="selected-character-header">{selectedMember && selectedCharacter ? (
               <div className="selected-character-identity"><Portrait character={selectedCharacter} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity={selectedMember.rarity} /><div><h2>{selectedCharacter.name}</h2>{selectedCharacter.subtitle && <p className="selected-subtitle">{selectedCharacter.subtitle}</p>}<p className="character-meta">{ELEMENTS[selectedCharacter.element]?.name}属性 · 第 {selectedIndex + 1} 位 · Lv.{policy.characterLevel}</p></div></div>
-            ) : <div className="character-overview-empty"><Icon name="gear" size={20} /><p>将角色拖入队伍位置<br />即可编辑装备</p></div>}
+            ) : <div className="character-overview-empty"><Icon name="gear" size={20} /><p>点击队伍空位选择角色<br />即可编辑装备</p></div>}
               <div className="character-overview-controls">
                 {selectedMember && selectedCharacter && <label className="rarity-control"><span className="field-label">角色稀有度</span><select aria-label="角色稀有度" value={selectedMember.rarity} onChange={event => chooseMemberRarity(event.target.value)}><option value="SR" disabled={arcanaRequiresLR}>SR</option><option value="LR">LR</option><option value="LR5">LR5</option></select>{arcanaRequiresLR && <span className="arcana-rarity-note">已购秘仪至少需 LR</span>}</label>}
                 <button type="button" className="quiet-button workbench-toggle" aria-expanded={!headerCollapsed} aria-controls="team-equipment-overview" onClick={() => setHeaderCollapsed(value => !value)}>{headerCollapsed ? '展开概览' : '折叠概览'}</button>
@@ -853,12 +911,12 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
         <section className="team-panel" aria-label="当前五人配队">
           <div className="team-lineup" style={catalog.teamFrame ? { '--team-frame-image': `url("${catalog.teamFrame}")` } : undefined}><div className="team-slots">{team.members.map((member, index) => {
             const character = member ? characters.get(member.characterId) : null;
-            return <div className="team-position" key={index}><div className={`team-slot${member ? '' : ' empty'}${member && index === selectedIndex ? ' selected' : ''}${dropTarget === index ? ' drop-target' : ''}`} style={{ backgroundImage: `url("${teamSeat}")` }} draggable={Boolean(member)}
+            return <div className="team-position" key={index}><div className={`team-slot${member ? '' : ' empty'}${member && index === selectedIndex ? ' selected' : ''}${dropTarget === index ? ' drop-target' : ''}${reorderMode && swapFrom === index ? ' is-swap-source' : ''}`} style={{ backgroundImage: `url("${teamSeat}")` }} draggable={Boolean(member) && !touchMode}
               onDragStart={event => member && startDrag(event, { kind: 'member', index, characterId: member.characterId })} onDragEnd={endDrag}
               onDragOver={event => { if (!event.dataTransfer.types.includes(TEAM_DRAG_TYPE)) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setDropTarget(index); }}
               onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(current => current === index ? null : current); }} onDrop={event => dropMember(event, index)}>
               <span className="slot-position">0{index + 1}</span>
-              {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={index === selectedIndex} onClick={() => selectMember(index)}><Portrait character={character} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity={member.rarity} /><span className="member-speed" title="当前构筑速度，不含战斗技能增益">速度 {teamStats[index]?.valid ? teamStats[index].rows.find(row => row.key === 'Speed')?.displayValue ?? '—' : '—'}</span></button> : <div className="empty-slot-content"><div className="empty-slot-plus">＋</div></div>}
+              {member ? <button className="member-select" title={characterLabel(character)} aria-label={`配置${characterLabel(character)}，位置${index + 1}`} aria-pressed={reorderMode ? swapFrom === index : index === selectedIndex} onClick={() => chooseTeamPosition(index)}><Portrait character={character} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity={member.rarity} /><span className="member-speed" title="当前构筑速度，不含战斗技能增益">速度 {teamStats[index]?.valid ? teamStats[index].rows.find(row => row.key === 'Speed')?.displayValue ?? '—' : '—'}</span></button> : <button type="button" className="empty-slot-button" aria-label={reorderMode ? `移动角色到第 ${index + 1} 位` : `为第 ${index + 1} 位选择角色`} onClick={() => chooseTeamPosition(index)}><span className="empty-slot-content"><span className="empty-slot-plus" aria-hidden="true">＋</span></span></button>}
             </div></div>;
           })}</div></div>
         </section>
@@ -868,7 +926,14 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
             <span className="team-equipment-caption">装备与魔装概览</span>
             <div className="team-equipment-grid">{team.members.map((member, index) => <div className="team-equipment-position" key={index}>{member && <MemberEquipmentSummary member={member} position={index + 1} catalog={catalog} />}</div>)}</div>
           </div>
-          <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
+          <p className="team-note">{touchMode ? '点击空位选人，点击队员编辑；使用下方按钮更换或调整站位。' : '拖动调整站位，点击队员编辑装备。'}替换保留该位置的稀有度、装备与符石。</p>
+          <div className="touch-team-actions" role="group" aria-label="手机配队操作">
+            <button type="button" className="button" disabled={!selectedMember} onClick={() => openCharacterPicker(selectedIndex)}>更换角色</button>
+            <button type="button" className="button" disabled={memberCount === 0} aria-pressed={reorderMode} onClick={() => { setReorderMode(value => !value); setSwapFrom(null); setTeamActionStatus(''); }}>{reorderMode ? '取消换位' : '调整站位'}</button>
+            <button type="button" className="button" disabled={!selectedMember} onClick={() => removeMember(selectedIndex)}>移出角色</button>
+            {removedMember && <button type="button" className="button" onClick={undoRemoveMember}>撤销移出</button>}
+            {(reorderMode || teamActionStatus) && <p className="team-swap-hint" role="status">{reorderMode ? swapFrom === null ? '先点击要移动的队员，再点击目标位置；目标可以是空位。' : `已选第 ${swapFrom + 1} 位，点击另一个位置完成换位；再点原位可取消选择。` : teamActionStatus}</p>}
+          </div>
           <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>配队与装备</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button><button id="stats-tab" role="tab" aria-selected={activePage === 'stats'} aria-controls="stats-page" onClick={() => setActivePage('stats')}>角色属性</button></nav>
           {activePage === 'arcana' ? <ArcanaEditor state={arcanaState} catalog={catalog} onPurchase={purchaseArcana} /> : activePage === 'stats' ? <CharacterStatsPanel result={characterStats} policy={policy} /> : <div id="team-page" role="tabpanel" aria-labelledby="team-tab">
           {selectedMember && selectedCharacter ? <>
@@ -880,12 +945,13 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
             {(freeCharacters.has(selectedCharacter.id) || freeLibrary?.exclusiveWeapons?.some(item => item.characterId === selectedCharacter.id)) && <p className="free-library-note">免费库：{freeCharacters.has(selectedCharacter.id) ? `角色本体免费至 ${freeCharacters.get(selectedCharacter.id).rarity}` : ''}{freeLibrary?.exclusiveWeapons?.filter(item => item.characterId === selectedCharacter.id).map(item => `${freeCharacters.has(selectedCharacter.id) ? '；' : ''}${item.level} 级 ${item.rarity} ${catalog.characters.find(character => character.id === item.characterId)?.exclusiveWeaponName ?? '专武'}免费`).join('')}。更高配置按差额计价。</p>}
             {policy.runes?.fixedStock && <p className="fixed-stock-note">普通符石：每类 {fixedRuneCaption(policy)}，整队共享。穿透与速度可自由调整等级。</p>}
             <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} onRuneChange={(runeIndex, nextRune, kind) => updateRune(slot, runeIndex, nextRune, kind)} onRuneCommit={runeIndex => finishRuneBatch(slot, runeIndex)} batchSourceRuneIndex={runeBatch?.memberIndex === selectedIndex && runeBatch.slot === slot ? runeBatch.runeIndex : null} runeFillReport={runeFillReport?.memberIndex === selectedIndex && runeFillReport.slot === slot ? runeFillReport : null} />)}</div>
-          </> : <div className="empty-detail"><div className="empty-detail-mark"><Icon name="gear" size={23} /></div><h2>从一名角色开始</h2><p>将角色头像拖入队伍位置，设定稀有度与六部位装备。<br />受「{curseName}」影响，全队等级固定为{policy.characterLevel}级。</p></div>}
+          </> : <div className="empty-detail"><div className="empty-detail-mark"><Icon name="gear" size={23} /></div><h2>从一名角色开始</h2><p>点击队伍空位选择角色，或拖入角色头像，设定稀有度与六部位装备。<br />受「{curseName}」影响，全队等级固定为{policy.characterLevel}级。</p></div>}
           </div>}
         </section>
       </div>
       <CostSummary cost={valuation.cost} errors={valuation.errors} policy={policy} catalog={catalog} memberCount={memberCount} inventory={inventory} arcanaState={arcanaState} canExport={canExport} onExport={exportTeam} />
     </main>
+    {pickerIndex !== null && <CharacterPicker key={pickerIndex} catalog={catalog} team={team} targetIndex={pickerIndex} aliases={aliases} elements={ELEMENTS} freeCharacters={freeCharacters} onChoose={chooseRosterCharacter} onClose={() => setPickerIndex(null)} renderPortrait={(character, rarity) => <Portrait character={character} elementIcons={catalog.elementIcons} jobIcons={catalog.jobIcons} iconArt={catalog.iconArt} rarity={rarity} />} closeIcon={<Icon name="close" size={20} />} searchIcon={<Icon name="search" size={18} />} />}
     <footer className="footer"><span>配队与草稿保存在你的浏览器中 · 不自动上传 · {draftStatus}</span><span>资源价值参考 <a href="https://hitazuki.github.io/mementomori-calculator/#packCompare" target="_blank" rel="noopener noreferrer">MementoMori Calculator</a> · 最终按站主规则复核</span></footer>
   </div>;
 }

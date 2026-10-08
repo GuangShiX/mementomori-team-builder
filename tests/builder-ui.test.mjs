@@ -738,7 +738,7 @@ test('real character stats render published totals and parts, while global stock
   } finally { await server.close(); }
   const invalidDraft = await renderDraft(broken);
   assert.equal((invalidDraft.match(/>速度 —<\/span>/g) ?? []).length, 2, 'team speed must not show plausible totals while the shared inventory is invalid');
-  assert.match(await renderStats(null), /将角色拖入队伍位置，再查看角色属性/);
+  assert.match(await renderStats(null), /点击队伍空位或拖入角色，再查看角色属性/);
 });
 
 test('automatic same-column rune installation shows its exact shared stock and preserves later per-hole levels', async () => {
