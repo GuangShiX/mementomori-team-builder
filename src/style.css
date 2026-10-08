@@ -85,17 +85,14 @@
 .equipment-source-band>.input-error{grid-column:1 / -1}
 .equipment-level-fields .field:nth-child(n+3)>.field-label{min-height:28px;align-content:start}
 .equipment-part-b>.rune-section{margin-top:0;align-self:start}
-.equipment-art.is-detailed{container-type:inline-size}
-.equipment-art-details{position:absolute;inset:0;z-index:5;pointer-events:none;text-shadow:0 1px 2px #162226,1px 0 2px #162226,-1px 0 2px #162226;font-variant-numeric:tabular-nums}
-.equipment-art-level,.equipment-art-holy,.equipment-art-reinforcement{position:absolute;white-space:nowrap;font-weight:600;line-height:1}
-.equipment-art-level{left:9%;top:8%;font-size:clamp(10px,12cqw,18px);color:#75e7bf}
-.equipment-art-holy{right:8%;top:8%;font-size:clamp(11px,12cqw,18px);color:#ffe084}
-.equipment-art-reinforcement{right:9%;bottom:8%;font-size:clamp(13px,16cqw,23px);color:#e9ee9b}
-.equipment-art-runes{position:absolute;left:4%;top:32%;width:17%;display:flex;flex-direction:column;gap:2cqw}
-.equipment-art-rune{display:block;position:relative;width:100%;aspect-ratio:1;border:1px dotted #c3c6ac;border-radius:50%;background:#243e3da6}
-.equipment-art-rune.is-filled{border-color:transparent;background:transparent}
-.equipment-art-rune img{display:block;width:100%;height:100%;object-fit:contain}
-.equipment-art-rune small{position:absolute;right:-10%;bottom:-8%;font-size:clamp(7px,6cqw,9px);font-weight:600;line-height:1;color:#fff4b8}
+.equipment-nine-slice{inset:0;width:100%;height:100%;border:0;overflow:visible}
+.equipment-art-details{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:5;pointer-events:none;overflow:hidden;font-variant-numeric:tabular-nums}
+.equipment-art-details text{font-family:'Noto Sans SC','Microsoft YaHei',sans-serif;font-weight:400;paint-order:stroke fill;stroke:#233437;stroke-width:1.3;stroke-linejoin:round}
+.equipment-art-level{fill:#75e7bf}
+.equipment-art-holy{fill:#ffe084}
+.equipment-art-reinforcement{fill:#e9ee9b}
+.workbench-sticky .workspace-tabs{margin:8px 0 0;padding:7px 0 0;border-top:1px solid var(--line);border-bottom:0;gap:4px}
+.workbench-sticky .workspace-tabs button{padding:5px 10px;font-size:11px}
 @media(max-width:430px){
   .equip-grid{grid-template-rows:none;grid-auto-flow:row}
   .equipment-card:nth-child(n){display:flex;flex-direction:column;grid-column:1;grid-row:auto;gap:10px}

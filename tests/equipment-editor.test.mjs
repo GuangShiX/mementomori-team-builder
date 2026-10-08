@@ -67,12 +67,12 @@ test('equipment A and B share the current equipment preview and rarity controls 
       assert.match(markup, /aria-label="武器切换UR"/);
       assert.match(markup, /aria-label="武器切换LR"/);
       assert.equal((markup.match(/class="equipment-art is-detailed"/g) ?? []).length, 1);
-      assert.match(markup, /class="equipment-art-level"[^>]*>Lv\.240<\/span>/);
-      assert.match(markup, /class="equipment-art-reinforcement"[^>]*>\+200<\/span>/);
-      assert.match(markup, /class="equipment-art-holy"[^>]*>\+7<\/span>/);
+      assert.match(markup, /class="equipment-art-level"[^>]*>Lv\.240<\/text>/);
+      assert.match(markup, /class="equipment-art-reinforcement"[^>]*>\+200<\/text>/);
+      assert.match(markup, /class="equipment-art-holy"[^>]*>\+7<\/text>/);
       assert.match(markup, /class="equipment-art-runes" aria-label="已装符石"/);
-      assert.equal((markup.match(/class="equipment-art-rune(?: is-filled)?"/g) ?? []).length, 4);
-      assert.match(markup, /title="第1孔：速度 Lv\.11"/);
+      assert.equal((markup.match(/class="equipment-art-rune"/g) ?? []).length, 1);
+      assert.match(markup, /aria-label="第1孔：速度 Lv\.11"/);
       assert.ok(markup.includes(`src="${catalog.characters.find(character => character.id === 54).exclusiveWeaponIcon}"`));
     }
     for (const markup of [defaultA, explicitA]) {
@@ -107,7 +107,7 @@ test('typing equipment level 4 then 45 then 450 preserves reinforcement until a 
     assert.equal(team.members[0].equipment[0].level, 240);
     assert.equal(team.members[0].equipment[0].reinforcementLevel, 240);
     assert.equal(control('武器强化等级').props.max, 240);
-    assert.match(renderToStaticMarkup(editor()), /class="equipment-art-reinforcement"[^>]*>\+240<\/span>/);
+    assert.match(renderToStaticMarkup(editor()), /class="equipment-art-reinforcement"[^>]*>\+240<\/text>/);
     assert.equal(validateTeam(team, catalog, policy, { freeLibrary }).valid, true);
   });
 });
@@ -140,8 +140,33 @@ test('equipment previews show sacred upgrades only for valid positive sacred lev
       }
       for (const level of [1, 40]) {
         team.members[0].equipment[0].legendSacredTreasureLevel = level;
-        assert.match(renderToStaticMarkup(editor(part)), new RegExp(`class="equipment-art-holy"[^>]*>\\+${level}<\\/span>`));
+        assert.match(renderToStaticMarkup(editor(part)), new RegExp(`class="equipment-art-holy"[^>]*>\\+${level}<\\/text>`));
       }
     }
+  });
+});
+
+test('equipment frames use eight SVG slices with an empty center and sockets retain their game layout inside the canvas', async () => {
+  await withEditor(EquipmentEditor => {
+    const { team, editor } = fixture(EquipmentEditor);
+    for (let index = 0; index < 4; index++) team.members[0].equipment[0].runes[index] = { categoryId: index + 1, level: 10 };
+    const markup = renderToStaticMarkup(editor());
+    assert.equal((markup.match(/class="game-icon-frame equipment-nine-slice"/g) ?? []).length, 4);
+    assert.equal((markup.match(/preserveAspectRatio="none" overflow="hidden"/g) ?? []).length, 32);
+    assert.match(markup, /x="20" y="0" width="88" height="20" viewBox="20 0 22 20"/);
+    assert.doesNotMatch(markup, /x="20" y="20" width="88" height="88"/);
+    assert.match(markup, /class="equipment-art-details" viewBox="0 0 128 128"/);
+    const socketImages = [...markup.matchAll(/<image class="equipment-art-rune"[^>]*x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
+    assert.equal(socketImages.length, 4);
+    for (const [index, match] of socketImages.entries()) {
+      const [, x, y, width, height] = match.map(Number);
+      assert.equal(width, 15.08);
+      assert.equal(height, 15.08);
+      assert.ok(x >= 0 && x + width <= 128 && y >= 0 && y + height <= 128);
+      assert.ok(Math.abs(y - (40.69 + index * 21.13)) < .001);
+    }
+    assert.doesNotMatch(markup, /equipment-art-rune is-filled|<small>|border-image-slice:20/);
+    team.members[0].equipment[0].runes = team.members[0].equipment[0].runes.map(() => ({ categoryId: null, level: 0 }));
+    assert.doesNotMatch(renderToStaticMarkup(editor()), /class="equipment-art-rune"/);
   });
 });

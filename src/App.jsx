@@ -197,6 +197,23 @@ function GameIconFrame({ iconArt, rarity, type = 'character' }) {
     inset: `${-(geometry.outward ?? 0) / canvasSize * 100}%`,
     ...(variant.tintMatrix ? { filter: `url(#${filterId})` } : {}),
   };
+  if (type === 'equipment') {
+    const sourceCuts = [0, sourceInsets.left, geometry.sourceSize - sourceInsets.right, geometry.sourceSize];
+    const sourceRows = [0, sourceInsets.top, geometry.sourceSize - sourceInsets.bottom, geometry.sourceSize];
+    const targetCuts = [0, targetInsets.left, canvasSize - targetInsets.right, canvasSize];
+    const targetRows = [0, targetInsets.top, canvasSize - targetInsets.bottom, canvasSize];
+    return <svg className="game-icon-frame equipment-nine-slice" data-rarity={rarity} data-frame={variant.frame} viewBox={`0 0 ${canvasSize} ${canvasSize}`} aria-hidden="true">
+      {variant.tintMatrix && <defs><filter id={filterId} colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values={variant.tintMatrix} /></filter></defs>}
+      <g filter={variant.tintMatrix ? `url(#${filterId})` : undefined}>{Array.from({ length: 9 }, (_, cell) => {
+        if (cell === 4) return null;
+        const column = cell % 3;
+        const row = Math.floor(cell / 3);
+        return <svg key={cell} x={targetCuts[column]} y={targetRows[row]} width={targetCuts[column + 1] - targetCuts[column]} height={targetRows[row + 1] - targetRows[row]} viewBox={`${sourceCuts[column]} ${sourceRows[row]} ${sourceCuts[column + 1] - sourceCuts[column]} ${sourceRows[row + 1] - sourceRows[row]}`} preserveAspectRatio="none" overflow="hidden">
+          <image href={source} width={geometry.sourceSize} height={geometry.sourceSize} />
+        </svg>;
+      })}</g>
+    </svg>;
+  }
   return <>
     {variant.tintMatrix && <svg className="icon-filter-defs" width="0" height="0" aria-hidden="true"><defs><filter id={filterId} colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values={variant.tintMatrix} /></filter></defs></svg>}
     <span className="game-icon-frame" data-rarity={rarity} data-frame={variant.frame} style={style} aria-hidden="true" />
@@ -268,20 +285,19 @@ export function EquipmentArt({ gear, member, catalog, rarity = gear.rarity, deta
     {plateStyle && <span className="equipment-art-plate" data-plate={plateKind} style={plateStyle} aria-hidden="true" />}
     {source ? <img className="equipment-art-image" src={source} alt="" loading="lazy" draggable={false} style={foregroundStyle} /> : <span className="equipment-art-fallback" aria-hidden="true">{rarity}</span>}
     <GameIconFrame iconArt={catalog.iconArt} rarity={rarity} type="equipment" />
-    {detail && <span className="equipment-art-details">
-      <span className="equipment-art-level" aria-label={`装备上限等级${gear.level}`}>Lv.{Number.isSafeInteger(gear.level) ? gear.level : '—'}</span>
-      {Number.isSafeInteger(gear.legendSacredTreasureLevel) && gear.legendSacredTreasureLevel > 0 && gear.legendSacredTreasureLevel <= (catalog.limits?.sacredTreasureLevel ?? 40) && <span className="equipment-art-holy" aria-label={`圣装加${gear.legendSacredTreasureLevel}`}>+{gear.legendSacredTreasureLevel}</span>}
-      <span className="equipment-art-reinforcement" aria-label={`强化等级${gear.reinforcementLevel}`}>+{Number.isSafeInteger(gear.reinforcementLevel) ? gear.reinforcementLevel : '—'}</span>
-      <span className="equipment-art-runes" aria-label="已装符石">{gear.runes.map((rune, index) => {
+    {detail && <svg className="equipment-art-details" viewBox="0 0 128 128" aria-label="装备等级与养成">
+      <text className="equipment-art-level" x="9" y="26" fontSize="20" aria-label={`装备上限等级${gear.level}`}>Lv.{Number.isSafeInteger(gear.level) ? gear.level : '—'}</text>
+      {Number.isSafeInteger(gear.legendSacredTreasureLevel) && gear.legendSacredTreasureLevel > 0 && gear.legendSacredTreasureLevel <= (catalog.limits?.sacredTreasureLevel ?? 40) && <text className="equipment-art-holy" x="118" y="26" fontSize="20" textAnchor="end" aria-label={`圣装加${gear.legendSacredTreasureLevel}`}>+{gear.legendSacredTreasureLevel}</text>}
+      <text className="equipment-art-reinforcement" x="118" y="118" fontSize="20" textAnchor="end" aria-label={`强化等级${gear.reinforcementLevel}`}>+{Number.isSafeInteger(gear.reinforcementLevel) ? gear.reinforcementLevel : '—'}</text>
+      <g className="equipment-art-runes" aria-label="已装符石">{gear.runes.map((rune, index) => {
         const category = catalog.runeCategories.find(item => item.id === rune.categoryId);
         const active = Number.isSafeInteger(rune.level) && rune.level > 0;
         const icon = catalog.runeIcons?.[rune.categoryId];
-        return <span className={`equipment-art-rune${active ? ' is-filled' : ''}`} key={index} title={`第${index + 1}孔：${active ? `${category?.name ?? '符石'} Lv.${rune.level}` : '空孔'}`}>
-          {active && icon && <img src={icon} alt={category?.name ?? '符石'} draggable={false} />}
-          {active && <small>{rune.level}</small>}
-        </span>;
-      })}</span>
-    </span>}
+        if (!active || !icon) return null;
+        const label = `第${index + 1}孔：${category?.name ?? '符石'} Lv.${rune.level}`;
+        return <image className="equipment-art-rune" key={index} x="5.305" y={40.69 + index * 21.13} width="15.08" height="15.08" opacity="0.851" href={icon} aria-label={label}><title>{label}</title></image>;
+      })}</g>
+    </svg>}
   </span>;
 }
 
@@ -882,17 +898,18 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
           })}</div></div>
         </section>
           </div>
+          <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>装备养成</button><button id="equipment-b-tab" role="tab" aria-selected={activePage === 'equipment-b'} aria-controls="equipment-b-page" onClick={() => setActivePage('equipment-b')}>打磨与符石</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button><button id="stats-tab" role="tab" aria-selected={activePage === 'stats'} aria-controls="stats-page" onClick={() => setActivePage('stats')}>角色属性</button></nav>
           </div>
           <div id="team-equipment-overview" className="team-equipment-overview" hidden={headerCollapsed}>
             <span className="team-equipment-caption">装备与魔装概览</span>
             <div className="team-equipment-grid">{team.members.map((member, index) => <div className="team-equipment-position" key={index}>{member && <MemberEquipmentSummary member={member} position={index + 1} catalog={catalog} />}</div>)}</div>
           </div>
           <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
-          <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>装备 A</button><button id="equipment-b-tab" role="tab" aria-selected={activePage === 'equipment-b'} aria-controls="equipment-b-page" onClick={() => setActivePage('equipment-b')}>装备 B</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button><button id="stats-tab" role="tab" aria-selected={activePage === 'stats'} aria-controls="stats-page" onClick={() => setActivePage('stats')}>角色属性</button></nav>
+
           {activePage === 'arcana' ? <ArcanaEditor state={arcanaState} catalog={catalog} onPurchase={purchaseArcana} /> : activePage === 'stats' ? <CharacterStatsPanel result={characterStats} policy={policy} /> : <div id={activePage === 'equipment-b' ? 'equipment-b-page' : 'team-page'} role="tabpanel" aria-labelledby={activePage === 'equipment-b' ? 'equipment-b-tab' : 'team-tab'}>
           {selectedMember && selectedCharacter ? <>
             {valuation.errors.length > 0 && <div className="notice error validation-notice" role="alert"><strong>当前配置需要修正</strong><ul>{valuation.errors.slice(0, 6).map((issue, i) => <li key={`${issue.path}-${i}`}>{issue.message}</li>)}</ul>{valuation.errors.length > 6 && <p>另有 {valuation.errors.length - 6} 项，请逐项检查。</p>}</div>}
-            <div className="equip-intro"><span>{activePage === 'equipment-b' ? '装备 B · 打磨与符石' : '装备 A · 等级与圣魔装'}</span><span>未装备部位不消耗材料</span></div>
+            <div className="equip-intro"><span>{activePage === 'equipment-b' ? '打磨与符石' : '装备养成 · 等级与圣魔装'}</span><span>未装备部位不消耗材料</span></div>
             {activePage === 'team' && <>
             <div className="equipment-presets" role="group" aria-label="快捷装备方案">{presetOptions.map(preset => <button className="button" key={preset.id} disabled={preset.requiresLR5 && selectedMember.rarity !== 'LR5'} title={`${preset.composition}${preset.requiresLR5 && selectedMember.rarity !== 'LR5' ? ' · 需要 LR5 角色' : ''}`} onClick={() => chooseEquipmentPreset(preset.id)}>{preset.label}</button>)}</div>
             <p className="equipment-preset-note">强化：武器／手套／脚 {policy.characterLevel}，头盔／衣服 240，项链 60。高阶项链、头盔和衣服按 240 档制作；圣魔装与符石保留，四件套随角色自动选 4UR／4LR。</p>

@@ -25,8 +25,9 @@ test('production UI renders the shipped empty and restored five-member draft wit
     assert.match(empty,/秘仪加成随角色实际持有汇总/);
     assert.match(empty,/<h1>身为剑所天成<span class="intro-heading-suffix">· 简易杯初筛<\/span><\/h1>/);
     assert.match(empty,/aria-label="构筑页面"/);
-    assert.match(empty,/id="team-tab" role="tab" aria-selected="true" aria-controls="team-page"[^>]*>装备 A<\/button>/);
-    assert.match(empty,/id="equipment-b-tab" role="tab" aria-selected="false" aria-controls="equipment-b-page"[^>]*>装备 B<\/button>/);
+    assert.match(empty,/id="team-tab" role="tab" aria-selected="true" aria-controls="team-page"[^>]*>装备养成<\/button>/);
+    assert.match(empty,/id="equipment-b-tab" role="tab" aria-selected="false" aria-controls="equipment-b-page"[^>]*>打磨与符石<\/button>/);
+    assert.doesNotMatch(empty,/>装备 [AB]<\/button>/);
     assert.match(empty,/id="team-page" role="tabpanel" aria-labelledby="team-tab"/);
     assert.doesNotMatch(empty,/id="equipment-b-page" role="tabpanel"/);
     assert.match(empty,/id="arcana-tab" role="tab"/);
