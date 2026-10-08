@@ -64,37 +64,3 @@
 .details-panel{--workbench-columns:minmax(140px,.48fr) minmax(235px,1.52fr);--workbench-gap:14px;--team-slot-width:90px;--team-slot-gap:6px}.workbench-heading{display:grid;grid-template-columns:var(--workbench-columns);gap:var(--workbench-gap);align-items:center;margin-bottom:8px}.workbench-heading .gear-panel-heading,.workbench-heading .panel-header{margin:0}.workbench-heading h3{font-size:12px}.workbench-sticky{position:sticky;top:8px;z-index:10;background:var(--paper);margin:0 -20px;padding:8px 20px;border-radius:8px;box-shadow:0 4px 8px #17233808}.workbench-sticky .character-workbench-header{grid-template-columns:var(--workbench-columns);gap:var(--workbench-gap);align-items:center;padding:0;margin:0;border:0}.workbench-sticky .selected-character-header{gap:8px}.workbench-sticky .selected-character-identity{flex-direction:row;align-items:center;gap:7px}.workbench-sticky .selected-character-identity .portrait-frame{width:40px}.workbench-sticky .selected-character-identity h2{font-size:14px;line-height:1.4}.workbench-sticky .character-meta,.workbench-sticky .selected-subtitle{font-size:9px}.character-overview-controls{display:flex;align-items:flex-end;gap:6px;min-width:0}.workbench-sticky .rarity-control{width:72px}.workbench-sticky .rarity-control select{height:29px;font-size:11px}.workbench-sticky .field-label{font-size:9px;margin-bottom:2px}.workbench-toggle{padding:5px 4px;font-size:9px;white-space:nowrap;border:1px solid var(--line);border-radius:5px;height:29px}.workbench-sticky .team-slots,.team-equipment-grid{grid-template-columns:repeat(5,minmax(0,var(--team-slot-width)));gap:var(--team-slot-gap);justify-content:center}.workbench-sticky .team-lineup{padding:13px 7px 7px}.team-equipment-overview{display:grid;grid-template-columns:var(--workbench-columns);gap:var(--workbench-gap);align-items:center;padding:6px 0 8px;border-bottom:1px solid var(--line)}.team-equipment-overview[hidden]{display:none}.team-equipment-caption{font-size:10px;color:var(--muted)}.team-equipment-grid{display:grid;min-width:0;padding:0 7px}.team-equipment-position{min-width:0}.details-panel>.team-note{font-size:9px;line-height:1.6;margin:8px 0 12px}
 @media(max-width:1190px){.details-panel{--workbench-columns:minmax(120px,.55fr) minmax(220px,1.45fr);--workbench-gap:10px;--team-slot-gap:4px}.workbench-sticky{margin:0 -16px;padding:7px 16px}.workbench-sticky .selected-character-identity .portrait-frame{width:34px}.workbench-sticky .selected-character-identity h2{font-size:12px}.workbench-sticky .rarity-control{width:62px}.workbench-sticky .team-lineup{padding-inline:5px}.team-equipment-grid{padding-inline:5px}.workbench-sticky .arcana-rarity-note{font-size:8px}}
 @media(max-width:720px){.details-panel{--workbench-columns:minmax(0,1fr);--workbench-gap:8px;--team-slot-width:78px;--team-slot-gap:6px}.workbench-heading{display:flex;justify-content:space-between;gap:12px}.workbench-heading .panel-header{gap:8px}.workbench-sticky{top:0;padding-top:7px;padding-bottom:7px}.workbench-sticky .selected-character-header{flex-direction:row;justify-content:space-between;align-items:center;gap:8px}.workbench-sticky .selected-character-identity .portrait-frame{width:36px}.workbench-sticky .selected-character-identity h2{font-size:14px}.workbench-sticky .selected-character-identity>div{min-width:0}.workbench-sticky .selected-character-identity h2,.workbench-sticky .selected-subtitle{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.workbench-sticky .character-meta{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.workbench-sticky .character-overview-controls{flex-shrink:0}.workbench-sticky .team-lineup{padding:13px 7px 7px}.team-equipment-overview{gap:4px}.team-equipment-caption{font-size:9px}.team-equipment-grid{padding-inline:7px}}
-
-/* Each left/right equipment pair shares its five layout rows. */
-.equip-grid{grid-template-rows:repeat(15,auto);grid-auto-flow:row;align-items:stretch;gap:10px 12px}
-.equipment-card{display:grid;grid-template-rows:subgrid;grid-row:span 5;row-gap:10px}
-.equipment-card:nth-child(-n+3){grid-column:1}
-.equipment-card:nth-child(n+4){grid-column:2}
-.equipment-card:nth-child(1),.equipment-card:nth-child(4){grid-row:1 / span 5}
-.equipment-card:nth-child(2),.equipment-card:nth-child(5){grid-row:6 / span 5}
-.equipment-card:nth-child(3),.equipment-card:nth-child(6){grid-row:11 / span 5}
-.equipment-card-header{margin-bottom:0;align-self:start;min-height:29px}
-.equipment-visual-row{display:grid;grid-template-columns:minmax(0,1fr) 72px;gap:10px;align-items:center;min-height:144px;align-self:start}
-.equipment-current-art{width:100%;max-width:144px;aspect-ratio:1;justify-self:center;align-self:center}
-.equipment-preview-empty{display:grid;place-items:center;width:100%;height:100%;border:1px dashed #d7d8ce;border-radius:9px;color:#a0a795;font-size:12px}
-.equipment-visual-row .equipment-tier-options{grid-template-columns:minmax(0,1fr);gap:5px;margin:0;align-content:center}
-.equipment-visual-row .equipment-tier-button{flex-direction:row;gap:5px;min-height:38px;padding:4px;font-size:11px}
-.equipment-visual-row .equipment-tier-button .equipment-art{width:30px}
-.equipment-card .fixed-series{margin:0;line-height:1.6;align-self:start;overflow-wrap:anywhere}
-.equipment-source-band,.equipment-level-fields,.equipment-polish-fields{align-content:start;align-self:start}
-.equipment-source-band>.input-error{grid-column:1 / -1}
-.equipment-level-fields .field:nth-child(n+3)>.field-label{min-height:28px;align-content:start}
-.equipment-part-b>.rune-section{margin-top:0;align-self:start}
-.equipment-nine-slice{inset:0;width:100%;height:100%;border:0;overflow:visible}
-.equipment-art-details{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:5;pointer-events:none;overflow:hidden;font-variant-numeric:tabular-nums}
-.equipment-art-details text{font-family:'Noto Sans SC','Microsoft YaHei',sans-serif;font-weight:400;paint-order:stroke fill;stroke:#233437;stroke-width:1.3;stroke-linejoin:round}
-.equipment-art-level{fill:#75e7bf}
-.equipment-art-holy{fill:#ffe084}
-.equipment-art-reinforcement{fill:#e9ee9b}
-.workbench-sticky .workspace-tabs{margin:8px 0 0;padding:7px 0 0;border-top:1px solid var(--line);border-bottom:0;gap:4px}
-.workbench-sticky .workspace-tabs button{padding:5px 10px;font-size:11px}
-@media(max-width:430px){
-  .equip-grid{grid-template-rows:none;grid-auto-flow:row}
-  .equipment-card:nth-child(n){display:flex;flex-direction:column;grid-column:1;grid-row:auto;gap:10px}
-  .equipment-source-band:empty{display:none}
-}

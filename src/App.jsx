@@ -41,7 +41,7 @@ const fixedRuneCaption = policy => fixedRuneTiers(policy).map(tier => `Lv.${tier
 const TEAM_DRAG_TYPE = 'application/x-mementomori-team';
 const POLISH_ATTRIBUTES = [['main', '主属性'], ['muscle', '力量'], ['energy', '战技'], ['health', '耐力'], ['intelligence', '魔力'], ['none', '四维均分']];
 
-export function restoreDraft(catalog, policy, freeLibrary) {
+function restoreDraft(catalog, policy, freeLibrary) {
   const empty = { ...createTeam(), level: policy.characterLevel };
   let originalRaw;
   try {
@@ -197,23 +197,6 @@ function GameIconFrame({ iconArt, rarity, type = 'character' }) {
     inset: `${-(geometry.outward ?? 0) / canvasSize * 100}%`,
     ...(variant.tintMatrix ? { filter: `url(#${filterId})` } : {}),
   };
-  if (type === 'equipment') {
-    const sourceCuts = [0, sourceInsets.left, geometry.sourceSize - sourceInsets.right, geometry.sourceSize];
-    const sourceRows = [0, sourceInsets.top, geometry.sourceSize - sourceInsets.bottom, geometry.sourceSize];
-    const targetCuts = [0, targetInsets.left, canvasSize - targetInsets.right, canvasSize];
-    const targetRows = [0, targetInsets.top, canvasSize - targetInsets.bottom, canvasSize];
-    return <svg className="game-icon-frame equipment-nine-slice" data-rarity={rarity} data-frame={variant.frame} viewBox={`0 0 ${canvasSize} ${canvasSize}`} aria-hidden="true">
-      {variant.tintMatrix && <defs><filter id={filterId} colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values={variant.tintMatrix} /></filter></defs>}
-      <g filter={variant.tintMatrix ? `url(#${filterId})` : undefined}>{Array.from({ length: 9 }, (_, cell) => {
-        if (cell === 4) return null;
-        const column = cell % 3;
-        const row = Math.floor(cell / 3);
-        return <svg key={cell} x={targetCuts[column]} y={targetRows[row]} width={targetCuts[column + 1] - targetCuts[column]} height={targetRows[row + 1] - targetRows[row]} viewBox={`${sourceCuts[column]} ${sourceRows[row]} ${sourceCuts[column + 1] - sourceCuts[column]} ${sourceRows[row + 1] - sourceRows[row]}`} preserveAspectRatio="none" overflow="hidden">
-          <image href={source} width={geometry.sourceSize} height={geometry.sourceSize} />
-        </svg>;
-      })}</g>
-    </svg>;
-  }
   return <>
     {variant.tintMatrix && <svg className="icon-filter-defs" width="0" height="0" aria-hidden="true"><defs><filter id={filterId} colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values={variant.tintMatrix} /></filter></defs></svg>}
     <span className="game-icon-frame" data-rarity={rarity} data-frame={variant.frame} style={style} aria-hidden="true" />
@@ -263,7 +246,7 @@ function equipmentLevels(catalog, rarity, weaponKind) {
   return catalog.equipmentCosts?.allowedLevels?.[rarity] ?? [];
 }
 
-export function EquipmentArt({ gear, member, catalog, rarity = gear.rarity, detail = false }) {
+function EquipmentArt({ gear, member, catalog, rarity = gear.rarity }) {
   const shadowId = `equipment-shadow-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const character = catalog.characters.find(item => item.id === member.characterId);
   const owner = catalog.characters.find(item => item.id === (gear.weaponOwnerCharacterId ?? member.characterId));
@@ -280,24 +263,11 @@ export function EquipmentArt({ gear, member, catalog, rarity = gear.rarity, deta
   const plateStyle = composition && palette ? { ...rectStyle(composition.plate), borderRadius: `${composition.plate.radius / composition.plate.width * 100}%`, backgroundImage: [lightGradient(composition.plate.light), lightGradient(composition.plate.glow), `linear-gradient(180deg,${palette.colors[0]},${palette.colors[1]} ${palette.middleOffset * 100}%,${palette.colors[2]})`].join(',') } : undefined;
   const shadows = Object.entries(composition?.foreground.shadow ?? {});
   const foregroundStyle = composition ? { ...rectStyle(composition.foreground), objectFit: composition.foreground.fit, ...(shadows.length ? { filter: `url(#${shadowId})` } : {}) } : undefined;
-  return <span className={`equipment-art${detail ? ' is-detailed' : ''}`} data-rarity={rarity}>
+  return <span className="equipment-art" data-rarity={rarity}>
     {shadows.length > 0 && <svg className="icon-filter-defs" width="0" height="0" aria-hidden="true"><defs><filter id={shadowId} x="-20%" y="-20%" width="140%" height="160%" primitiveUnits="objectBoundingBox" colorInterpolationFilters="sRGB">{shadows.map(([name, shadow]) => <feDropShadow key={name} in="SourceGraphic" dx={shadow.dx / composition.foreground.width} dy={shadow.dy / composition.foreground.height} stdDeviation={shadow.blur / composition.foreground.width} floodColor={shadow.color} floodOpacity={shadow.opacity} result={`shadow-${name}`} />)}<feMerge>{shadows.map(([name]) => <feMergeNode key={name} in={`shadow-${name}`} />)}<feMergeNode in="SourceGraphic" /></feMerge></filter></defs></svg>}
     {plateStyle && <span className="equipment-art-plate" data-plate={plateKind} style={plateStyle} aria-hidden="true" />}
     {source ? <img className="equipment-art-image" src={source} alt="" loading="lazy" draggable={false} style={foregroundStyle} /> : <span className="equipment-art-fallback" aria-hidden="true">{rarity}</span>}
     <GameIconFrame iconArt={catalog.iconArt} rarity={rarity} type="equipment" />
-    {detail && <svg className="equipment-art-details" viewBox="0 0 128 128" aria-label="装备等级与养成">
-      <text className="equipment-art-level" x="9" y="26" fontSize="20" aria-label={`装备上限等级${gear.level}`}>Lv.{Number.isSafeInteger(gear.level) ? gear.level : '—'}</text>
-      {Number.isSafeInteger(gear.legendSacredTreasureLevel) && gear.legendSacredTreasureLevel > 0 && gear.legendSacredTreasureLevel <= (catalog.limits?.sacredTreasureLevel ?? 40) && <text className="equipment-art-holy" x="118" y="26" fontSize="20" textAnchor="end" aria-label={`圣装加${gear.legendSacredTreasureLevel}`}>+{gear.legendSacredTreasureLevel}</text>}
-      <text className="equipment-art-reinforcement" x="118" y="118" fontSize="20" textAnchor="end" aria-label={`强化等级${gear.reinforcementLevel}`}>+{Number.isSafeInteger(gear.reinforcementLevel) ? gear.reinforcementLevel : '—'}</text>
-      <g className="equipment-art-runes" aria-label="已装符石">{gear.runes.map((rune, index) => {
-        const category = catalog.runeCategories.find(item => item.id === rune.categoryId);
-        const active = Number.isSafeInteger(rune.level) && rune.level > 0;
-        const icon = catalog.runeIcons?.[rune.categoryId];
-        if (!active || !icon) return null;
-        const label = `第${index + 1}孔：${category?.name ?? '符石'} Lv.${rune.level}`;
-        return <image className="equipment-art-rune" key={index} x="5.305" y={40.69 + index * 21.13} width="15.08" height="15.08" opacity="0.851" href={icon} aria-label={label}><title>{label}</title></image>;
-      })}</g>
-    </svg>}
   </span>;
 }
 
@@ -317,7 +287,7 @@ function MemberEquipmentSummary({ member, position, catalog }) {
   </div>;
 }
 
-export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, onChange, onRuneChange, onRuneCommit, batchSourceRuneIndex, runeFillReport, errors, memberIndex, inventory, borrowableWeapons, ownWeaponClaimed, part = 'A' }) {
+export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibrary, onChange, onRuneChange, onRuneCommit, batchSourceRuneIndex, runeFillReport, errors, memberIndex, inventory, borrowableWeapons, ownWeaponClaimed }) {
   const prefix = `members[${memberIndex}].equipment[${index}]`;
   const availableRunes = catalog.runeCategories.filter(category => runeSlots(category).includes(gear.slot));
   const levels = equipmentLevels(catalog, gear.rarity, gear.weaponKind).filter(level => level <= policy.characterLevel);
@@ -335,7 +305,7 @@ export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibr
   const borrowed = ownerId !== member.characterId;
   const compatibleOwners = (freeLibrary?.exclusiveWeapons ?? []).filter(weapon => weapon.rarity === 'UR' && weapon.characterId !== member.characterId && catalog.characters.find(character => character.id === weapon.characterId)?.job === actor?.job);
   function updateGearLevel(level) {
-    onChange({ ...gear, level, reinforcementLevel: levels.includes(level) ? Math.min(Number(gear.reinforcementLevel) || 0, level) : gear.reinforcementLevel });
+    onChange({ ...gear, level, reinforcementLevel: Math.min(Number(gear.reinforcementLevel) || 0, level) });
   }
   function selectRarity(rarity) {
     if (rarity === 'NONE') { onChange(selectEquipmentRarity(gear, rarity)); return; }
@@ -369,7 +339,7 @@ export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibr
     if (onRuneChange) onRuneChange(runeIndex, nextRune, kind);
     else onChange({ ...gear, runes: gear.runes.map((rune, i) => i === runeIndex ? nextRune : rune) });
   }
-  return <section className={`equipment-card equipment-part-${part.toLowerCase()}${gear.rarity === 'NONE' ? ' empty-equipment' : ''}`} aria-label={SLOT_NAMES[gear.slot]}>
+  return <section className={`equipment-card${gear.rarity === 'NONE' ? ' empty-equipment' : ''}`} aria-label={SLOT_NAMES[gear.slot]}>
     <div className="equipment-card-header">
       <h3 className="equipment-name"><Icon name={gear.slot <= 3 ? 'sword' : 'shield'} size={15} />{SLOT_NAMES[gear.slot]}</h3>
       <select className="equipment-rarity" aria-label={`${SLOT_NAMES[gear.slot]}稀有度`} value={gear.rarity} onChange={event => selectRarity(event.target.value)}>
@@ -377,19 +347,16 @@ export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibr
         <option value="LR" disabled={member.rarity !== 'LR5'}>LR{member.rarity !== 'LR5' ? ' · 需 LR5' : ''}</option>
       </select>
     </div>
-    <div className="equipment-visual-row">
-      <div className="equipment-current-art">{gear.rarity === 'NONE' ? <span className="equipment-preview-empty">未装备</span> : <EquipmentArt gear={gear} member={member} catalog={catalog} detail />}</div>
-      <div className="equipment-tier-options" role="group" aria-label={`${SLOT_NAMES[gear.slot]}装备档位`}>
+    <div className="equipment-tier-options" role="group" aria-label={`${SLOT_NAMES[gear.slot]}装备档位`}>
       {['SSR', 'UR', 'LR'].map(rarity => <button key={rarity} className={`equipment-tier-button${gear.rarity === rarity ? ' active' : ''}`} type="button" aria-label={`${SLOT_NAMES[gear.slot]}切换${rarity}${rarity === 'LR' && member.rarity !== 'LR5' ? '，需要LR5角色' : ''}`} aria-pressed={gear.rarity === rarity} disabled={rarity === 'LR' && member.rarity !== 'LR5'} onClick={() => selectRarity(rarity)}>
         <EquipmentArt gear={{ ...gear, weaponKind: gear.slot === 1 ? 'exclusive' : gear.weaponKind, weaponOwnerCharacterId: rarity === 'SSR' ? member.characterId : ownerId }} member={member} catalog={catalog} rarity={rarity} />
         <span>{rarity}</span>
       </button>)}
-      </div>
     </div>
-    <div className="fixed-series">{gear.rarity === 'NONE' ? '选择档位以装备' : <>{gear.weaponKind === 'exclusive' ? `${borrowed ? '借用 ' : ''}${ownerWeaponName}` : series?.name ?? gear.rarity}{gear.rarity === 'LR' ? ' · 需 LR5 角色' : ''}</>}</div>
-    {gear.rarity === 'NONE' ? <><div className="equipment-source-band" /><p className="empty-equipment-note">选择装备后设置养成与符石</p></> : part === 'A' ? <>
-      <div className="equipment-source-band equipment-fields">
-        {gear.slot === 1 && gear.weaponKind === 'normal' && ['UR', 'LR'].includes(gear.rarity) && <p className="input-error">UR / LR 武器需使用专武。<button className="rune-repair" onClick={() => setWeaponKind('exclusive')}>改为专属武器</button></p>}
+    {gear.rarity === 'NONE' ? <p className="empty-equipment-note">选择装备后设置养成与符石</p> : <>
+      <div className="fixed-series">{gear.weaponKind === 'exclusive' ? `${borrowed ? '借用 ' : ''}${ownerWeaponName}` : series?.name ?? gear.rarity}{gear.rarity === 'LR' ? ' · 需 LR5 角色' : ''}</div>
+      {gear.slot === 1 && gear.weaponKind === 'normal' && ['UR', 'LR'].includes(gear.rarity) && <p className="input-error">UR / LR 武器需使用专武。<button className="rune-repair" onClick={() => setWeaponKind('exclusive')}>改为专属武器</button></p>}
+      <div className="equipment-fields">
         {gear.slot === 1 && gear.weaponKind === 'exclusive' && <Field label="专武来源" path={`${prefix}.weaponOwnerCharacterId`} errors={errors} full>
           <select aria-label="专武所属角色" value={ownerId} onChange={event => chooseWeaponOwner(Number(event.target.value))}>
             <option value={member.characterId} disabled={ownWeaponClaimed && ownerId !== member.characterId}>{ownWeaponName}{ownWeaponClaimed ? ' · 已使用' : ''}</option>
@@ -401,26 +368,24 @@ export function EquipmentEditor({ gear, index, member, catalog, policy, freeLibr
         {gear.slot === 1 && gear.rarity === 'SSR' && <Field label="武器类型" path={`${prefix}.weaponKind`} errors={errors} full>
           <select aria-label="武器类型" value={gear.weaponKind} onChange={event => setWeaponKind(event.target.value)}><option value="exclusive">专属武器</option><option value="normal">SSR 通用武器</option></select>
         </Field>}
-      </div>
-      <div className="equipment-fields equipment-level-fields">
         <Field label="装备等级" path={`${prefix}.level`} errors={errors}>
-          <input aria-label={`${SLOT_NAMES[gear.slot]}装备等级`} type="number" min={levels[0] ?? 1} max={levels.at(-1) ?? policy.characterLevel} step="1" title={`可用装备等级：${levels.join('、')}`} value={gear.level} onChange={event => updateGearLevel(numeric(event.target.value))} />
+          <select aria-label={`${SLOT_NAMES[gear.slot]}装备等级`} value={gear.level} onChange={event => updateGearLevel(Number(event.target.value))}>
+            {!levels.includes(gear.level) && <option value={gear.level}>{gear.level} · 不可用</option>}
+            {levels.map(level => <option key={level} value={level}>Lv. {level}</option>)}
+          </select>
         </Field>
         <Field label="强化等级" path={`${prefix}.reinforcementLevel`} errors={errors}>
           <input aria-label={`${SLOT_NAMES[gear.slot]}强化等级`} type="number" min="0" max={gear.level} step="1" value={gear.reinforcementLevel} onChange={event => onChange({ ...gear, reinforcementLevel: numeric(event.target.value) })} />
+        </Field>
+        <Field label="满打磨属性" path={`${prefix}.polishAttribute`} errors={errors} full>
+          <select aria-label={`${SLOT_NAMES[gear.slot]}满打磨属性`} value={gear.polishAttribute ?? 'main'} onChange={event => onChange({ ...gear, polishAttribute: event.target.value })}>{POLISH_ATTRIBUTES.map(([id, label]) => <option value={id} key={id}>{label}</option>)}</select>
+          <span className="polish-note">{gear.polishAttribute === 'none' ? '四维均分，不定向打磨；不计费用。' : '满打磨：所选属性 60%，其余均分；不计费用。'}</span>
         </Field>
         <Field label={<><span>圣装等级</span><SacredBonus kind="legend" level={gear.legendSacredTreasureLevel} slot={gear.slot} catalog={catalog} /></>} path={`${prefix}.legendSacredTreasureLevel`} errors={errors}>
           <input aria-label={`${SLOT_NAMES[gear.slot]}圣装等级`} type="number" min="0" max={maximumSacred} step="1" value={gear.legendSacredTreasureLevel} onChange={event => onChange({ ...gear, legendSacredTreasureLevel: numeric(event.target.value) })} />
         </Field>
         <Field label={<><span>魔装等级</span><SacredBonus kind="matchless" level={gear.matchlessSacredTreasureLevel} slot={gear.slot} catalog={catalog} /></>} path={`${prefix}.matchlessSacredTreasureLevel`} errors={errors}>
           <input aria-label={`${SLOT_NAMES[gear.slot]}魔装等级`} type="number" min="0" max={maximumSacred} step="1" value={gear.matchlessSacredTreasureLevel} onChange={event => onChange({ ...gear, matchlessSacredTreasureLevel: numeric(event.target.value) })} />
-        </Field>
-      </div>
-    </> : <>
-      <div className="equipment-fields equipment-polish-fields">
-        <Field label="满打磨属性" path={`${prefix}.polishAttribute`} errors={errors} full>
-          <select aria-label={`${SLOT_NAMES[gear.slot]}满打磨属性`} value={gear.polishAttribute ?? 'main'} onChange={event => onChange({ ...gear, polishAttribute: event.target.value })}>{POLISH_ATTRIBUTES.map(([id, label]) => <option value={id} key={id}>{label}</option>)}</select>
-          <span className="polish-note">{gear.polishAttribute === 'none' ? '四维均分，不定向打磨；不计费用。' : '满打磨：所选属性 60%，其余均分；不计费用。'}</span>
         </Field>
       </div>
       <div className="rune-section">
@@ -898,26 +863,23 @@ export default function App({ catalog, policy, freeLibrary, nameAliases }) {
           })}</div></div>
         </section>
           </div>
-          <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>装备养成</button><button id="equipment-b-tab" role="tab" aria-selected={activePage === 'equipment-b'} aria-controls="equipment-b-page" onClick={() => setActivePage('equipment-b')}>打磨与符石</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button><button id="stats-tab" role="tab" aria-selected={activePage === 'stats'} aria-controls="stats-page" onClick={() => setActivePage('stats')}>角色属性</button></nav>
           </div>
           <div id="team-equipment-overview" className="team-equipment-overview" hidden={headerCollapsed}>
             <span className="team-equipment-caption">装备与魔装概览</span>
             <div className="team-equipment-grid">{team.members.map((member, index) => <div className="team-equipment-position" key={index}>{member && <MemberEquipmentSummary member={member} position={index + 1} catalog={catalog} />}</div>)}</div>
           </div>
           <p className="team-note">拖动调整站位，点击队员编辑装备。替换保留该位置的稀有度、装备与符石。</p>
-
-          {activePage === 'arcana' ? <ArcanaEditor state={arcanaState} catalog={catalog} onPurchase={purchaseArcana} /> : activePage === 'stats' ? <CharacterStatsPanel result={characterStats} policy={policy} /> : <div id={activePage === 'equipment-b' ? 'equipment-b-page' : 'team-page'} role="tabpanel" aria-labelledby={activePage === 'equipment-b' ? 'equipment-b-tab' : 'team-tab'}>
+          <nav className="workspace-tabs" role="tablist" aria-label="构筑页面"><button id="team-tab" role="tab" aria-selected={activePage === 'team'} aria-controls="team-page" onClick={() => setActivePage('team')}>配队与装备</button><button id="arcana-tab" role="tab" aria-selected={activePage === 'arcana'} aria-controls="arcana-page" onClick={() => setActivePage('arcana')}>秘仪 · LR 档</button><button id="stats-tab" role="tab" aria-selected={activePage === 'stats'} aria-controls="stats-page" onClick={() => setActivePage('stats')}>角色属性</button></nav>
+          {activePage === 'arcana' ? <ArcanaEditor state={arcanaState} catalog={catalog} onPurchase={purchaseArcana} /> : activePage === 'stats' ? <CharacterStatsPanel result={characterStats} policy={policy} /> : <div id="team-page" role="tabpanel" aria-labelledby="team-tab">
           {selectedMember && selectedCharacter ? <>
             {valuation.errors.length > 0 && <div className="notice error validation-notice" role="alert"><strong>当前配置需要修正</strong><ul>{valuation.errors.slice(0, 6).map((issue, i) => <li key={`${issue.path}-${i}`}>{issue.message}</li>)}</ul>{valuation.errors.length > 6 && <p>另有 {valuation.errors.length - 6} 项，请逐项检查。</p>}</div>}
-            <div className="equip-intro"><span>{activePage === 'equipment-b' ? '打磨与符石' : '装备养成 · 等级与圣魔装'}</span><span>未装备部位不消耗材料</span></div>
-            {activePage === 'team' && <>
+            <div className="equip-intro"><span>六部位装备</span><span>未装备部位不消耗材料</span></div>
             <div className="equipment-presets" role="group" aria-label="快捷装备方案">{presetOptions.map(preset => <button className="button" key={preset.id} disabled={preset.requiresLR5 && selectedMember.rarity !== 'LR5'} title={`${preset.composition}${preset.requiresLR5 && selectedMember.rarity !== 'LR5' ? ' · 需要 LR5 角色' : ''}`} onClick={() => chooseEquipmentPreset(preset.id)}>{preset.label}</button>)}</div>
             <p className="equipment-preset-note">强化：武器／手套／脚 {policy.characterLevel}，头盔／衣服 240，项链 60。高阶项链、头盔和衣服按 240 档制作；圣魔装与符石保留，四件套随角色自动选 4UR／4LR。</p>
             <p className="equipment-default-note">新装备默认魔装 40，可按实际配置调整。</p>
             {(freeCharacters.has(selectedCharacter.id) || freeLibrary?.exclusiveWeapons?.some(item => item.characterId === selectedCharacter.id)) && <p className="free-library-note">免费库：{freeCharacters.has(selectedCharacter.id) ? `角色本体免费至 ${freeCharacters.get(selectedCharacter.id).rarity}` : ''}{freeLibrary?.exclusiveWeapons?.filter(item => item.characterId === selectedCharacter.id).map(item => `${freeCharacters.has(selectedCharacter.id) ? '；' : ''}${item.level} 级 ${item.rarity} ${catalog.characters.find(character => character.id === item.characterId)?.exclusiveWeaponName ?? '专武'}免费`).join('')}。更高配置按差额计价。</p>}
-            </>}
-            {activePage === 'equipment-b' && policy.runes?.fixedStock && <p className="fixed-stock-note">普通符石：每类 {fixedRuneCaption(policy)}，整队共享。穿透与速度可自由调整等级。</p>}
-            <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} part={activePage === 'equipment-b' ? 'B' : 'A'} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} onRuneChange={(runeIndex, nextRune, kind) => updateRune(slot, runeIndex, nextRune, kind)} onRuneCommit={runeIndex => finishRuneBatch(slot, runeIndex)} batchSourceRuneIndex={runeBatch?.memberIndex === selectedIndex && runeBatch.slot === slot ? runeBatch.runeIndex : null} runeFillReport={runeFillReport?.memberIndex === selectedIndex && runeFillReport.slot === slot ? runeFillReport : null} />)}</div>
+            {policy.runes?.fixedStock && <p className="fixed-stock-note">普通符石：每类 {fixedRuneCaption(policy)}，整队共享。穿透与速度可自由调整等级。</p>}
+            <div className="equip-grid">{EQUIPMENT_SLOTS.map((slot, index) => <EquipmentEditor key={`${selectedMember.characterId}-${slot}`} gear={selectedMember.equipment[index]} index={index} member={selectedMember} memberIndex={selectedIndex} catalog={catalog} policy={policy} freeLibrary={freeLibrary} errors={valuation.errors} inventory={inventory} borrowableWeapons={borrowableWeapons} ownWeaponClaimed={ownWeaponClaimed} onChange={gear => updateEquipment(index, gear)} onRuneChange={(runeIndex, nextRune, kind) => updateRune(slot, runeIndex, nextRune, kind)} onRuneCommit={runeIndex => finishRuneBatch(slot, runeIndex)} batchSourceRuneIndex={runeBatch?.memberIndex === selectedIndex && runeBatch.slot === slot ? runeBatch.runeIndex : null} runeFillReport={runeFillReport?.memberIndex === selectedIndex && runeFillReport.slot === slot ? runeFillReport : null} />)}</div>
           </> : <div className="empty-detail"><div className="empty-detail-mark"><Icon name="gear" size={23} /></div><h2>从一名角色开始</h2><p>将角色头像拖入队伍位置，设定稀有度与六部位装备。<br />受「{curseName}」影响，全队等级固定为{policy.characterLevel}级。</p></div>}
           </div>}
         </section>

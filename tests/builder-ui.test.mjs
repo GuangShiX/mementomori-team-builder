@@ -45,28 +45,6 @@ async function renderStats(result) {
   } finally { await server.close(); }
 }
 
-async function renderEquipmentEditors(team, part = 'B', displayedCatalog = catalog) {
-  const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
-  const original = globalThis.localStorage;
-  try {
-    globalThis.localStorage = { getItem: () => JSON.stringify({ schemaVersion: 1, catalogVersion: catalog.version, team }) };
-    const { EquipmentEditor, restoreDraft } = await server.ssrLoadModule('/src/App.jsx');
-    const restored = restoreDraft(displayedCatalog, policy, freeLibrary).team;
-    const member = restored.members.find(Boolean);
-    const memberIndex = restored.members.indexOf(member);
-    const validation = validateTeam(restored, displayedCatalog, policy, { freeLibrary });
-    const inventory = validation.valid ? calculateTeam(restored, displayedCatalog, policy, freeLibrary).fixedRuneInventory : [];
-    return renderToStaticMarkup(React.createElement(React.Fragment, null, member.equipment.map((gear, index) => React.createElement(EquipmentEditor, {
-      key: gear.slot, part, gear, index, member, memberIndex, catalog: displayedCatalog, policy, freeLibrary,
-      errors: validation.errors, inventory, borrowableWeapons: [], ownWeaponClaimed: false, onChange() {},
-    }))));
-  } finally {
-    if (original === undefined) delete globalThis.localStorage;
-    else globalThis.localStorage = original;
-    await server.close();
-  }
-}
-
 const arcanaCard = (markup, group) => markup.split(`aria-label="${group.name}"`)[1]?.split('</section>')[0];
 
 test('resource price help reflects policy unit prices and exchange rates rather than hardcoded quotes', async () => {
@@ -159,20 +137,13 @@ test('builder displays a nameless framed team to the right of the selected chara
   assert.match(sticky, /class="character-overview-controls"/);
   assert.match(sticky, /class="selected-character-header"/);
   assert.ok(sticky.includes(lineup));
-  assert.doesNotMatch(sticky, /member-equipment-summary|member-matchless|member-equipment-item|workbench-heading|gear-panel-heading|team-header-controls|新建方案|我的配队|team-note|role="tabpanel"/);
-  const tabs = sticky.match(/<nav class="workspace-tabs" role="tablist" aria-label="构筑页面">([\s\S]*?)<\/nav>/)?.[1];
-  assert.ok(tabs, 'all workspace tabs belong to the sticky identity and lineup');
-  assert.equal((tabs.match(/role="tab"/g) ?? []).length, 4);
-  for (const label of ['装备养成', '打磨与符石', '秘仪 · LR 档', '角色属性']) assert.ok(tabs.includes(`>${label}</button>`));
-  assert.equal((markup.match(/class="workspace-tabs"/g) ?? []).length, 1, 'the sticky tablist is not duplicated in scrolling content');
+  assert.doesNotMatch(sticky, /member-equipment-summary|member-matchless|member-equipment-item|workbench-heading|gear-panel-heading|team-header-controls|新建方案|我的配队|team-note|workspace-tabs/);
   assert.match(heading, /角色与装备/);
   assert.match(heading, /我的配队/);
   assert.match(heading, /新建方案/);
   assert.ok(markup.indexOf(heading) + heading.length <= stickyStart);
   assert.ok(markup.indexOf(overview) >= stickyEnd, 'the hidden equipment overview stays outside the sticky identity and lineup');
-  assert.ok(markup.indexOf('class="workspace-tabs"') < stickyEnd, 'tabs remain available when the page content scrolls');
-  assert.ok(markup.indexOf('<p class="team-note"') >= stickyEnd, 'dragging instructions stay outside the sticky row');
-  assert.ok(markup.indexOf('id="team-page" role="tabpanel"') >= stickyEnd, 'equipment editing content stays outside the sticky row');
+  assert.ok(markup.indexOf('class="workspace-tabs"') >= stickyEnd, 'tabs scroll with their page content');
   assert.match(markup, /新建方案/);
   assert.equal((overview.match(/class="team-equipment-position"/g) ?? []).length, 5);
   assert.equal((overview.match(/class="member-equipment-summary"/g) ?? []).length, 2);
@@ -232,17 +203,15 @@ test('builder displays a nameless framed team to the right of the selected chara
   assert.match(css, /\.portrait-frame\.has-rarity-frame\{overflow:visible/);
   assert.match(css, /\.rune-holes\{display:grid;grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
   assert.doesNotMatch(css, /\.rune-holes\{[^}]*grid-template-columns:1fr|\.rune-holes\{[^}]*repeat\(2/);
-  assert.doesNotMatch(markup, /class="rune-number"|class="rune-level-label"|aria-label="武器满打磨属性"/);
+  assert.match(markup, /class="rune-number">第 1 孔<\/span>/);
+  assert.equal((markup.match(/class="rune-level-label">等级/g) ?? []).length, 4);
   assert.equal((markup.match(/class="equipment-tier-button/g) ?? []).length, 18);
   assert.match(markup, /aria-label="武器切换LR" aria-pressed="false"/);
   assert.doesNotMatch(css, /\.portrait-frame img\{|--element-color|@media\([^{}]+\)\{\}/);
   assert.ok(markup.indexOf('aria-label="角色目录"') < markup.indexOf('aria-label="当前角色装备配置"'));
   assert.match(markup, /draggable="true"/);
-  const equipmentB = await renderEquipmentEditors(team, 'B', displayedCatalog);
-  assert.match(equipmentB, /class="rune-number">第 1 孔<\/span>/);
-  assert.equal((equipmentB.match(/class="rune-level-label">等级/g) ?? []).length, 4);
-  assert.match(equipmentB, /<option value="11" selected="">Lv\.11<\/option>/);
-  assert.match(equipmentB, /<option value="10">Lv\.10<\/option>/);
+  assert.match(markup, /<option value="11" selected="">Lv\.11<\/option>/);
+  assert.match(markup, /<option value="10">Lv\.10<\/option>/);
   assert.match(markup, /Lv\.11 × 3、Lv\.10 × 3/);
   assert.match(markup, /aria-label="专武造价"/);
   assert.match(markup, /紫水晶等价 82\.5 个/);
@@ -265,7 +234,7 @@ test('automatic third-weapon fabrication discount leaves all actual levels and r
   const markup = await renderDraft(cloneTeam(team));
   assert.equal((markup.match(/class="automatic-weapon-credit"/g) ?? []).length, 1);
   assert.match(markup, /自动同步 · 制作材料按 Lv\.300 计算；强化与叶子按实际配置计费/);
-  assert.match(markup, /<input aria-label="武器装备等级"[^>]*type="number"[^>]*min="240"[^>]*max="450"[^>]*step="1"[^>]*value="450"/);
+  assert.match(markup, /aria-label="武器装备等级"[\s\S]*?<option value="450" selected="">Lv\. 450<\/option>/);
   assert.match(markup, /aria-label="武器强化等级"[^>]*max="450"[^>]*value="420"/);
   assert.doesNotMatch(markup, /aria-label="叶子造价"/);
   const relics = costFoldout(markup, 'UR和LR圣遗物装备明细', 'relic-crafting-costs');
@@ -552,7 +521,7 @@ test('three adaptive equipment shortcuts display their real compositions, preser
     assert.match(markup, /aria-label="武器魔装等级"[^>]*value="17"/);
     assert.match(markup, /aria-label="项链魔装等级"[^>]*value="40"/);
     assert.match(markup, /魔装 17–40/);
-    assert.match(await renderEquipmentEditors(team), /aria-label="武器第1孔符石等级"[^>]*value="11"/);
+    assert.match(markup, /aria-label="武器第1孔符石等级"[^>]*value="11"/);
     assertAutomaticControls(markup);
   }
   assert.equal(JSON.stringify(member), previous, 'preset previews leave the original equipment intact');
@@ -572,18 +541,8 @@ test('equipment DOM keeps slot order 1..6 while the desktop grid fills the left 
   const titles = [...markup.matchAll(/<section class="equipment-card[^"]*" aria-label="([^"]+)"/g)].map(match => match[1]);
   assert.deepEqual(titles, ['武器', '项链', '手套', '头盔', '衣服', '脚']);
   const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
-  assert.match(css, /\.equip-grid\{[^}]*grid-template-rows:repeat\(15,auto\)/);
-  assert.match(css, /\.equipment-card\{[^}]*grid-template-rows:subgrid/);
-  assert.match(css, /\.equipment-card\{[^}]*grid-row:span 5/);
-  assert.match(css, /\.equipment-card:nth-child\(-n\+3\)\{[^}]*grid-column:1/);
-  assert.match(css, /\.equipment-card:nth-child\(n\+4\)\{[^}]*grid-column:2/);
-  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
-  for (const [position, row] of [[1, 1], [2, 6], [3, 11], [4, 1], [5, 6], [6, 11]]) {
-    const declaration = rules.find(rule => rule[1].split(',').map(selector => selector.trim()).includes(`.equipment-card:nth-child(${position})`))?.[2];
-    assert.ok(declaration, `card ${position} has a shared row declaration`);
-    assert.match(declaration, new RegExp(`grid-row:${row}\\s*\\/\\s*span 5`));
-  }
-  assert.match(css, /@media\(max-width:430px\)\{[\s\S]*?\.equip-grid\{[^}]*grid-template-rows:none/);
+  assert.match(css, /\.equip-grid\{grid-template-rows:repeat\(3,auto\);grid-auto-flow:column\}/);
+  assert.match(css, /@media\(max-width:430px\)\{\.equip-grid\{grid-template-rows:none;grid-auto-flow:row\}\}/);
   const controls = markup.match(/<div class="equipment-presets"[^>]*>([\s\S]*?)<\/div>/)[1];
   assert.match(controls, /title="4UR \+ 2SSR">4UR \+ 2SSR<\/button>/);
   assert.doesNotMatch(controls, />4LR \+ 2SSR<\/button>/);
@@ -607,7 +566,7 @@ test('LR5 to LR changes LR gear to UR and switches the adaptive shortcut without
   for (const slotName of ['武器', '项链', '手套', '头盔', '衣服', '脚']) assert.match(markup, new RegExp(`aria-label="${slotName}稀有度"[\\s\\S]*?<option value="UR" selected=""`));
   assert.match(markup, /aria-label="武器魔装等级"[^>]*value="17"/);
   assert.match(markup, /aria-label="武器圣装等级"[^>]*value="7"/);
-  assert.match(await renderEquipmentEditors(team), /aria-label="武器第1孔符石等级"[^>]*value="11"/);
+  assert.match(markup, /aria-label="武器第1孔符石等级"[^>]*value="11"/);
   assert.doesNotMatch(markup, /请修正配置后查看准确费用|已恢复可识别的草稿配置/);
   for (let index = 0; index < 6; index++) {
     const before = high.equipment[index];
@@ -640,7 +599,7 @@ test('LR to LR5 updates equipped UR gear, adaptive controls and displayed costs 
   for (const slotName of ['武器', '项链', '手套', '头盔', '衣服', '脚']) assert.match(markup, new RegExp(`aria-label="${slotName}稀有度"[\\s\\S]*?<option value="LR" selected=""`));
   assert.match(markup, /aria-label="武器魔装等级"[^>]*value="17"/);
   assert.match(markup, /aria-label="武器圣装等级"[^>]*value="7"/);
-  assert.match(await renderEquipmentEditors(team), /aria-label="武器第1孔符石等级"[^>]*value="11"/);
+  assert.match(markup, /aria-label="武器第1孔符石等级"[^>]*value="11"/);
   costFoldout(markup, 'UR和LR圣遗物装备明细', 'relic-crafting-costs');
   assert.ok(markup.includes(`<strong>${amount(cost.totalDiamonds)}</strong>`), 'the total uses the promoted character and LR equipment costs');
   assert.doesNotMatch(markup, /请修正配置后查看准确费用|已恢复可识别的草稿配置/);
@@ -725,24 +684,22 @@ test('polish selections retain all six preferences in draft restoration and pres
   const choices = ['main', 'none', 'muscle', 'energy', 'health', 'intelligence'];
   team.members[0].equipment = team.members[0].equipment.map((gear, index) => ({ ...selectEquipmentRarity(gear, 'SSR'), weaponKind: gear.slot === 1 ? 'exclusive' : 'normal', level: gear.slot === 1 ? 240 : 450, weaponOwnerCharacterId: gear.slot === 1 ? 54 : null, polishAttribute: choices[index] }));
   const markup = await renderDraft(cloneTeam(team));
-  const equipmentB = await renderEquipmentEditors(team);
-  for (const [index, slotName] of ['武器', '项链', '手套', '头盔', '衣服', '脚'].entries()) assert.match(equipmentB, new RegExp(`aria-label="${slotName}满打磨属性"[\\s\\S]*?<option value="${choices[index]}" selected=""`));
-  assert.match(equipmentB, /满打磨：所选属性 60%，其余均分；不计费用/);
-  assert.match(equipmentB, /四维均分，不定向打磨；不计费用/);
-  assert.match(equipmentB, /<option value="energy">战技<\/option>/);
-  assert.match(equipmentB, /<option value="health">耐力<\/option>/);
+  for (const [index, slotName] of ['武器', '项链', '手套', '头盔', '衣服', '脚'].entries()) assert.match(markup, new RegExp(`aria-label="${slotName}满打磨属性"[\\s\\S]*?<option value="${choices[index]}" selected=""`));
+  assert.match(markup, /满打磨：所选属性 60%，其余均分；不计费用/);
+  assert.match(markup, /四维均分，不定向打磨；不计费用/);
+  assert.match(markup, /<option value="energy">战技<\/option>/);
+  assert.match(markup, /<option value="health">耐力<\/option>/);
   assert.doesNotMatch(markup, /已恢复可识别的草稿配置|不打磨，不计费用/);
   const old = JSON.parse(JSON.stringify(team));
   delete old.members[0].equipment[0].polishAttribute;
   const restored = await renderDraft(old);
   assert.match(restored, /已恢复可识别的草稿配置，原始草稿会另存备份/);
-  const restoredB = await renderEquipmentEditors(old);
-  assert.match(restoredB, /aria-label="武器满打磨属性"[\s\S]*?<option value="main" selected=""/);
-  assert.match(restoredB, /aria-label="项链满打磨属性"[\s\S]*?<option value="none" selected=""/);
+  assert.match(restored, /aria-label="武器满打磨属性"[\s\S]*?<option value="main" selected=""/);
+  assert.match(restored, /aria-label="项链满打磨属性"[\s\S]*?<option value="none" selected=""/);
   old.members[0].equipment[2].polishAttribute = 'unknown-polish';
   const repaired = await renderDraft(old);
   assert.match(repaired, /已恢复可识别的草稿配置，原始草稿会另存备份/);
-  assert.match(await renderEquipmentEditors(old), /aria-label="手套满打磨属性"[\s\S]*?<option value="main" selected=""/);
+  assert.match(repaired, /aria-label="手套满打磨属性"[\s\S]*?<option value="main" selected=""/);
 });
 
 test('real character stats render published totals and parts, while global stock errors suppress the entire panel', async () => {
@@ -790,15 +747,13 @@ test('automatic same-column rune installation shows its exact shared stock and p
   const category = catalog.runeCategories.find(item => item.slots.includes(1) && !policy.runes.fixedStock.excludedCategoryIds.includes(item.id));
   const filled = fillColumnEmptyRunes(team, 0, 1, 0, { categoryId: category.id, level: 11 }, catalog, policy);
   const markup = await renderDraft(filled);
-  const equipmentB = await renderEquipmentEditors(filled);
-  assert.match(equipmentB, /四个孔均可填入同列对应空孔，首次等级一起同步；离开等级框后独立调整，已有符石保留/);
-  for (const name of ['武器', '项链', '手套']) assert.match(equipmentB, new RegExp(`aria-label="${name}第1孔固定符石等级"[^>]*>[\\s\\S]*?<option value="11" selected=""`));
+  assert.match(markup, /四个孔均可填入同列对应空孔，首次等级一起同步；离开等级框后独立调整，已有符石保留/);
+  for (const name of ['武器', '项链', '手套']) assert.match(markup, new RegExp(`aria-label="${name}第1孔固定符石等级"[^>]*>[\\s\\S]*?<option value="11" selected=""`));
   assert.ok(markup.includes(`${category.name} · Lv.11</span><span>已用 3 / 3</span><strong>余 0</strong>`));
   const tuned = fillColumnEmptyRunes(filled, 0, 2, 0, { level: 10 }, catalog, policy);
   const independent = await renderDraft(tuned);
-  const independentB = await renderEquipmentEditors(tuned);
-  assert.match(independentB, /aria-label="项链第1孔固定符石等级"[^>]*>[\s\S]*?<option value="10" selected=""/);
-  for (const name of ['武器', '手套']) assert.match(independentB, new RegExp(`aria-label="${name}第1孔固定符石等级"[^>]*>[\\s\\S]*?<option value="11" selected=""`));
+  assert.match(independent, /aria-label="项链第1孔固定符石等级"[^>]*>[\s\S]*?<option value="10" selected=""/);
+  for (const name of ['武器', '手套']) assert.match(independent, new RegExp(`aria-label="${name}第1孔固定符石等级"[^>]*>[\\s\\S]*?<option value="11" selected=""`));
   assert.ok(independent.includes(`${category.name} · Lv.11</span><span>已用 2 / 3</span><strong>余 1</strong>`));
   assert.ok(independent.includes(`${category.name} · Lv.10</span><span>已用 1 / 3</span><strong>余 2</strong>`));
   assert.equal(validateTeam(tuned, catalog, policy, { freeLibrary }).valid, true);
@@ -818,7 +773,7 @@ test('the real category and level controls synchronize a new speed batch through
     function control(label) {
       const member = state.team.members[0];
       const tree = EquipmentEditor({
-        part: 'B', gear: member.equipment[0], index: 0, member, memberIndex: 0, catalog, policy, freeLibrary,
+        gear: member.equipment[0], index: 0, member, memberIndex: 0, catalog, policy, freeLibrary,
         errors: [], inventory: [], borrowableWeapons: [], ownWeaponClaimed: false,
         batchSourceRuneIndex: state.batch?.slot === 1 ? state.batch.runeIndex : null,
         onRuneChange(index, rune, kind) { state = updateColumnRune(state.team, 0, 1, index, rune, catalog, policy, { batch: state.batch, kind }); },
@@ -846,7 +801,7 @@ test('the real category and level controls synchronize a new speed batch through
     for (const value of ['1', '10']) control('武器第1孔符石等级').props.onChange({ target: { value } });
     assert.deepEqual(levels(), [10, 10, 10]);
     assert.equal(validateTeam(state.team, catalog, policy, { freeLibrary }).valid, true);
-    const markup = await renderEquipmentEditors(state.team);
+    const markup = await renderDraft(state.team);
     for (const name of ['武器', '项链', '手套']) assert.match(markup, new RegExp(`aria-label="${name}第1孔符石等级"[^>]*value="10"`));
     const levelControl = control('武器第1孔符石等级');
     levelControl.props.onKeyDown({ key: 'Enter', currentTarget: { blur() { levelControl.props.onBlur(); } } });
@@ -875,7 +830,7 @@ test('Lily second-hole magic uses the tier that can fill her column and reports 
     function editor() {
       const member = state.team.members[0];
       return EquipmentEditor({
-        part: 'B', gear: member.equipment[0], index: 0, member, memberIndex: 0, catalog, policy, freeLibrary,
+        gear: member.equipment[0], index: 0, member, memberIndex: 0, catalog, policy, freeLibrary,
         errors: [], inventory: calculateTeam(state.team, catalog, policy, freeLibrary).fixedRuneInventory,
         borrowableWeapons: [], ownWeaponClaimed: false, runeFillReport: state.fillReport,
         batchSourceRuneIndex: state.batch?.slot === 1 ? state.batch.runeIndex : null,
@@ -930,12 +885,12 @@ test('team actual investments and off-team arcana characters remain separate and
   assert.doesNotMatch(markup, /抵扣|NaN|undefined/);
 });
 
-test('member clicks and drag placement select the new member without leaving any current tab', async () => {
+test('member clicks and drag placement select the new member without leaving the stats or arcana tab', async () => {
   const source = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
   const selectBody = source.match(/  function selectMember\(index\) \{([\s\S]*?)\n  \}/)?.[1];
   const placementBody = source.match(/  function applyPlacement\(result\) \{([\s\S]*?)\n  \}/)?.[1];
   assert.ok(selectBody && placementBody, 'exercise the production event handlers without introducing a DOM test runtime');
-  for (const page of ['team', 'equipment-b', 'stats', 'arcana']) {
+  for (const page of ['stats', 'arcana']) {
     const team = createTeam();
     team.members[0] = createMember(54);
     team.members[1] = createMember(124);

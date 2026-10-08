@@ -25,11 +25,6 @@ test('production UI renders the shipped empty and restored five-member draft wit
     assert.match(empty,/秘仪加成随角色实际持有汇总/);
     assert.match(empty,/<h1>身为剑所天成<span class="intro-heading-suffix">· 简易杯初筛<\/span><\/h1>/);
     assert.match(empty,/aria-label="构筑页面"/);
-    assert.match(empty,/id="team-tab" role="tab" aria-selected="true" aria-controls="team-page"[^>]*>装备养成<\/button>/);
-    assert.match(empty,/id="equipment-b-tab" role="tab" aria-selected="false" aria-controls="equipment-b-page"[^>]*>打磨与符石<\/button>/);
-    assert.doesNotMatch(empty,/>装备 [AB]<\/button>/);
-    assert.match(empty,/id="team-page" role="tabpanel" aria-labelledby="team-tab"/);
-    assert.doesNotMatch(empty,/id="equipment-b-page" role="tabpanel"/);
     assert.match(empty,/id="arcana-tab" role="tab"/);
     assert.match(empty,/id="stats-tab" role="tab"/);
     assert.doesNotMatch(empty,/统一链接模拟基准/);
@@ -46,9 +41,6 @@ test('production UI renders the shipped empty and restored five-member draft wit
     assert.ok(restored.includes(`角色本体：${new Intl.NumberFormat('zh-CN').format(policy.unitPrices.characterCopy)} 钻 / 个。`));
     assert.match(restored,/索尔缇娜/);
     assert.match(restored,/100,000/);
-    assert.match(restored,/id="team-tab" role="tab" aria-selected="true"/);
-    assert.match(restored,/aria-label="武器稀有度"/);
-    assert.doesNotMatch(restored,/aria-label="武器满打磨属性"|aria-label="武器第1孔符石类别"/);
     assert.doesNotMatch(restored,/NaN/);
     globalThis.localStorage={getItem:()=>JSON.stringify({schemaVersion:1,catalogVersion:'previous-public-catalog',team})};
     const migrated=renderToStaticMarkup(React.createElement(App,{catalog,policy}));
