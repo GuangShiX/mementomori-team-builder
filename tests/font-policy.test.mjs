@@ -150,3 +150,12 @@ test('Git checking inspects the actual committed tree rather than a corrected wo
   assert.equal(cli.status, 1);
   assert.match(cli.stderr, /Georgia/);
 });
+
+test('free entry HTML is included in source font policy checks', async t => {
+  const rootDir = await fixture(t);
+  await mkdir(path.join(rootDir, 'free'));
+  await writeFile(path.join(rootDir, 'free', 'index.html'), '<style>body { font-family: Georgia }</style>');
+  const findings = await verifyFontPolicy({ rootDir });
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].file, 'free/index.html');
+});

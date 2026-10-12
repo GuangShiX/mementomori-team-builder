@@ -32,7 +32,7 @@ function phoneSession(team, activePage = 'stats') {
       if (key === 'activePage') pageChanges.push(value);
       state[key] = typeof value === 'function' ? value(state[key]) : value;
     }]));
-    const scope = { ...state, ...setters, ...handlers, catalog, freeLibrary, characters: new Map(catalog.characters.map(character => [character.id, character])), placeRosterCharacter, swapTeamPositions, characterLabel: character => character.name };
+    const scope = { ...state, ...setters, ...handlers, catalog, policy, freeLibrary, characters: new Map(catalog.characters.map(character => [character.id, character])), placeRosterCharacter, swapTeamPositions, characterLabel: character => character.name };
     const production = handlerBody(name);
     return new Function(...Object.keys(scope), `return function(${production.parameters}) {${production.body}\n};`)(...Object.values(scope))(...args);
   }

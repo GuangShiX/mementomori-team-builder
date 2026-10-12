@@ -1,0 +1,137 @@
+{
+  "id": "free-team-v1",
+  "version": 1,
+  "ruleSetId": "mementomori-free-investment-v1",
+  "title": "自由配队 · 消耗资源等价钻石",
+  "characterLevel": 450,
+  "baseline": {
+    "levelLink": {
+      "level": 450,
+      "subLevel": 0
+    },
+    "arcanaMode": "ownedRarity",
+    "playerLevel": 560,
+    "playerLevelMode": "selected",
+    "polishMode": "selectedAttributeMaximum",
+    "description": "玩家等级与等级链接只决定静态属性，不计算等级提升资源。按实际消耗的资源折算钻石，不含战斗技能增益。"
+  },
+  "allowanceScope": "wholeTeam",
+  "allowances": {
+    "runeTickets": 0,
+    "reinforcementMedicine": 0,
+    "unidentifiedRune7": 0,
+    "holySteel": 0,
+    "ssrFragments": 0,
+    "urLrFragments": 0,
+    "exclusiveFragments": 0,
+    "lifeTreeDew": 0
+  },
+  "blessings": [],
+  "arcana": {
+    "mode": "ownedRarity",
+    "purchaseRarity": "LR"
+  },
+  "unitPrices": {
+    "characterCopy": 17000,
+    "runeTickets": 10,
+    "reinforcementMedicine": 10,
+    "holySteel": 100,
+    "ssrFragments": 44.2470588235294,
+    "urLrFragments": 211.4210142276423,
+    "exclusiveFragments": 46.0676829268293,
+    "lifeTreeDew": 400,
+    "unidentifiedRune7": 256
+  },
+  "copies": {
+    "N": {
+      "normal": 1,
+      "lightDark": 1
+    },
+    "SR": {
+      "normal": 1,
+      "lightDark": 1
+    },
+    "LR": {
+      "normal": 8,
+      "lightDark": 14
+    },
+    "LR5": {
+      "normal": 20,
+      "lightDark": 26
+    }
+  },
+  "holySteelPerExperience": 1,
+  "holySteelUnit": "level1SacredExperienceEquivalent",
+  "rawHolySteelPerExperience": 1000,
+  "runes": {
+    "ticketCategoryIds": [
+      5,
+      9
+    ],
+    "ticketExponentOffset": 0,
+    "unidentifiedRuneBaseLevel": 7
+  },
+  "equipment": {
+    "urLifeTreeDew": 0,
+    "lrLifeTreeDew": 50,
+    "exclusiveUrLifeTreeDew": 15,
+    "exclusiveLrLifeTreeDew": 65
+  },
+  "conversions": {
+    "relicMaterialPrice": 5285.525355691057,
+    "relicMaterialsPerExchange": 2,
+    "urLrFragmentsPerExchange": 50,
+    "magicCrystalPrice": 153.5589430894309,
+    "magicCrystalsPerExclusiveExchange": 3,
+    "exclusiveFragmentsPerExchange": 10,
+    "forbiddenProductPrice": 663.705882352941,
+    "ssrFragmentsPerProduct": 15
+  },
+  "rounding": {
+    "precision": 2,
+    "mode": "roundFinalTotal"
+  },
+  "limits": {
+    "runeLevel": 15,
+    "sacredTreasureLevel": 40
+  },
+  "notes": [
+    "自由配队没有诅咒、恩泽、免费角色／专武库或资源免费额度；本体与资源按当前规则全额计价。",
+    "SR来源角色每个本体17000钻，四色LR/LR5为8/20个，光暗LR/LR5为14/26个；R/N来源角色本体暂不折钻，明确为不计价。",
+    "玩家等级1至1100、等级链接1至1000，只用于静态属性；不计算等级提升资源与战斗技能临时加成。装备仍按合法档位选择，不能高于链接等级。",
+    "魔装、强化水（绿水）、金币免费；打磨按所选属性分配，不另估随机消耗费用。",
+    "普通SSR、UR/LR圣遗物装备、SSR/UR/LR专武制作与叶子进化、符石、强化秘药、圣装按实际累计消耗计价，不提供免费库存。",
+    "普通属性符石按7级未鉴定符石256钻等价，等级每升一级翻倍；穿透和速度单独按符石兑换券消耗计价。",
+    "圣装以每份一级圣装经验等价100钻估值，魔装只记录经验、不收费。",
+    "秘仪购买只补齐关联角色LR，配队及多个秘仪按角色ID最高持有档位合并，避免重复收取本体费用。",
+    "专武按真实等级制作全额计价，不启用自动同步造价优惠；可购买同职业其它角色专武借用，一把仅供一人，不自动购买所属角色本体，不获得佩戴者自身专武技能。",
+    "50片UR/LR装备碎片等价2个圣遗物材料；10片专武碎片等价3个紫水晶。等价数量仅用于说明，费用只计一次。",
+    "参考单价保留换算精度，最终合计保留两位小数；报价为资源等价钻石，并非玩家真实充值金额。",
+    "导入只读取构筑数据，忽略文件自带策略、免费权益和报价，按当前自由版规则重算。"
+  ],
+  "reference": "https://hitazuki.github.io/mementomori-calculator/#packCompare",
+  "weaponSync": {
+    "mode": "none"
+  },
+  "mode": "free",
+  "levelRanges": {
+    "characterLevel": {
+      "min": 1,
+      "max": 1000
+    },
+    "playerLevel": {
+      "min": 1,
+      "max": 1100
+    }
+  },
+  "unpricedResources": [
+    "R/N角色本体",
+    "等级提升资源"
+  ],
+  "freeResources": [
+    "魔装",
+    "强化水（绿水）",
+    "金币",
+    "打磨"
+  ]
+}

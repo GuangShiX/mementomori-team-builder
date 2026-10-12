@@ -1,5 +1,7 @@
 # MementoMori 配队构筑器
 
+自由配队新增入口：[/free/](https://guangshix.github.io/mementomori-team-builder/free/)。可设玩家／链接等级，按消耗资源等价钻石逐项计价；规则与数据边界见 [自由版说明](docs/free-builder.md)。原简易杯入口继续保留。
+
 供玩家配置五人队伍、查看资源等价钻石并导出 JSON 构筑方案的静态网站。浏览器自动保存草稿；文件通过玩家自己的联系方式发给构建方。无登录、自动上传、游戏请求或后台服务。
 
 ## 使用与发布

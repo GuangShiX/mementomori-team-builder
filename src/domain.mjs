@@ -22,11 +22,22 @@ const defaultSeries = rarity => ({ SSR: 12, UR: 13, LR: 14 }[rarity] ?? null);
 const getSeries = catalog => catalog.equipmentSeries ?? catalog.series;
 const getFixedRuneTiers = stock => stock?.tiers ?? (stock ? [{ level: stock.level, perCategory: stock.perCategory }] : []);
 const legacySyncSettings = () => ({ minimumLevel: 300, maximumSourceCount: 3, slots: [{ slot: 1, requiredAnchors: 2 }, { slot: 2, requiredAnchors: 3 }] });
-const automaticWeaponPricing = policy => policy.weaponSync?.mode === 'automatic';
+const freeMode = policy => policy?.mode === 'free';
+const noWeaponSync = policy => policy.weaponSync?.mode === 'none';
+const automaticWeaponPricing = policy => !freeMode(policy) && policy.weaponSync?.mode === 'automatic';
+const characterCopyPrice = (character, policy) => freeMode(policy) && [1, 2].includes(character?.baseRarity) ? 0 : policy.unitPrices?.characterCopy;
 const syncSettings = policy => automaticWeaponPricing(policy) ? legacySyncSettings() : policy.weaponSync ?? legacySyncSettings();
 const weaponOwnerId = (member, gear = member?.equipment?.[0]) => gear?.weaponOwnerCharacterId ?? member?.characterId;
 const highestRarity = (left, right) => RARITIES[Math.max(RARITIES.indexOf(left), RARITIES.indexOf(right))] ?? null;
 const blessingEffect = blessing => blessing.effect ?? 'resourceAllowance';
+
+export function getEffectivePolicy(team, policy) {
+  if (!freeMode(policy)) return policy;
+  const level = team?.level ?? policy.characterLevel;
+  const playerLevel = team?.playerLevel ?? policy.baseline?.playerLevel;
+  return { ...policy, characterLevel: level, baseline: { ...policy.baseline,
+    playerLevel, levelLink: { ...policy.baseline?.levelLink, level, subLevel: 0 } } };
+}
 
 function validateResourceAllowances(policy, errors) {
   for (const key of RESOURCE_KEYS) {
@@ -88,17 +99,19 @@ function validateResourceAllowances(policy, errors) {
 }
 
 function resourceAllowanceDetails(policy, resource) {
+  if (freeMode(policy)) return { baseAllowance: 0, blessingAllowance: 0, freeAllowance: 0 };
   const baseAllowance = policy.allowances?.[resource] ?? 0;
   const blessingAllowance = (policy.blessings ?? []).filter(blessing => blessingEffect(blessing) === 'resourceAllowance' && blessing.resource === resource).reduce((sum, blessing) => sum + blessing.amount, 0);
   return { baseAllowance, blessingAllowance, freeAllowance: baseAllowance + blessingAllowance };
 }
 
 function resourceDiamondAllowance(policy, resource) {
+  if (freeMode(policy)) return 0;
   return (policy.blessings ?? []).filter(blessing => blessingEffect(blessing) === 'resourceDiamondAllowance' && blessing.resource === resource).reduce((sum, blessing) => sum + blessing.amount, 0);
 }
 
 function teamDiamondAllowanceDetails(team, catalog, policy) {
-  const allowance = (policy.blessings ?? []).find(blessing => blessingEffect(blessing) === 'freeExclusiveFragmentBaseline')?.teamDiamondAllowance;
+  const allowance = freeMode(policy) ? null : (policy.blessings ?? []).find(blessing => blessingEffect(blessing) === 'freeExclusiveFragmentBaseline')?.teamDiamondAllowance;
   const configuredTeamDiamondAllowance = allowance?.amount ?? 0;
   const teamDiamondAllowanceTriggerCharacterIds = team.members.filter(Boolean).flatMap(member => {
     const character = catalog.characters.find(item => item.id === member.characterId);
@@ -224,7 +237,7 @@ export function getArcanaRequiredRarity(team, characterId, catalog) {
   return arcanaGroups(catalog).some(group => publishedArcana(group) && purchased.includes(group?.id) && group?.characterIds?.includes(characterId)) ? 'LR' : null;
 }
 
-function characterLedger(team, catalog, freeLibrary) {
+function characterLedger(team, catalog, freeLibrary, policy) {
   const ledger = new Map();
   const add = (id, rarity, source, metadata = {}) => {
     const character = arcanaCharacter(catalog, id);
@@ -243,7 +256,7 @@ function characterLedger(team, catalog, freeLibrary) {
     if (member) {
       add(member.characterId, member.rarity, 'team', { teamRarity: member.rarity, position: index + 1 });
       const character = catalog.characters.find(item => item.id === member.characterId);
-      if ([1, 2].includes(character?.baseRarity)) add(member.characterId, member.rarity, 'freeLibrary');
+      if (!freeMode(policy) && [1, 2].includes(character?.baseRarity)) add(member.characterId, member.rarity, 'freeLibrary');
     }
   });
   (Array.isArray(team?.weaponSources) ? team.weaponSources : []).forEach((source, index) => add(source.characterId, source.characterRarity, 'reserve', { reserveRarity: source.characterRarity, sourceIndex: index }));
@@ -255,18 +268,21 @@ function characterLedger(team, catalog, freeLibrary) {
       if (entry) entry.purchasedArcanaIds.push(group.id);
     }
   }
-  for (const entry of Array.isArray(freeLibrary?.characters) ? freeLibrary.characters : []) add(entry.characterId, entry.rarity, 'freeLibrary');
-  for (const character of arcanaSupport(catalog)) add(character.id, character.freeRarity, 'freeLibrary');
+  if (!freeMode(policy)) {
+    for (const entry of Array.isArray(freeLibrary?.characters) ? freeLibrary.characters : []) add(entry.characterId, entry.rarity, 'freeLibrary');
+    for (const character of arcanaSupport(catalog)) add(character.id, character.freeRarity, 'freeLibrary');
+  }
   return [...ledger.values()];
 }
 
 export function getArcanaState(team, catalog, policy, freeLibrary) {
+  policy = getEffectivePolicy(team, policy);
   const errors = [];
   validateArcanaCatalog(catalog, errors);
   validateArcanaSelection(team, catalog, errors);
   if (policy.arcana?.mode !== undefined && policy.arcana.mode !== 'ownedRarity') error(errors, 'policy.arcana.mode', 'INVALID_ARCANA_MODE', '秘仪档位必须按角色实际持有稀有度判断。');
   if (errors.length) return { groups: [], ledger: [], lrBonuses: [], bonusRows: [], errors };
-  const ledger = characterLedger(team, catalog, freeLibrary);
+  const ledger = characterLedger(team, catalog, freeLibrary, policy);
   const groups = errors.length ? [] : arcanaGroups(catalog).map(group => {
     const published = publishedArcana(group);
     const missingCharacters = published ? group.characterIds.flatMap(id => {
@@ -276,7 +292,7 @@ export function getArcanaState(team, catalog, policy, freeLibrary) {
       const tier = ['light', 'dark'].includes(character.element) ? 'lightDark' : 'normal';
       const copies = policy.copies?.LR?.[tier];
       const ownedCopies = owned?.rarity ? policy.copies?.[owned.rarity]?.[tier] : 0;
-      const unitPrice = policy.unitPrices?.characterCopy;
+      const unitPrice = characterCopyPrice(character, policy);
       if (!Number.isSafeInteger(copies) || copies < 1 || !Number.isSafeInteger(ownedCopies) || ownedCopies < 0 || !finiteNonnegative(unitPrice)) error(errors, 'policy.copies', 'INVALID_CHARACTER_PRICE', 'LR 秘仪的本体数量或单价规则无效。');
       return [{ characterId: id, characterName: character.name, fromRarity: owned?.rarity ?? null, targetRarity: 'LR', diamonds: round(Math.max(0, copies - ownedCopies) * unitPrice, policy.rounding?.precision ?? 2) }];
     }) : [];
@@ -326,6 +342,16 @@ export function getBorrowableWeapons(team, memberIndex, catalog, freeLibrary) {
   const member = team?.members?.[memberIndex];
   const actor = catalog.characters.find(item => item.id === member?.characterId);
   if (!actor || ![1, 2, 4].includes(actor.job)) return [];
+  if (catalog.mode === 'free') {
+    const table = catalog.equipmentCosts?.fragments?.exclusiveUR;
+    const levels = catalog.equipmentCosts?.allowedLevels?.exclusiveUR ?? Object.keys(table ?? {}).map(Number);
+    const available = levels.filter(level => integerIn(level, 1, team.level) && finiteNonnegative(table?.[level]));
+    if (!available.length) return [];
+    const level = Math.min(...available);
+    return catalog.characters.filter(owner => owner.baseRarity === 8 && owner.hasExclusiveWeapon !== false
+      && owner.job === actor.job && !isWeaponOwnerClaimed(team, memberIndex, owner.id))
+      .map(owner => ({ characterId: owner.id, characterName: owner.name, job: owner.job, rarity: 'UR', level, paid: true }));
+  }
   return (Array.isArray(freeLibrary?.exclusiveWeapons) ? freeLibrary.exclusiveWeapons : []).flatMap(weapon => {
     const owner = catalog.characters.find(item => item.id === weapon.characterId);
     return weapon.rarity === 'UR' && owner?.job === actor.job && !isWeaponOwnerClaimed(team, memberIndex, owner.id)
@@ -352,13 +378,14 @@ export function deriveWeaponPricing(team, catalog, policy) {
       craftingLevel: discounted ? rules.billedLevel : gear.level, ordinal, discountOrdinal: ordinal,
       discounted, automaticSyncDiscount: discounted }];
   });
-  return { mode: automatic ? 'automatic' : 'manual', qualifyingCount, discountCount: weapons.filter(weapon => weapon.discounted).length, weapons, errors: [] };
+  return { mode: noWeaponSync(policy) ? 'none' : automatic ? 'automatic' : 'manual', qualifyingCount, discountCount: weapons.filter(weapon => weapon.discounted).length, weapons, errors: [] };
 }
 
 export function deriveWeaponSync(team, catalog, policy, freeLibrary) {
   const settings = syncSettings(policy);
   const errors = [];
   const members = Array.isArray(team?.members) ? team.members : [];
+  if (noWeaponSync(policy)) return { anchors: [], slots: [], effectiveLevels: members.map(member => member?.equipment?.[0]?.level ?? null), errors };
   const targets = new Set(members.filter(member => member?.equipment?.[0]?.syncSlot > 0).map(member => weaponOwnerId(member)));
   const candidates = new Map();
   const add = (weapon, source) => {
@@ -441,10 +468,10 @@ export class DomainValidationError extends Error {
   }
 }
 
-export function createEquipment(slot) {
+export function createEquipment(slot, options = {}) {
   if (!EQUIPMENT_SLOTS.includes(slot)) throw new RangeError('装备槽必须为 1 至 6。');
   return {
-    slot, rarity: 'NONE', seriesId: null, weaponKind: 'normal', level: 450, syncSlot: 0,
+    slot, rarity: 'NONE', seriesId: null, weaponKind: 'normal', level: isObject(options) ? options.level ?? 450 : 450, syncSlot: 0,
     polishAttribute: 'main',
     reinforcementLevel: 0, legendSacredTreasureLevel: 0, matchlessSacredTreasureLevel: 0,
     runes: Array.from({ length: 4 }, () => ({ categoryId: 5, level: 0 })),
@@ -463,20 +490,23 @@ export function selectEquipmentRarity(gear, rarity) {
   };
 }
 
-export function createMember(character) {
+export function createMember(character, options = {}) {
   const characterId = isObject(character) ? character.id : character;
   if (!Number.isSafeInteger(characterId) || characterId <= 0) throw new RangeError('角色编号无效。');
   const rarity = isObject(character) ? character.defaultRarity ?? (character.baseRarity === 2 ? 'LR5' : character.baseRarity === 1 ? 'N' : 'SR') : 'SR';
-  return { characterId, rarity, equipment: EQUIPMENT_SLOTS.map(createEquipment) };
+  return { characterId, rarity, equipment: EQUIPMENT_SLOTS.map(slot => createEquipment(slot, options)) };
 }
 
-export function createTeam() {
-  return { name: '我的配队', author: '', notes: '', level: 450, members: Array(5).fill(null), weaponSources: [], purchasedArcanaIds: [] };
+export function createTeam(options = {}) {
+  return { name: '我的配队', author: '', notes: '', level: options.level ?? 450,
+    ...(options.playerLevel !== undefined ? { playerLevel: options.playerLevel } : {}),
+    members: Array(5).fill(null), weaponSources: [], purchasedArcanaIds: [] };
 }
 
 export function cloneTeam(team) {
   return {
     name: team.name, author: team.author ?? '', notes: team.notes ?? '', level: team.level,
+    ...(team.playerLevel !== undefined ? { playerLevel: team.playerLevel } : {}),
     purchasedArcanaIds: [...(team.purchasedArcanaIds ?? [])],
     weaponSources: (team.weaponSources ?? []).map(weapon => ({ characterId: weapon.characterId, characterRarity: weapon.characterRarity, rarity: weapon.rarity, level: weapon.level })),
     members: team.members.map(member => member === null ? null : {
@@ -498,6 +528,7 @@ export function cloneTeam(team) {
 
 function validateStructure(team, catalog, policy, { requireFullTeam = false, freeLibrary } = {}) {
   const errors = [];
+  if (freeMode(policy)) freeLibrary = null;
   if (!isObject(catalog) || !Array.isArray(catalog.characters) || !Array.isArray(catalog.runeCategories)) {
     error(errors, 'catalog', 'INVALID_CATALOG', '角色或符石目录无效。');
     return errors;
@@ -520,9 +551,9 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false, fre
     }
   }
   const syncPolicy = syncSettings(policy);
-  if (!isObject(syncPolicy) || syncPolicy.minimumLevel !== 300 || !integerIn(syncPolicy.maximumSourceCount, 0, 20)
+  if (!noWeaponSync(policy) && (!isObject(syncPolicy) || syncPolicy.minimumLevel !== 300 || !integerIn(syncPolicy.maximumSourceCount, 0, 20)
     || !Array.isArray(syncPolicy.slots) || syncPolicy.slots.length !== 2
-    || ![1, 2].every(slot => syncPolicy.slots.some(item => item?.slot === slot && item.requiredAnchors === slot + 1))) {
+    || ![1, 2].every(slot => syncPolicy.slots.some(item => item?.slot === slot && item.requiredAnchors === slot + 1)))) {
     error(errors, 'policy.weaponSync', 'INVALID_WEAPON_SYNC_POLICY', '武器同步规则必须保留 300 级门槛、第 1 槽两种基石和第 2 槽三种基石。');
   }
   if (policy.conversions?.magicCrystalPrice !== undefined) {
@@ -563,7 +594,22 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false, fre
       error(errors, field, 'INVALID_TEXT', `${field === 'name' ? '配队名称' : field === 'author' ? '作者' : '备注'}必须为不超过 ${maximum} 字的文字。`);
     }
   }
-  if (team.level !== policy.characterLevel) error(errors, 'level', 'FIXED_LEVEL', `当前规则固定角色等级为 ${policy.characterLevel}。`);
+  if (freeMode(policy)) {
+    const ranges = catalog.freeLevels?.limits ?? policy.levelRanges;
+    const characterRange = ranges?.characterLevel;
+    const playerRange = ranges?.playerLevel;
+    if (!characterRange || !playerRange || !integerIn(team.level, characterRange.min, characterRange.max)
+      || !integerIn(team.playerLevel, playerRange.min, playerRange.max)) {
+      error(errors, 'level', 'INVALID_FREE_LEVEL', '玩家等级或等级链接不在当前公开成长数据支持的整数范围内。');
+    }
+    if (team.level !== policy.characterLevel || team.playerLevel !== policy.baseline?.playerLevel) {
+      error(errors, 'level', 'LEVEL_POLICY_MISMATCH', '自由配队等级必须与当前计算策略一致。');
+    }
+    if (!noWeaponSync(policy) || (policy.blessings?.length ?? 0) > 0 || policy.runes?.fixedStock
+      || Object.values(policy.allowances ?? {}).some(amount => amount !== 0)) {
+      error(errors, 'policy', 'INVALID_FREE_POLICY', '自由配队不能包含恩泽、免费资源库存或武器同步优惠。');
+    }
+  } else if (team.level !== policy.characterLevel) error(errors, 'level', 'FIXED_LEVEL', `当前规则固定角色等级为 ${policy.characterLevel}。`);
   if (!Array.isArray(team.members) || team.members.length !== 5) {
     error(errors, 'members', 'INVALID_TEAM_SIZE', '配队必须保留五个固定位置。');
     return errors;
@@ -606,7 +652,7 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false, fre
       if (!EQUIPMENT_RARITIES.includes(gear.rarity)) error(errors, `${path}.rarity`, 'INVALID_GEAR_RARITY', '装备稀有度仅支持无装备、SSR、UR 和 LR。');
       if (!POLISH_ATTRIBUTES.includes(gear.polishAttribute === undefined ? 'main' : gear.polishAttribute)) error(errors, `${path}.polishAttribute`, 'INVALID_POLISH_ATTRIBUTE', '打磨属性仅支持主属性、不打磨、力量、敏捷、体力或魔力。');
       if (gear.rarity === 'LR' && member.rarity !== 'LR5') error(errors, `${path}.rarity`, 'LR_REQUIRES_LR5', 'LR 装备仅能由 LR5 角色使用。');
-      if (!integerIn(gear.level, 1, policy.characterLevel)) error(errors, `${path}.level`, 'INVALID_GEAR_LEVEL', `装备等级必须为 1 至 ${policy.characterLevel} 的整数。`);
+      if (!integerIn(gear.level, 1, freeMode(policy) && gear.rarity === 'NONE' ? (catalog.freeLevels?.limits ?? policy.levelRanges)?.characterLevel?.max ?? policy.characterLevel : policy.characterLevel)) error(errors, `${path}.level`, 'INVALID_GEAR_LEVEL', `装备等级必须为 1 至 ${policy.characterLevel} 的整数。`);
       const weaponKind = gear.weaponKind ?? 'normal';
       const levelTableKey = weaponKind === 'exclusive' ? `exclusive${gear.rarity}` : gear.rarity;
       const costLevels = catalog.equipmentCosts?.fragments?.[levelTableKey];
@@ -619,22 +665,23 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false, fre
         if (!integerIn(gear[field], 0, maximum)) error(errors, `${path}.${field}`, 'INVALID_UPGRADE_LEVEL', `强化或圣装等级必须为 0 至 ${maximum} 的整数。`);
       }
       const syncSlot = gear.syncSlot ?? 0;
+      if (noWeaponSync(policy) && syncSlot !== 0) error(errors, `${path}.syncSlot`, 'DISABLED_WEAPON_SYNC', '自由配队不支持武器同步槽。');
       if (automaticWeaponPricing(policy) && syncSlot !== 0) error(errors, `${path}.syncSlot`, 'LEGACY_WEAPON_CONFIG_REQUIRES_MIGRATION', '旧同步配置需要先迁移到自动造价规则，不能保留隐藏同步槽。');
       if (!integerIn(syncSlot, 0, 2)) error(errors, `${path}.syncSlot`, 'INVALID_WEAPON_SYNC_SLOT', '武器同步仅支持关闭、第 1 槽或第 2 槽。');
       if (syncSlot === 0 && Number.isSafeInteger(gear.reinforcementLevel) && gear.reinforcementLevel > gear.level) error(errors, `${path}.reinforcementLevel`, 'REINFORCEMENT_EXCEEDS_LEVEL', '强化等级不能超过装备等级。');
       if (!['normal', 'exclusive'].includes(weaponKind)) error(errors, `${path}.weaponKind`, 'INVALID_WEAPON_KIND', '武器类型无效。');
-      if (gear.slot === 1 && weaponKind === 'normal' && ['UR', 'LR'].includes(gear.rarity)) error(errors, `${path}.weaponKind`, 'UNAVAILABLE_NORMAL_WEAPON', '通用 UR／LR 武器不可获取，请使用自己的专武或借用免费的同职业 UR 专武。');
+      if (gear.slot === 1 && weaponKind === 'normal' && ['UR', 'LR'].includes(gear.rarity)) error(errors, `${path}.weaponKind`, 'UNAVAILABLE_NORMAL_WEAPON', freeMode(policy) ? '通用UR／LR武器不可获取，请使用同职业专武。' : '通用 UR／LR 武器不可获取，请使用自己的专武或借用免费的同职业 UR 专武。');
       if (weaponKind === 'exclusive' && (gear.slot !== 1 || !['SSR', 'UR', 'LR'].includes(gear.rarity))) error(errors, `${path}.weaponKind`, 'INVALID_EXCLUSIVE_WEAPON', '专属武器仅支持第 1 槽的 SSR、UR 或 LR 装备。');
       if (gear.slot === 1 && weaponKind === 'exclusive' && gear.rarity !== 'NONE') {
         const ownerId = weaponOwnerId(member, gear);
         const owner = catalog.characters.find(item => item.id === ownerId);
         if (!owner) error(errors, `${path}.weaponOwnerCharacterId`, 'UNKNOWN_WEAPON_OWNER', '专武所属角色不在公开目录中。');
-        if (owner?.hasExclusiveWeapon === false || [1, 2].includes(owner?.baseRarity)) error(errors, `${path}.weaponOwnerCharacterId`, 'NO_EXCLUSIVE_WEAPON', 'R／N角色没有自己的专武，请选择同职业的免费UR专武。');
-        if (seenWeaponOwners.has(ownerId)) error(errors, `${path}.weaponOwnerCharacterId`, 'DUPLICATE_WEAPON_OWNER', '每个免费专武只提供一把，同一所属角色的专武不能同时装备给两个人。');
+        if (owner?.hasExclusiveWeapon === false || [1, 2].includes(owner?.baseRarity)) error(errors, `${path}.weaponOwnerCharacterId`, 'NO_EXCLUSIVE_WEAPON', freeMode(policy) ? 'R／N角色没有自己的专武，请选择同职业的UR专武。' : 'R／N角色没有自己的专武，请选择同职业的免费UR专武。');
+        if (seenWeaponOwners.has(ownerId)) error(errors, `${path}.weaponOwnerCharacterId`, 'DUPLICATE_WEAPON_OWNER', freeMode(policy) ? '同一所属角色的专武不能同时装备给两个人。' : '每个免费专武只提供一把，同一所属角色的专武不能同时装备给两个人。');
         seenWeaponOwners.add(ownerId);
         if (ownerId !== member.characterId) {
           const gift = freeLibrary?.exclusiveWeapons.find(entry => entry.characterId === ownerId);
-          if (gift?.rarity !== 'UR' || !['UR', 'LR'].includes(gear.rarity)) error(errors, `${path}.weaponOwnerCharacterId`, 'UNAVAILABLE_BORROWED_WEAPON', '只能借用免费库中的 UR 专武，并按需进化到 LR；SSR 专武不能借用。');
+          if (freeMode(policy) ? owner?.baseRarity !== 8 || owner?.hasExclusiveWeapon === false || !['UR', 'LR'].includes(gear.rarity) : gift?.rarity !== 'UR' || !['UR', 'LR'].includes(gear.rarity)) error(errors, `${path}.weaponOwnerCharacterId`, 'UNAVAILABLE_BORROWED_WEAPON', freeMode(policy) ? '只能使用同职业SR来源角色的UR专武，并按需进化到LR；SSR专武不能借用。' : '只能借用免费库中的 UR 专武，并按需进化到 LR；SSR 专武不能借用。');
           if (!owner || !character || ![1, 2, 4].includes(owner.job) || owner.job !== character.job) error(errors, `${path}.weaponOwnerCharacterId`, 'BORROWED_WEAPON_JOB_MISMATCH', '借用专武必须与装备角色属于同一职业。');
         }
       }
@@ -686,9 +733,10 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false, fre
     }
   }
   const sources = team.weaponSources ?? [];
+  if (noWeaponSync(policy) && (!Array.isArray(sources) || sources.length > 0)) error(errors, 'weaponSources', 'DISABLED_WEAPON_SOURCES', '自由配队不计入隐藏队外武器库存。');
   if (automaticWeaponPricing(policy) && Array.isArray(sources) && sources.length > 0) error(errors, 'weaponSources', 'LEGACY_WEAPON_CONFIG_REQUIRES_MIGRATION', '旧队外基石需要先迁移并移除，自动造价不计入隐藏队外库存。');
-  if (!Array.isArray(sources) || sources.length > syncPolicy.maximumSourceCount) {
-    error(errors, 'weaponSources', 'INVALID_WEAPON_SOURCE_LIST', `备用基石最多配置 ${syncPolicy.maximumSourceCount} 件专武。`);
+  if (!Array.isArray(sources) || sources.length > (noWeaponSync(policy) ? 0 : syncPolicy.maximumSourceCount)) {
+    error(errors, 'weaponSources', 'INVALID_WEAPON_SOURCE_LIST', `备用基石最多配置 ${noWeaponSync(policy) ? 0 : syncPolicy.maximumSourceCount} 件专武。`);
   } else {
     const seenSources = new Set();
     for (const [index, source] of sources.entries()) {
@@ -707,7 +755,7 @@ function validateStructure(team, catalog, policy, { requireFullTeam = false, fre
         || !finiteNonnegative(catalog.equipmentCosts?.fragments?.[`exclusive${source.rarity}`]?.[source.level])) error(errors, `${path}.level`, 'INVALID_WEAPON_SOURCE_LEVEL', '备用基石必须使用当前可制作的 300 至 450 级专武档位。');
     }
   }
-  if (errors.length === 0 && !automaticWeaponPricing(policy)) {
+  if (errors.length === 0 && !automaticWeaponPricing(policy) && !noWeaponSync(policy)) {
     const sync = deriveWeaponSync(team, catalog, policy, freeLibrary);
     errors.push(...sync.errors);
     team.members.forEach((member, index) => {
@@ -729,12 +777,13 @@ function readCost(table, level, errors, path, label) {
 }
 
 function collectCosts(team, catalog, policy, errors, freeLibrary) {
+  if (freeMode(policy)) freeLibrary = null;
   const precision = policy.rounding?.precision ?? 2;
   const consumed = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
   const libraryCredits = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
   const craftingBlessingCredits = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
   const baselineBlessingCredits = Object.fromEntries(RESOURCE_KEYS.map(key => [key, 0]));
-  const exclusiveBaselineBlessing = (policy.blessings ?? []).find(blessing => blessingEffect(blessing) === 'freeExclusiveFragmentBaseline');
+  const exclusiveBaselineBlessing = freeMode(policy) ? null : (policy.blessings ?? []).find(blessing => blessingEffect(blessing) === 'freeExclusiveFragmentBaseline');
   const exclusiveBaselineFragments = exclusiveBaselineBlessing ? catalog.equipmentCosts.fragments[`exclusive${exclusiveBaselineBlessing.rarity}`][exclusiveBaselineBlessing.level] : 0;
   const arcanaState = getArcanaState(team, catalog, policy, freeLibrary);
   errors.push(...arcanaState.errors);
@@ -742,7 +791,7 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
     const lightDark = ['light', 'dark'].includes(entry.element);
     const tier = lightDark ? 'lightDark' : 'normal';
     const copies = policy.copies?.[entry.requiredRarity]?.[tier];
-    const copyPrice = policy.unitPrices?.characterCopy;
+    const copyPrice = characterCopyPrice(arcanaCharacter(catalog, entry.characterId), policy);
     const entitlementCopies = entry.freeRarity ? policy.copies?.[entry.freeRarity]?.[tier] : 0;
     if (!Number.isSafeInteger(copies) || copies < 1 || !finiteNonnegative(copyPrice)) error(errors, `policy.copies.${entry.requiredRarity}`, 'INVALID_CHARACTER_PRICE', '角色本体数量或单价规则无效。');
     if (!Number.isSafeInteger(entitlementCopies) || entitlementCopies < 0) error(errors, 'freeLibrary.characters', 'INVALID_FREE_CHARACTER_PRICE', '免费库角色对应的累计本体规则无效。');
@@ -1028,12 +1077,14 @@ function collectCosts(team, catalog, policy, errors, freeLibrary) {
 }
 
 export function validateTeam(team, catalog, policy, options = {}) {
+  policy = getEffectivePolicy(team, policy);
   const errors = validateStructure(team, catalog, policy, options);
   if (errors.length === 0) collectCosts(team, catalog, policy, errors, options.freeLibrary);
   return { valid: errors.length === 0, errors };
 }
 
 export function calculateTeam(team, catalog, policy, freeLibrary) {
+  policy = getEffectivePolicy(team, policy);
   const errors = validateStructure(team, catalog, policy, { freeLibrary });
   if (errors.length > 0) throw new DomainValidationError(errors);
   const result = collectCosts(team, catalog, policy, errors, freeLibrary);
@@ -1076,18 +1127,33 @@ export function calculateTeam(team, catalog, policy, freeLibrary) {
 }
 
 export function createExport(team, catalog, policy, freeLibrary) {
+  policy = getEffectivePolicy(team, policy);
   const validation = validateTeam(team, catalog, policy, { requireFullTeam: true, freeLibrary });
   if (!validation.valid) throw new DomainValidationError(validation.errors);
   return {
     format: FORMAT, schemaVersion: SCHEMA_VERSION,
     catalogVersion: catalog.version ?? null, exportedAt: new Date().toISOString(),
     policySnapshot: cloneJson(policy), team: cloneTeam(team),
-    ...(freeLibrary ? { freeLibrarySnapshot: cloneJson(freeLibrary) } : {}),
+    ...(!freeMode(policy) && freeLibrary ? { freeLibrarySnapshot: cloneJson(freeLibrary) } : {}),
     costBreakdown: calculateTeam(team, catalog, policy, freeLibrary),
   };
 }
 
 export function migrateLegacyWeaponConfiguration(team, catalog, policy, freeLibrary) {
+  if (freeMode(policy)) {
+    if (!isObject(team)) return { team, warnings: [], changed: false };
+    const cleaned = { ...team,
+      playerLevel: team.playerLevel ?? policy.baseline?.playerLevel,
+      weaponSources: [],
+      members: Array.isArray(team.members) ? team.members.map(member => !isObject(member) ? member : {
+        ...member, equipment: Array.isArray(member.equipment) ? member.equipment.map(gear => isObject(gear) ? { ...gear, syncSlot: 0 } : gear) : member.equipment,
+      }) : team.members,
+    };
+    const changed = team.playerLevel === undefined || (Array.isArray(team.weaponSources) && team.weaponSources.length > 0)
+      || team.weaponSources !== undefined && !Array.isArray(team.weaponSources)
+      || (Array.isArray(team.members) && team.members.some(member => Array.isArray(member?.equipment) && member.equipment.some(gear => gear?.syncSlot > 0)));
+    return { team: cleaned, changed, warnings: changed ? ['已按自由配队规则移除武器同步及队外基石，保留实际装备等级并重新计算全额造价。'] : [] };
+  }
   if (!automaticWeaponPricing(policy)) return { team, warnings: [], changed: false };
   const sources = team?.weaponSources;
   const hasSources = sources != null && (!Array.isArray(sources) || sources.length > 0);
@@ -1124,6 +1190,7 @@ export function parseImport(value, catalog, policy, freeLibrary) {
     throw new DomainValidationError([{ path: 'file', code: 'UNSUPPORTED_FORMAT', message: '文件格式或版本不受支持。' }]);
   }
   const migrated = migrateLegacyWeaponConfiguration(imported.team, catalog, policy, freeLibrary);
+  policy = getEffectivePolicy(migrated.team, policy);
   const validation = validateTeam(migrated.team, catalog, policy, { requireFullTeam: true, freeLibrary });
   if (!validation.valid) throw new DomainValidationError(validation.errors);
   const team = cloneTeam(migrated.team);

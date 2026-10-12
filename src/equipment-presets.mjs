@@ -49,7 +49,7 @@ export function applyEquipmentPreset(member, presetId, catalog, policy) {
   const character = catalog.characters.find(item => item.id === member.characterId);
   if ((character.hasExclusiveWeapon === false || [1, 2].includes(character.baseRarity))
     && (member.equipment[0].rarity === 'NONE' || member.equipment[0].weaponKind !== 'exclusive')) {
-    throw issue('member.equipment[0]', 'BORROWED_WEAPON_REQUIRED', '此角色没有专武，请先选择一把同职业可借用的免费UR专武，再使用快捷配装。');
+    throw issue('member.equipment[0]', 'BORROWED_WEAPON_REQUIRED', policy.mode === 'free' ? '此角色没有专武，请先选择一把同职业的UR专武，再使用快捷配装。' : '此角色没有专武，请先选择一把同职业可借用的免费UR专武，再使用快捷配装。');
   }
   const equipment = member.equipment.map((gear, index) => {
     const slot = index + 1;

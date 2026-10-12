@@ -166,6 +166,7 @@ export async function verifyFontPolicy({ rootDir = path.resolve(fileURLToPath(ne
   const candidates = [
     ...await filesIn(path.join(rootDir, 'src')),
     ...await filesIn(path.join(rootDir, 'public')),
+    ...await filesIn(path.join(rootDir, 'free')),
     ...(['index.html', 'vite.config.mjs', 'vite.config.js', 'vite.config.ts'].map(file => path.join(rootDir, file))),
   ];
   const findings = [];
@@ -198,7 +199,7 @@ export async function verifyGitFontPolicy(ref, { cwd = process.cwd() } = {}) {
   if (commit.trim().toLowerCase() !== ref.toLowerCase()) throw new Error('--git-ref must identify a commit directly');
   const { stdout: listing } = await runFile('git', ['ls-tree', '-r', '--name-only', '-z', ref], { cwd, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   const sourceFiles = listing.split('\0').filter(Boolean).filter(file => {
-    if (!/^(?:src\/|public\/|dist\/|index\.html$|vite\.config\.(?:js|mjs|ts)$)/.test(file)) return false;
+    if (!/^(?:src\/|public\/|free\/|dist\/|index\.html$|vite\.config\.(?:js|mjs|ts)$)/.test(file)) return false;
     const extension = path.extname(file).toLowerCase();
     return textExtensions.has(extension) || fontExtensions.has(extension);
   });

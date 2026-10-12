@@ -1,4 +1,4 @@
-import { createMember, isWeaponOwnerClaimed, selectEquipmentRarity, getArcanaRequiredRarity, getBorrowableWeapons } from './domain.mjs';
+import { createMember, createEquipment, isWeaponOwnerClaimed, selectEquipmentRarity, getArcanaRequiredRarity, getBorrowableWeapons } from './domain.mjs';
 
 const validPosition = (team, index) => Number.isInteger(index) && index >= 0 && index < team.members.length;
 
@@ -13,7 +13,7 @@ export function swapTeamPositions(team, from, to, selectedIndex) {
   return { team: { ...team, members }, selectedIndex: selected, changed: true };
 }
 
-export function placeRosterCharacter(team, character, targetIndex, { catalog, freeLibrary } = {}) {
+export function placeRosterCharacter(team, character, targetIndex, { catalog, freeLibrary, policy } = {}) {
   if (!validPosition(team, targetIndex)) return { team, selectedIndex: targetIndex, changed: false };
   const existing = team.members.findIndex(member => member?.characterId === character.id);
   if (existing === targetIndex) return { team, selectedIndex: targetIndex, changed: false };
@@ -23,12 +23,14 @@ export function placeRosterCharacter(team, character, targetIndex, { catalog, fr
   }
   const members = [...team.members];
   const previous = members[targetIndex];
-  members[targetIndex] = previous ? { ...previous, characterId: character.id } : createMember(character);
+  const free = policy?.mode === 'free' || catalog?.mode === 'free';
+  members[targetIndex] = previous ? { ...previous, characterId: character.id } : createMember(character, free ? { level: team.level } : {});
   const hasOwnWeapon = character.hasExclusiveWeapon !== false && ![1, 2].includes(character.baseRarity);
   if (!hasOwnWeapon) members[targetIndex].rarity = character.defaultRarity ?? (character.baseRarity === 2 ? 'LR5' : 'N');
   else if (previous && !(character.allowedRarities ?? ['SR', 'LR', 'LR5']).includes(previous.rarity)) members[targetIndex].rarity = character.defaultRarity ?? 'SR';
   if (catalog && members[targetIndex].rarity === 'SR' && getArcanaRequiredRarity(team, character.id, catalog)) members[targetIndex].rarity = 'LR';
   if (catalog) {
+    if (free) return placeFreeWeapon(team, members, character, targetIndex, previous, catalog, hasOwnWeapon);
     if (previous) {
       const weapon = previous.equipment[0];
       const ownerId = weapon.weaponOwnerCharacterId ?? previous.characterId;
@@ -73,6 +75,54 @@ export function placeRosterCharacter(team, character, targetIndex, { catalog, fr
     }
   }
   return { team: { ...team, members }, selectedIndex: targetIndex, changed: true };
+}
+
+// Free builds purchase a compatible weapon rather than claiming gifted inventory.
+function placeFreeWeapon(team, members, character, index, previous, catalog, hasOwnWeapon) {
+  const member = members[index];
+  member.equipment = member.equipment.map(gear => ({ ...gear, runes: gear.runes.map(rune => ({ ...rune })) }));
+  let weapon = member.equipment[0];
+  const empty = () => createEquipment(1, { level: team.level });
+  const freeCatalog = catalog.mode === 'free' ? catalog : { ...catalog, mode: 'free' };
+  const candidates = () => getBorrowableWeapons({ ...team, members }, index, freeCatalog);
+  const validLevels = (rarity, kind) => {
+    const key = kind === 'exclusive' ? 'exclusive' + rarity : rarity;
+    const table = catalog.equipmentCosts?.fragments?.[key];
+    return (catalog.equipmentCosts?.allowedLevels?.[key] ?? Object.keys(table ?? {}).map(Number))
+      .filter(level => Number.isSafeInteger(level) && level > 0 && level <= team.level && Number.isFinite(table?.[level]));
+  };
+  const equip = (base, rarity, kind, ownerId, desiredLevel) => {
+    const levels = validLevels(rarity, kind).filter(level => level <= desiredLevel);
+    if (!levels.length) return empty();
+    const level = Math.max(...levels);
+    return { ...selectEquipmentRarity(base, rarity), weaponKind: kind,
+      weaponOwnerCharacterId: kind === 'exclusive' ? ownerId : null, level, syncSlot: 0,
+      reinforcementLevel: Math.min(base.reinforcementLevel, level) };
+  };
+  const chooseDefault = base => {
+    if (hasOwnWeapon && !isWeaponOwnerClaimed({ ...team, members }, index, character.id)) {
+      return equip(base, 'SSR', 'exclusive', character.id, 180);
+    }
+    const borrow = candidates()[0];
+    if (borrow) return equip(base, 'UR', 'exclusive', borrow.characterId, borrow.level);
+    const levels = validLevels('SSR', 'normal');
+    return levels.length ? equip(base, 'SSR', 'normal', null, Math.min(...levels)) : empty();
+  };
+  if (!previous || weapon.rarity === 'NONE') weapon = chooseDefault(weapon);
+  else if (weapon.weaponKind === 'exclusive') {
+    const ownerId = weapon.weaponOwnerCharacterId ?? previous.characterId;
+    const owner = catalog.characters.find(item => item.id === ownerId);
+    const canKeepBorrow = owner?.baseRarity === 8 && owner.hasExclusiveWeapon !== false && owner.job === character.job
+      && ['UR', 'LR'].includes(weapon.rarity) && !isWeaponOwnerClaimed({ ...team, members }, index, ownerId)
+      && (!hasOwnWeapon || ownerId !== previous.characterId);
+    if (canKeepBorrow) weapon = equip(weapon, member.rarity === 'LR5' ? weapon.rarity : 'UR', 'exclusive', ownerId, weapon.level);
+    else if (hasOwnWeapon && !isWeaponOwnerClaimed({ ...team, members }, index, character.id)) {
+      weapon = equip(weapon, member.rarity !== 'LR5' && weapon.rarity === 'LR' ? 'UR' : weapon.rarity, 'exclusive', character.id, weapon.level);
+    } else weapon = chooseDefault(weapon);
+  }
+  member.equipment[0] = weapon;
+  if (member.rarity !== 'LR5') member.equipment = member.equipment.map(gear => gear.rarity === 'LR' ? { ...gear, rarity: 'UR', seriesId: 13 } : gear);
+  return { team: { ...team, members }, selectedIndex: index, changed: true };
 }
 
 export function addRosterCharacter(team, character, options) {

@@ -54,20 +54,46 @@ function normalizedEffect(effect, label) {
   return { ...effect, key: keys[effect.type - 1], value: requireValue(effect.value, `${label}属性数值缺失。`), source: label };
 }
 
+function levelBasis(member, catalog, policy, data) {
+  const level = policy.characterLevel;
+  const playerLevel = policy.baseline?.playerLevel;
+  if ((policy.baseline?.levelLink?.subLevel ?? 0) !== 0) throw new Error('当前等级联结副等级暂不支持。');
+  if (policy.mode !== 'free') {
+    if (level !== data.characterLevel) throw new Error('当前等级与角色属性数据不一致。');
+    if (playerLevel !== data.rank560?.rank) throw new Error('当前玩家等级与属性数据不一致。');
+    return { level, playerLevel, natural: data.characters?.[member.characterId]?.baseByRarity?.[member.rarity], rank: data.rank560.bonuses };
+  }
+  const free = catalog.freeLevels;
+  if (free?.schemaVersion !== 1 || free.scope !== 'selectedRosterVariableLevels') throw new Error('自由配队等级属性数据尚未加载。');
+  for (const [value, key, label] of [[level, 'characterLevel', '等级联结'], [playerLevel, 'playerLevel', '玩家等级']]) {
+    const limits = free.limits?.[key];
+    if (!Number.isSafeInteger(value) || !Number.isSafeInteger(limits?.min) || !Number.isSafeInteger(limits?.max) || value < limits.min || value > limits.max) throw new Error(`${label}超出可计算范围。`);
+  }
+  if (free.characterSubLevel !== 0 || !Array.isArray(free.baseAttributeOrder) || free.baseAttributeOrder.join(',') !== BASE_KEYS.join(',')) throw new Error('自由配队四维数据格式不一致。');
+  const selected = free.characters?.[member.characterId];
+  const coefficient = free.rarityCoefficients?.[selected?.originRarity]?.[member.rarity];
+  if (!Array.isArray(selected?.weights) || selected.weights.length !== 4 || !Number.isSafeInteger(selected.weightTotal) || selected.weightTotal <= 0 || selected.weights.some(value => !Number.isSafeInteger(value) || value < 0) || !coefficient) throw new Error('此角色或稀有度的自由属性数据缺失。');
+  const potential = requireValue(free.characterLevelPotential?.[level], '当前等级的成长属性数据缺失。');
+  const total = potential * requireValue(coefficient.m, '稀有度成长倍率缺失。') + requireValue(coefficient.b, '稀有度成长常量缺失。');
+  if (potential < 0 || total < 0) throw new Error('角色成长属性数据无效。');
+  const natural = Object.fromEntries(BASE_KEYS.map((key, index) => [key, Math.trunc(total * selected.weights[index] / selected.weightTotal)]));
+  const fields = free.playerRankFields, values = free.playerRankBonuses?.[playerLevel];
+  if (!Array.isArray(fields) || !Array.isArray(values) || fields.length !== values.length || new Set(fields).size !== fields.length) throw new Error('当前玩家等级的属性数据缺失。');
+  const rank = Object.fromEntries(fields.map((key, index) => [key, requireValue(values[index], '玩家等级加成数据无效。')]));
+  return { level, playerLevel, natural, rank };
+}
+
 function evaluate(member, catalog, policy, arcanaState) {
   const data = catalog.characterStats;
   if (!data || data.schemaVersion !== 1) throw new Error('角色属性数据尚未加载。');
   if (!member) throw new Error('请先选择一名配队角色。');
   const character = data.characters?.[member.characterId];
-  const natural = character?.baseByRarity?.[member.rarity];
+  const { level, playerLevel, natural, rank } = levelBasis(member, catalog, policy, data);
   if (!natural || !MAIN_ATTRIBUTE[character.job]) throw new Error('此角色或稀有度的属性数据缺失。');
-  if (policy.characterLevel !== data.characterLevel || (policy.baseline?.levelLink?.subLevel ?? 0) !== 0) throw new Error('当前等级与角色属性数据不一致。');
-  if (policy.baseline?.playerLevel !== data.rank560?.rank) throw new Error('当前玩家等级与属性数据不一致。');
   if (!Array.isArray(member.equipment) || member.equipment.length !== 6) throw new Error('角色装备槽位不完整。');
   if (arcanaState?.errors?.length) throw new Error('秘仪配置无效，请先修正配置。');
-  const level = policy.characterLevel;
   const base = Object.fromEntries(BASE_KEYS.map(key => [key, requireValue(natural[key], '角色基础四维数据缺失。')]));
-  const baseParts = Object.fromEntries(BASE_KEYS.map(key => [key, [part('450级与当前稀有度', format.format(base[key]))]]));
+  const baseParts = Object.fromEntries(BASE_KEYS.map(key => [key, [part(`${level}级与当前稀有度`, format.format(base[key]))]]));
   const polish = empty(BASE_KEYS);
   const effects = [];
   const gearEffects = [];
@@ -95,7 +121,7 @@ function evaluate(member, catalog, policy, arcanaState) {
   }
   // Spheres, then exclusive four-dimensional terms, then set terms, then arcana.
   for (const { gear, template, kind } of equipped) {
-    const reinforced = requireLevel(gear.reinforcementLevel, Math.min(gear.level, 450), '强化等级');
+    const reinforced = requireLevel(gear.reinforcementLevel, Math.min(gear.level, policy.mode === 'free' ? data.reinforcementCoefficients.length - 1 : 450), '强化等级');
     const coefficient = requireValue(data.reinforcementCoefficients?.[reinforced], '强化倍率数据缺失。');
     if (template.battleChange) add(gearEffects, [{ ...template.battleChange, value: template.battleChange.value * coefficient }], '装备与强化');
     for (const [kindName, levelKey] of [['legend', 'legendSacredTreasureLevel'], ['matchless', 'matchlessSacredTreasureLevel']]) {
@@ -154,7 +180,6 @@ function evaluate(member, catalog, policy, arcanaState) {
       battleParts[effect.key].push(part(effect.source, display(effect.key, delta)));
     }
   }
-  const rank = data.rank560.bonuses;
   const battle = {};
   for (const key of BATTLE_KEYS) {
     const initial = requireValue(character.initialBattle?.[initialKey(key)], '角色初始战斗属性数据缺失。');
@@ -165,13 +190,13 @@ function evaluate(member, catalog, policy, arcanaState) {
       converted = base[MAIN_ATTRIBUTE[character.job]];
       percent += requireValue(rank.AttackPowerPercentBonus, '玩家等级攻击比例缺失。');
       outside = requireValue(rank.AttackPowerBonus, '玩家等级攻击加成缺失。');
-      battleParts[key].push(part('玩家560级固定加成（比例后）', format.format(outside)));
+      battleParts[key].push(part(`玩家${playerLevel}级固定加成（比例后）`, format.format(outside)));
     } else if (key === 'HP') {
       converted = base.Health * 10;
       const fixed = requireValue(rank.HpBonus, '玩家等级生命加成缺失。');
       inside += fixed;
       percent += requireValue(rank.HpPercentBonus, '玩家等级生命比例缺失。');
-      battleParts[key].push(part('玩家560级固定加成', format.format(fixed)));
+      battleParts[key].push(part(`玩家${playerLevel}级固定加成`, format.format(fixed)));
     } else if (key === 'Defense') {
       inside -= initial;
       outside = initial;
@@ -186,10 +211,10 @@ function evaluate(member, catalog, policy, arcanaState) {
     if (key !== 'AttackPower' && key !== 'HP' && key !== 'Defense') {
       const fixed = requireValue(rank[`${key}Bonus`] ?? 0, '玩家等级固定加成无效。');
       inside += fixed;
-      if (fixed) battleParts[key].push(part('玩家560级固定加成', display(key, fixed)));
+      if (fixed) battleParts[key].push(part(`玩家${playerLevel}级固定加成`, display(key, fixed)));
     }
-    if (key === 'HP' && rank.HpPercentBonus) battleParts[key].push(part('玩家560级生命比例', `${format.format(rank.HpPercentBonus / 100)}%`));
-    if (key === 'AttackPower' && rank.AttackPowerPercentBonus) battleParts[key].push(part('玩家560级攻击比例', `${format.format(rank.AttackPowerPercentBonus / 100)}%`));
+    if (key === 'HP' && rank.HpPercentBonus) battleParts[key].push(part(`玩家${playerLevel}级生命比例`, `${format.format(rank.HpPercentBonus / 100)}%`));
+    if (key === 'AttackPower' && rank.AttackPowerPercentBonus) battleParts[key].push(part(`玩家${playerLevel}级攻击比例`, `${format.format(rank.AttackPowerPercentBonus / 100)}%`));
     battle[key] = MULTIPLIED.has(key) ? Math.trunc(inside * (10000 + percent) * 0.0001 + (key === 'Defense' ? outside : 0)) + (key === 'AttackPower' ? outside : 0) : Math.trunc(inside);
     if (!Number.isSafeInteger(battle[key]) || battle[key] < 0) throw new Error('当前属性超出可计算范围。');
   }
@@ -199,7 +224,7 @@ function evaluate(member, catalog, policy, arcanaState) {
     parts: BASE_KEYS.includes(key) ? baseParts[key] : battleParts[key],
   }));
   return { valid: true, errors: [], base, battle, rows, notes: [
-    `角色 Lv.${level} · 玩家等级 ${data.rank560.rank} · 等级联结副等级 0。`,
+    `角色 Lv.${level} · 玩家等级 ${playerLevel} · 等级联结副等级 0。`,
     `满打磨：所选属性占 ${data.polish.selectedPercent}%，其余均分；四维均分选项按各25%，整数尾差按固定四维顺序分配。`,
     '包含装备、强化、符石、圣魔装、固有专武属性、套装及已解锁秘仪；借用专武不获得其固有加成。',
     '不计战斗技能、临时增益与战斗阵营加成；本页为构筑静态面板，实际战斗接入仍为后续工作。',
